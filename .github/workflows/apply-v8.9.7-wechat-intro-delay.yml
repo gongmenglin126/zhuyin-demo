@@ -1,0 +1,48 @@
+name: Apply WeChat Intro And Reply Delay
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths:
+      - '.github/workflows/apply-v8.9.7-wechat-intro-delay.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - name: Add one-time Xu Ning introduction and delayed replies
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/InteractiveWechat.tsx')
+          s=p.read_text()
+          s=s.replace(' const [extra,setExtra]=useState<Record<string,Msg[]>>({});\n const scrollRef=useRef<HTMLElement|null>(null);', ' const [extra,setExtra]=useState<Record<string,Msg[]>>({});\n const [introduced,setIntroduced]=useState<Record<string,boolean>>({});\n const [typing,setTyping]=useState<Record<string,boolean>>({});\n const scrollRef=useRef<HTMLElement|null>(null);')
+          old=' const append=(items:Msg[])=>setExtra(prev=>({...prev,[id]:[...(prev[id]||[]),...items]}));'
+          new=''' const appendFor=(contactId:string,items:Msg[])=>setExtra(prev=>({...prev,[contactId]:[...(prev[contactId]||[]),...items]}));\n const introFor=(contactId:string):Msg[]=>{\n  if(contactId==="x"||introduced[contactId])return [];\n  setIntroduced(prev=>({...prev,[contactId]:true}));\n  return [{who:"沈妍",text:"你好，我是徐宁，沈妍的朋友。她今天一直联系不上，我现在在她家，用的是她电脑上的微信。想问你几件她最近在查的事。"}];\n };\n const delayedReply=(contactId:string,reply:string|null)=>{\n  if(!reply)return;\n  setTyping(prev=>({...prev,[contactId]:true}));\n  const delay=Math.min(1500,850+reply.length*7);\n  window.setTimeout(()=>{\n   appendFor(contactId,[{who:"对方",text:reply}]);\n   setTyping(prev=>({...prev,[contactId]:false}));\n  },delay);\n };'''
+          if old not in s: raise SystemExit('append target not found')
+          s=s.replace(old,new)
+          old='''  const reply=textReply(id,text);\n  append([{who:"沈妍",text},...(reply?[{who:"对方" as const,text:reply}]:[])]);\n  setDraft("");'''
+          new='''  const contactId=id;\n  const reply=textReply(contactId,text);\n  appendFor(contactId,[...introFor(contactId),{who:"沈妍",text}]);\n  delayedReply(contactId,reply);\n  setDraft("");'''
+          if old not in s: raise SystemExit('sendText target not found')
+          s=s.replace(old,new)
+          old='''  const reply=rules[id];\n  append([\n    {who:"沈妍",text:`[分享] ${material.title}`,material},\n    ...(reply?[{who:"对方" as const,text:reply}]:[]),\n  ]);\n  setPicker(false);'''
+          new='''  const contactId=id;\n  const reply=rules[contactId];\n  appendFor(contactId,[...introFor(contactId),{who:"沈妍",text:`[分享] ${material.title}`,material}]);\n  delayedReply(contactId,reply);\n  setPicker(false);'''
+          if old not in s: raise SystemExit('sendMaterial target not found')
+          s=s.replace(old,new)
+          old='<header style={{flex:"0 0 auto"}}><b>{contact.name}</b><small>聊天记录</small></header>'
+          new='<header style={{flex:"0 0 auto"}}><b>{contact.name}</b><small>{typing[id]?"正在输入…":"聊天记录"}</small></header>'
+          if old not in s: raise SystemExit('header target not found')
+          s=s.replace(old,new)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/InteractiveWechat.tsx
+          git diff --cached --quiet || git commit -m 'Add Xu Ning intro and delayed WeChat replies'
+          git push
