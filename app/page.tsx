@@ -3,6 +3,7 @@
 import {FormEvent,ReactNode,useMemo,useState} from "react";
 import {ArrowLeft,ChevronRight,Clock3,ExternalLink,Globe2,History as HistoryIcon,Home,LockKeyhole,Maximize2,MessageCircle,Minimize2,NotebookPen,RefreshCw,Search,Wifi,X} from "lucide-react";
 import {chats,history,Post,posts,privateEntries,profile} from "../content/gameDataFlowV2";
+import LocalVault from "./LocalVault";
 
 type App="browser"|"wechat"|"notes"|"verse";
 type Route={kind:"home"}|{kind:"post",id:string}|{kind:"profile"}|{kind:"user",name:string}|{kind:"private"}|{kind:"history"}|{kind:"search",q:string};
@@ -21,7 +22,7 @@ export default function Page(){
  return <main className="desktop"><header className="sys"><div><b>●</b><strong>{appTitle}</strong><span>文件</span><span>编辑</span></div><div><Wifi/><span>80%</span><span>10月17日 周六 19:06</span></div></header>
   <div className="shortcuts"><Icon label="浏览器" tone="blue" icon={<Globe2/>} onClick={()=>open("browser")}/><Icon label="微信" tone="green" icon={<MessageCircle/>} badge={!wxRead} onClick={()=>open("wechat")}/><Icon label="本地资料" tone="amber" icon={<NotebookPen/>} onClick={()=>open("notes")}/></div>
   {intro&&<div className="overlay"><section className="intro"><small><Clock3/> 2026年10月17日　19:06</small><h2>沈妍没有来。</h2><p>你们约好今天中午见面。她没有出现，电话关机，微信也没有回复。</p><p>傍晚，你用她留给你的备用门锁密码进了公寓。屋里没人，电脑没有关机，微信和浏览器仍保持登录。</p><blockquote><b>徐宁　18:37</b>我去你家看看。看到回我。</blockquote><em>现在还没有理由把这件事说成犯罪。你只是想先确认，她昨天离开后原本打算去哪里。</em><button onClick={()=>setIntro(false)}>查看电脑</button></section></div>}
-  {app&&<Window title={appTitle} max={max} allowMax={app==="browser"||app==="verse"} close={()=>setApp(null)} toggle={()=>setMax(!max)}>{app==="browser"?<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked}/>:app==="wechat"?<Wechat/>:app==="notes"?<Notes unlocked={noteUnlocked} onUnlock={()=>setNoteUnlocked(true)} openLink={()=>open("verse")}/>:<VersePage/>}</Window>}
+  {app&&<Window title={appTitle} max={max} allowMax={app==="browser"||app==="verse"} close={()=>setApp(null)} toggle={()=>setMax(!max)}>{app==="browser"?<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked}/>:app==="wechat"?<Wechat/>:app==="notes"?<LocalVault unlocked={noteUnlocked} onUnlock={()=>setNoteUnlocked(true)} openLink={()=>open("verse")}/>:<VersePage/>}</Window>}
   <nav className="dock"><button onClick={()=>open("browser")}><i className="blue"><Globe2/></i></button><button onClick={()=>open("wechat")}><i className="green"><MessageCircle/>{!wxRead&&<b>1</b>}</i></button><button onClick={()=>open("notes")}><i className="amber"><NotebookPen/></i></button></nav>
  </main>
 }
