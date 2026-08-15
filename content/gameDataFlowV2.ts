@@ -88,11 +88,13 @@ const toRank=(date:string)=>{
 
 export const posts:Post[]=[...patched].sort((a,b)=>toRank(a.date)-toRank(b.date));
 
-export const privateEntries:PrivateEntry[]=flowPrivateEntries.map(entry=>entry.id!=="p1"?entry:{
-  ...entry,
-  highlights:(entry.highlights||[]).map(mark=>mark==="红色铁皮糖盒"?"红铁皮盒":mark),
-  body:entry.body.map((text,index)=>index===0?text.replace("红色铁皮糖盒","红铁皮盒"):text),
-});
+export const privateEntries:PrivateEntry[]=flowPrivateEntries
+  .filter(entry=>entry.id!=="p2")
+  .map(entry=>entry.id!=="p1"?entry:{
+    ...entry,
+    highlights:(entry.highlights||[]).map(mark=>mark==="红色铁皮糖盒"?"红铁皮盒":mark),
+    body:entry.body.map((text,index)=>index===0?text.replace("红色铁皮糖盒","红铁皮盒"):text),
+  });
 
 export const profile={
   ...flowProfile,
