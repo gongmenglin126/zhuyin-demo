@@ -28,9 +28,8 @@ const redBoxPost:Post={
   highlights:[...new Set([...(redBoxBase.highlights||[]),"红铁皮盒","打开前会卡一下"])],
   replies:[
     ...redBoxBase.replies,
-    reply("一格胶片","23:18","这种红色套盖铁皮盒以前太常见了，地方糕点、茶叶、糖果都装，光看颜色认不出牌子。我上个月拍岚州一处旧厂房时，窗边也有个形制很像的。"),
-    reply("候鸟第七年","23:31","有侧面或者盒盖边缘吗？我想确认是不是套盖。","楼主"),
-    reply("一格胶片","23:44","原图里只能看到一角，我主要拍窗和走廊。那组照片我发过站里，没特写盒子。"),
+    reply("一格胶片","23:18","这种红色套盖铁皮盒以前太常见了，地方糕点、茶叶、糖果都装，光看颜色认不出牌子。我前阵子拍旧厂房时好像见过一个形制很像的，当时没特意拍。下次再碰到我帮你留意盒盖边缘。"),
+    reply("候鸟第七年","23:31","麻烦了。主要想确认这种东西是不是现实里真常见，不急。","楼主"),
   ],
 };
 
@@ -40,7 +39,7 @@ const cottonYard:Post={
   author:"一格胶片",
   date:"2026-07-09 22:14",
   excerpt:"岚棉三厂旧家属区的一组窗户和走廊照片。评论里有老住户补充旧房型。",
-  terms:["岚棉三厂","旧址","家属区","4栋","窗户","走廊","红铁皮盒","寻人启事"],
+  terms:["岚棉三厂","旧址","家属区","4栋","窗户","走廊","寻人启事"],
   highlights:["岚棉三厂","4栋","寻人启事"],
   body:[
     "上周路过岚棉三厂旧家属区，拍了几张还没封死的外墙和窗户。主要想留老单位房改造前后的样子，不做灵异讨论。",
@@ -99,7 +98,57 @@ const linNanReport:Post={
   ],
 };
 
-const patched=flowPosts.map(post=>post.id==="33897"?cottonYard:post.id==="09114"?linNanReport:post.id==="20847"?dreamPost:post.id==="30177"?redBoxPost:post);
+// 首页上的普通旧报不能提前命中“寻人启事”。
+const wallBase=flowPosts.find(post=>post.id==="34049")!;
+const wallPost:Post={
+  ...wallBase,
+  body:wallBase.body.map(text=>text.replace("天气和寻人启事","天气和商场促销")),
+  highlights:(wallBase.highlights||[]).map(mark=>mark==="天气和寻人启事"?"天气和商场促销":mark),
+};
+
+// 这个真实案例留到“名字不对 / 另一个家”阶段再被搜到，不抢“寻人启事”入口。
+const returnedBase=flowPosts.find(post=>post.id==="14692")!;
+const returnedCase:Post={
+  ...returnedBase,
+  terms:(returnedBase.terms||[]).filter(term=>term!=="寻人启事"),
+  highlights:(returnedBase.highlights||[]).filter(mark=>mark!=="寻人启事"),
+  replies:[
+    ...returnedBase.replies.map(item=>({...item,text:item.text.replace(/寻人启事/g,"当年的寻人材料")})),
+    reply("照骨","2020-01-13 00:18","回来以后除了名字和另一个家，有没有突然怕以前不怕的东西，或者以前会做、后来突然不会的事？没有也可以写没有。"),
+    reply("夜班公交","00:31","@照骨 你这套问题我是不是在别的走失帖也见过？有点眼熟。"),
+    reply("照骨","00:44","类似自述我都按差不多的顺序问，免得把几种变化混成一个。"),
+  ],
+};
+
+const julyBase=flowPosts.find(post=>post.id==="10731")!;
+const julyArchive:Post={
+  ...julyBase,
+  title:"2004 年 7 月两地地方报转载来源求考",
+};
+
+const traumaBase=flowPosts.find(post=>post.id==="17428")!;
+const traumaCase:Post={
+  ...traumaBase,
+  replies:[
+    ...traumaBase.replies,
+    reply("纸页边角","19:14","折柳这个 ID 我好像在另一个走失帖也见过。你很关注这种帖子？"),
+    reply("折柳","19:22","旧闻区类似问题不少。原则一样：事实是真的，不代表原因就自动成立。"),
+    reply("照骨","19:41","除了香菜，还有没有觉得名字不对、认错家，或者突然不会以前会的东西？没有也算信息。"),
+    reply("雨衣口袋","19:53","这些都没有。就是香菜，其他生活一直正常。","楼主"),
+  ],
+};
+
+const patched=flowPosts.map(post=>
+  post.id==="33897"?cottonYard:
+  post.id==="09114"?linNanReport:
+  post.id==="20847"?dreamPost:
+  post.id==="30177"?redBoxPost:
+  post.id==="34049"?wallPost:
+  post.id==="14692"?returnedCase:
+  post.id==="10731"?julyArchive:
+  post.id==="17428"?traumaCase:
+  post
+);
 
 const toRank=(date:string)=>{
   const full=date.match(/(20\d{2})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2}))?/);
@@ -115,10 +164,22 @@ export const posts:Post[]=[...patched,posterMemory].sort((a,b)=>toRank(a.date)-t
 
 export const privateEntries:PrivateEntry[]=flowPrivateEntries
   .filter(entry=>entry.id!=="p2")
-  .map(entry=>entry.id!=="p1"?entry:{
-    ...entry,
-    highlights:(entry.highlights||[]).map(mark=>mark==="红色铁皮糖盒"?"红铁皮盒":mark),
-    body:entry.body.map((text,index)=>index===0?text.replace("红色铁皮糖盒","红铁皮盒"):text),
+  .map(entry=>{
+    if(entry.id==="p1")return {
+      ...entry,
+      highlights:(entry.highlights||[]).map(mark=>mark==="红色铁皮糖盒"?"红铁皮盒":mark),
+      body:entry.body.map((text,index)=>index===0?text.replace("红色铁皮糖盒","红铁皮盒"):text),
+    };
+    if(entry.id==="p3")return {
+      ...entry,
+      highlights:[...(entry.highlights||[]),"名字不对","另一个家","回来以后不会"],
+      body:[
+        entry.body[0],
+        "麻烦在于每个人的后续都不一样。有人只是口味改变；有些人用的原话却很像：‘名字不对’、‘另一个家’、‘回来以后不会以前会的事’。这些先当检索用的原话，不当结论。",
+        "我现在只记四列：失踪时年龄、失踪多久、回来后最早记录到的变化、能不能找到独立来源。相似的先放在一起看，不代表要把它们合成一个解释。"
+      ],
+    };
+    return entry;
   });
 
 export const profile={
