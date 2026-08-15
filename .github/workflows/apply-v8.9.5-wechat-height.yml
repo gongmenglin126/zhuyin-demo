@@ -1,0 +1,38 @@
+name: Fix WeChat Composer Height
+
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths:
+      - '.github/workflows/apply-v8.9.5-wechat-height.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - name: Keep WeChat composer inside window content area
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/InteractiveWechat.tsx')
+          s=p.read_text()
+          old='return <div className="wechat" style={{height:"100%",minHeight:0,overflow:"hidden"}}>'
+          new='return <div className="wechat" style={{height:"calc(100% - 39px)",minHeight:0,overflow:"hidden"}}>'
+          if old not in s:
+              raise SystemExit('expected WeChat root height marker not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/InteractiveWechat.tsx
+          git diff --cached --quiet || git commit -m "Keep WeChat composer visible"
+          git push
