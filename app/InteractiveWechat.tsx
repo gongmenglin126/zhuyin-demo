@@ -154,7 +154,7 @@ export default function InteractiveWechat({materials}:{materials:SharedMaterial[
   setPicker(false);
  };
 
- return <div className="wechat" style={{height:"100%",minHeight:0,overflow:"hidden"}}>
+ return <div className="wechat" style={{height:"calc(100% - 39px)",minHeight:0,overflow:"hidden"}}>
   <aside style={{height:"100%",minHeight:0,overflowY:"auto"}}><header><i>妍</i><span><b>沈妍</b><small>微信已登录</small></span></header><label><Search/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索联系人和消息"/></label>{visible.map(x=><button className={x.id===id?"active":""} onClick={()=>setId(x.id)} key={x.id}><i>{x.name[0]}</i><span><b>{x.name}</b><small>{x.preview}</small></span></button>)}</aside>
   <main style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}}>
    <header style={{flex:"0 0 auto"}}><b>{contact.name}</b><small>聊天记录</small></header>
