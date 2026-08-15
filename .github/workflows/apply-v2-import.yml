@@ -23,13 +23,31 @@ jobs:
           p=Path('app/page.tsx')
           s=p.read_text()
           s=s.replace('from "../content/gameDataFlow";', 'from "../content/gameDataFlowV2";')
+          s=s.replace('import LocalVault from "./LocalVault";', 'import LocalVault from "./LocalVault";\nimport InteractiveWechat,{SharedMaterial} from "./InteractiveWechat";')
           s=s.replace('<dt>主题</dt><dd>8</dd>', '<dt>主题</dt><dd>{profile.topics.length}</dd>')
           s=s.replace('<h3>公开主题（8） <small>按发布时间从早到晚</small></h3>', '<h3>公开主题（{profile.topics.length}） <small>按发布时间从早到晚</small></h3>')
           s=s.replace('if(pwd==="身非我身名非我名")', 'if(pwd==="林楠")')
-          s=s.replace('slice(0,8)', 'slice(0,2)')
           s=s.replace('aria-label="八字访问口令"', 'aria-label="两个字访问口令"')
           s=s.replace('Array.from({length:8}', 'Array.from({length:2}')
           s=s.replace('<small>8 个汉字</small><button>进入</button>', '<small>2 个汉字</small><button>进入</button>')
+          old_state=' const [intro,setIntro]=useState(true),[app,setApp]=useState<App|null>(null),[max,setMax]=useState(true),[wxRead,setWxRead]=useState(false),[privateUnlocked,setPrivateUnlocked]=useState(false),[noteUnlocked,setNoteUnlocked]=useState(false);'
+          if old_state in s and 'setClipboard' not in s:
+              s=s.replace(old_state,old_state+'\n const [clipboard,setClipboard]=useState<SharedMaterial|null>(null);',1)
+          s=s.replace('<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked}/>', '<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked} onCopyMaterial={setClipboard}/>',1)
+          s=s.replace('app==="wechat"?<Wechat/>', 'app==="wechat"?<InteractiveWechat clipboard={clipboard}/>',1)
+          s=s.replace(':<VersePage/>', ':<VersePage onCopyMaterial={setClipboard}/>',1)
+          s=s.replace('function Browser({privateUnlocked,setPrivateUnlocked}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void}){', 'function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void;onCopyMaterial:(m:SharedMaterial)=>void}){',1)
+          s=s.replace('<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser}/>', '<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser} onCopyMaterial={onCopyMaterial}/>',1)
+          s=s.replace('function Thread({post,openUser}:{post:Post;openUser:(name:string)=>void}){', 'function Thread({post,openUser,onCopyMaterial}:{post:Post;openUser:(name:string)=>void;onCopyMaterial:(m:SharedMaterial)=>void}){',1)
+          needle='</p></header><Floor user={post.author}'
+          if needle in s and '复制帖子链接' not in s:
+              button='</p><button onClick={()=>onCopyMaterial({id:post.id,title:post.title,kind:"论坛帖子",url:"https://www.zhuyinwen.cn/thread/"+post.id})} style={{marginTop:8,border:"1px solid #b8afa5",background:"#fff",borderRadius:5,padding:"6px 10px",fontSize:12,cursor:"pointer"}}>复制帖子链接</button></header><Floor user={post.author}'
+              s=s.replace(needle,button,1)
+          start=s.find('function VersePage(){')
+          end=s.find('function Wechat(){',start)
+          if start!=-1 and end!=-1:
+              verse='''function VersePage({onCopyMaterial}:{onCopyMaterial:(m:SharedMaterial)=>void}){return <main className="verse-page"><header><LockKeyhole/><span>www.zhuyinwen.cn/archive/cache/baishesong-1986.html</span><b>缓存页面</b></header><section className="verse-image-view simple"><figure><img src="assets/baishesong-recovered-scan-v1.webp" alt="一张来源不明的黑纸红字抄写页扫描件"/><figcaption><span>scan_07_untitled.tif</span><em>来源字段已删除 · 缓存于 2026-10-16 19:49</em></figcaption></figure><article style={{maxWidth:720,margin:"18px auto 0",padding:"16px 18px",background:"#f5f1e9",border:"1px solid #d7cec1",lineHeight:1.8,fontSize:14}}><small style={{color:"#8a8179"}}>缓存页附带的手工抄录</small><p>能辨认的其中一句是：<strong className="clue">身非我身，名非我名</strong>。标点为后补，原页只有连续八字。</p><button onClick={()=>onCopyMaterial({id:"verse",title:"《百舍偈》残页缓存",kind:"缓存页",url:"https://www.zhuyinwen.cn/archive/cache/baishesong-1986.html"})} style={{border:"1px solid #b8afa5",background:"#fff",borderRadius:5,padding:"7px 10px",fontSize:12,cursor:"pointer"}}>复制缓存链接</button></article></section></main>}\n'''
+              s=s[:start]+verse+s[end:]
           p.write_text(s)
           PY
       - name: Commit
@@ -37,5 +55,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/page.tsx
-          git diff --cached --quiet || git commit -m "Require Lin Nan clue for private topics"
+          git diff --cached --quiet || git commit -m "Wire material sharing into v8 investigation"
           git push
