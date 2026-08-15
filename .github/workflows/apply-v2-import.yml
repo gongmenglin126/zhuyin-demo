@@ -23,7 +23,7 @@ jobs:
           p=Path('app/page.tsx')
           s=p.read_text()
           s=s.replace('from "../content/gameDataFlow";', 'from "../content/gameDataFlowV2";')
-          s=s.replace('import LocalVault from "./LocalVault";', 'import LocalVault from "./LocalVault";\nimport InteractiveWechat,{SharedMaterial} from "./InteractiveWechat";')
+          s=s.replace('import LocalVault from "./LocalVault";', 'import LocalVault from "./LocalVault";\nimport InteractiveWechat,{SharedMaterial} from "./InteractiveWechat";\nimport DeepArchiveGate from "./DeepArchiveGate";')
           s=s.replace('<dt>主题</dt><dd>8</dd>', '<dt>主题</dt><dd>{profile.topics.length}</dd>')
           s=s.replace('<h3>公开主题（8） <small>按发布时间从早到晚</small></h3>', '<h3>公开主题（{profile.topics.length}） <small>按发布时间从早到晚</small></h3>')
           s=s.replace('<b>私密主题（3）</b>', '<b>私密主题（{investigationPrivateEntries.length}）</b>')
@@ -39,11 +39,16 @@ jobs:
           s=s.replace(':<VersePage/>', ':<VersePage onCopyMaterial={setClipboard}/>',1)
           s=s.replace('function Browser({privateUnlocked,setPrivateUnlocked}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void}){', 'function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void;onCopyMaterial:(m:SharedMaterial)=>void}){',1)
           s=s.replace('<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser}/>', '<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser} onCopyMaterial={onCopyMaterial}/>',1)
+          s=s.replace('<Private unlocked={privateUnlocked} onUnlock={()=>setPrivateUnlocked(true)}/>', '<Private unlocked={privateUnlocked} onUnlock={()=>setPrivateUnlocked(true)} onCopyMaterial={onCopyMaterial}/>',1)
           s=s.replace('function Thread({post,openUser}:{post:Post;openUser:(name:string)=>void}){', 'function Thread({post,openUser,onCopyMaterial}:{post:Post;openUser:(name:string)=>void;onCopyMaterial:(m:SharedMaterial)=>void}){',1)
+          s=s.replace('function Private({unlocked,onUnlock}:{unlocked:boolean;onUnlock:()=>void}){', 'function Private({unlocked,onUnlock,onCopyMaterial}:{unlocked:boolean;onUnlock:()=>void;onCopyMaterial:(m:SharedMaterial)=>void}){',1)
           needle='</p></header><Floor user={post.author}'
           if needle in s and '复制帖子链接' not in s:
               button='</p><button onClick={()=>onCopyMaterial({id:post.id,title:post.title,kind:"论坛帖子",url:"https://www.zhuyinwen.cn/thread/"+post.id})} style={{marginTop:8,border:"1px solid #b8afa5",background:"#fff",borderRadius:5,padding:"6px 10px",fontSize:12,cursor:"pointer"}}>复制帖子链接</button></header><Floor user={post.author}'
               s=s.replace(needle,button,1)
+          archive_needle='{active.images?.map(x=><figure key={x.src}><button onClick={()=>setZoom(x)}><img src={x.src} alt={x.caption}/><span><Maximize2/>查看原图</span></button><figcaption>{x.caption}</figcaption></figure>)}'
+          if archive_needle in s and 'DeepArchiveGate onCopyMaterial' not in s:
+              s=s.replace(archive_needle,archive_needle+'{active.id==="p3"&&<DeepArchiveGate onCopyMaterial={onCopyMaterial}/>} ',1)
           start=s.find('function VersePage(){')
           end=s.find('function Wechat(){',start)
           if start!=-1 and end!=-1:
@@ -56,5 +61,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/page.tsx
-          git diff --cached --quiet || git commit -m "Wire material sharing into v8 investigation"
+          git diff --cached --quiet || git commit -m "Mount second archive behind private investigation layer"
           git push
