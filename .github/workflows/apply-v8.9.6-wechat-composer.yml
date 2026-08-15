@@ -1,0 +1,38 @@
+name: Apply WeChat Composer Polish
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths:
+      - '.github/workflows/apply-v8.9.6-wechat-composer.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - name: Enlarge composer and remove meta placeholder
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/InteractiveWechat.tsx')
+          s=p.read_text()
+          s=s.replace('bottom:62,zIndex:8', 'bottom:76,zIndex:8')
+          s=s.replace('padding:"10px 12px",background:"#f7f7f7"', 'padding:"12px 14px",background:"#f7f7f7"')
+          s=s.replace('gridTemplateColumns:"1fr 38px 42px"', 'gridTemplateColumns:"1fr 44px 48px"')
+          s=s.replace('placeholder={id==="x"?"这是你自己的对话":"将以沈妍账号发送"}', 'placeholder={id==="x"?"":"输入消息"}')
+          s=s.replace('style={{height:36,border:"1px solid #d0d0d0",borderRadius:6,padding:"0 10px",minWidth:0}}', 'style={{height:48,border:"1px solid #d0d0d0",borderRadius:8,padding:"0 14px",minWidth:0,fontSize:14}}')
+          s=s.replace('height:36,width:38', 'height:44,width:44')
+          s=s.replace('height:36,width:42', 'height:44,width:48')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/InteractiveWechat.tsx
+          git diff --cached --quiet || git commit -m 'Polish WeChat composer size and wording'
+          git push
