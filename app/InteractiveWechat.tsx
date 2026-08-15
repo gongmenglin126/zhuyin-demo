@@ -1,11 +1,12 @@
 "use client";
 
-import {FormEvent,useMemo,useState} from "react";
-import {Link2,Search,Send} from "lucide-react";
+import {FormEvent,useEffect,useMemo,useRef,useState} from "react";
+import {Link2,Search,Send,X} from "lucide-react";
 
 export type SharedMaterial={id:string;title:string;kind:string;url:string};
 type Msg={time?:string;who:"沈妍"|"对方";text:string;material?:SharedMaterial};
 type Contact={id:string;name:string;preview:string;messages:Msg[]};
+type MaterialRule=Record<string,string|null>;
 
 const contacts:Contact[]=[
  {id:"x",name:"徐宁",preview:"我去你家看看。",messages:[
@@ -48,39 +49,35 @@ const contacts:Contact[]=[
  ]},
 ];
 
-const materialReply=(contact:string,id:string):string=>{
- const table:Record<string,Record<string,string>>={
-  yq:{
-   "30177":"她前阵子确实老在找这种旧盒子。我还笑她为了一个梦跑太远。",
-   "33897":"这个我没看过。她最近去岚州就是为了旧楼照片？",
-   "09114":"林楠？她没跟我提过这个名字。",
-   "09831":"她小时候失踪那件事我知道一点，她自己一直不愿细说。",
-   sanmen:"这什么旧文？我看不懂。她最近查的已经这么偏了吗？",
+// 只有这些“材料 × 联系人”组合允许发送；null 代表消息能发出去，但对方不会立刻回复。
+const materialRules:Record<string,MaterialRule>={
+  "33897":{
+    yq:null,
+    zc:"户型和梦里结构能对上，值得查；但先找原始记录，不要拿熟悉感证明她去过。",
   },
-  zc:{
-   "30177":"物件相似只能当检索入口，不能当身份依据。先留原图和时间。",
-   "33897":"户型和梦里结构能对上，值得查；但先找旧报，不要拿熟悉感证明她去过。",
-   "09114":"把失踪日期、找回日期、年龄和找回后的变化分开记。尤其不要因为两个案子接近，就先设成同一作案者。",
-   "09831":"这条你自己的旧报也要按同样标准处理。家人口述和原报分开。",
-   "10731":"这篇楼主的结论是对的：目前只能证明两起案子很接近，不能证明同因。",
-   "14692":"这个人的描述里，名字、习惯、空间记忆是三类不同信息。不要把它们互相证明。",
-   "17119":"如果她愿意说，先问被找到当天有没有突然害怕以前不怕的东西，以及以前会做后来不会的事。",
-   verse:"这张残页来源字段没了。先找同句异文，尤其是‘身’‘名’这些词，别直接按现代意义解释。",
-   sanmen:"如果“舍”“客”是这个文本自己的术语，先确认别处是不是也把身体叫舍、魂叫客。‘二客’只能说明它在谈两个主体，还不能自动等于交换。",
+  "09114":{
+    zc:"把失踪日期、找回日期、年龄和找回后的变化分开记。尤其不要因为两个案子接近，就先设成同一作案者。",
+    ly:"……你怎么查到林楠这个名字的？先别在公开区发。",
   },
-  ly:{
-   "30177":"这个盒子我不认识。她后来一直在查旧房子吗？",
-   "33897":"我没去过岚棉三厂。但她问我的问题和这帖里那些‘回来以后变了什么’很像。",
-   "09114":"……你怎么查到林楠这个名字的？先别在公开区发。",
-   "09831":"你把两条日期放一起看。别只看‘都失踪过’，看她们分别什么时候不见、什么时候回来。",
-   "10731":"我以前看到这篇时只当巧合。现在再看，确实有点不舒服。",
-   "14692":"这条我看过。那种‘名字叫错了’的感觉不是只有她有。",
-   "17119":"这是我以前的帖子。别把我的真名和论坛账号放到公开区。",
-   verse:"‘身非我身，名非我名’这句我见过。不是在公开帖正文里，是别人发给我的一张旧纸截图。",
-   sanmen:"我见过“客”这个词。以前有人问我走失回来以后会不会梦到‘故门’，我当时只觉得他说话很怪。你先别把它解释成换魂，但这套词和那些问题确实像是一套东西。",
+  "09831":{
+    zc:"这条你自己的旧报也要按同样标准处理。家人口述和原报分开。",
+    ly:null,
   },
- };
- return table[contact]?.[id]||"我看到了。你先把原始链接留着，别急着下结论。";
+  "10731":{
+    zc:"这篇楼主的结论是对的：目前只能证明两起案子很接近，不能证明同因。",
+    ly:"我以前看到这篇时只当巧合。现在再看，确实有点不舒服。",
+  },
+  "14692":{
+    ly:"这条我看过。那种‘名字叫错了’的感觉不是只有她有。",
+  },
+  verse:{
+    zc:"这张残页来源字段没了。先找同句异文，尤其是‘身’‘名’这些词，别直接按现代意义解释。",
+    ly:"‘身非我身，名非我名’这句我见过。不是在公开帖正文里，是别人发给我的一张旧纸截图。",
+  },
+  sanmen:{
+    zc:"如果‘舍’‘客’是这个文本自己的术语，先确认别处是不是也把身体叫舍、魂叫客。‘二客’只能说明它在谈两个主体，还不能自动等于交换。",
+    ly:"我见过‘客’这个词。以前有人问我走失回来以后会不会梦到‘故门’，我当时只觉得他说话很怪。你先别把它解释成换魂，但这套词和那些问题确实像是一套东西。",
+  },
 };
 
 const textReply=(contact:string,text:string):string|null=>{
@@ -102,13 +99,22 @@ const textReply=(contact:string,text:string):string|null=>{
  return null;
 };
 
-export default function InteractiveWechat({clipboard}:{clipboard:SharedMaterial|null}){
- const [id,setId]=useState("x"),[q,setQ]=useState(""),[draft,setDraft]=useState("");
+export default function InteractiveWechat({materials}:{materials:SharedMaterial[]}){
+ const [id,setId]=useState("x"),[q,setQ]=useState(""),[draft,setDraft]=useState(""),[picker,setPicker]=useState(false);
  const [extra,setExtra]=useState<Record<string,Msg[]>>({});
+ const scrollRef=useRef<HTMLElement|null>(null);
  const contact=contacts.find(x=>x.id===id)!;
  const visible=contacts.filter(x=>(x.name+x.preview).includes(q));
  const messages=useMemo(()=>[...contact.messages,...(extra[id]||[])],[contact,extra,id]);
+ const sendable=useMemo(()=>materials.filter(m=>Object.prototype.hasOwnProperty.call(materialRules[m.id]||{},id)),[materials,id]);
  const append=(items:Msg[])=>setExtra(prev=>({...prev,[id]:[...(prev[id]||[]),...items]}));
+
+ useEffect(()=>{
+  const el=scrollRef.current;
+  if(el)el.scrollTop=el.scrollHeight;
+ },[id,messages.length]);
+ useEffect(()=>setPicker(false),[id]);
+
  const sendText=(e:FormEvent)=>{
   e.preventDefault();
   const text=draft.trim(); if(!text||id==="x")return;
@@ -116,17 +122,31 @@ export default function InteractiveWechat({clipboard}:{clipboard:SharedMaterial|
   append([{who:"沈妍",text},...(reply?[{who:"对方" as const,text:reply}]:[])]);
   setDraft("");
  };
- const sendMaterial=()=>{
-  if(!clipboard||id==="x")return;
-  append([{who:"沈妍",text:`[分享] ${clipboard.title}`,material:clipboard},{who:"对方",text:materialReply(id,clipboard.id)}]);
+ const sendMaterial=(material:SharedMaterial)=>{
+  const rules=materialRules[material.id];
+  if(!rules||!Object.prototype.hasOwnProperty.call(rules,id))return;
+  const reply=rules[id];
+  append([
+    {who:"沈妍",text:`[分享] ${material.title}`,material},
+    ...(reply?[{who:"对方" as const,text:reply}]:[]),
+  ]);
+  setPicker(false);
  };
- return <div className="wechat">
-  <aside><header><i>妍</i><span><b>沈妍</b><small>微信已登录</small></span></header><label><Search/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索联系人和消息"/></label>{visible.map(x=><button className={x.id===id?"active":""} onClick={()=>setId(x.id)} key={x.id}><i>{x.name[0]}</i><span><b>{x.name}</b><small>{x.preview}</small></span></button>)}</aside>
-  <main><header><b>{contact.name}</b><small>聊天记录</small></header><section>{messages.map((m,i)=><div key={i}>{m.time&&<time>{m.time}</time>}<article className={m.who==="沈妍"?"mine":""}><i>{m.who==="沈妍"?"妍":contact.name[0]}</i><p>{m.material?<><b style={{display:"block",fontSize:12,marginBottom:4}}>{m.material.kind}</b>{m.material.title}<small style={{display:"block",marginTop:5,opacity:.65}}>{m.material.url}</small></>:m.text}</p></article></div>)}</section>
-   <footer style={{display:"grid",gridTemplateColumns:"auto 1fr auto",gap:8,alignItems:"center",padding:"10px 12px"}}>
-    <button onClick={sendMaterial} disabled={!clipboard||id==="x"} title={clipboard?`发送：${clipboard.title}`:"先在论坛帖子里复制链接"} style={{height:36,padding:"0 10px",border:"1px solid #d0d0d0",borderRadius:6,background:"#fff",display:"flex",alignItems:"center",gap:5,cursor:clipboard&&id!=="x"?"pointer":"default",opacity:clipboard&&id!=="x"?1:.45}}><Link2 size={15}/>材料</button>
+
+ return <div className="wechat" style={{height:"100%",minHeight:0,overflow:"hidden"}}>
+  <aside style={{height:"100%",minHeight:0,overflowY:"auto"}}><header><i>妍</i><span><b>沈妍</b><small>微信已登录</small></span></header><label><Search/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索联系人和消息"/></label>{visible.map(x=><button className={x.id===id?"active":""} onClick={()=>setId(x.id)} key={x.id}><i>{x.name[0]}</i><span><b>{x.name}</b><small>{x.preview}</small></span></button>)}</aside>
+  <main style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}}>
+   <header style={{flex:"0 0 auto"}}><b>{contact.name}</b><small>聊天记录</small></header>
+   <section ref={scrollRef} style={{flex:"1 1 auto",minHeight:0,overflowY:"auto",overscrollBehavior:"contain"}}>{messages.map((m,i)=><div key={i}>{m.time&&<time>{m.time}</time>}<article className={m.who==="沈妍"?"mine":""}><i>{m.who==="沈妍"?"妍":contact.name[0]}</i><p>{m.material?<><b style={{display:"block",fontSize:12,marginBottom:4}}>{m.material.kind}</b>{m.material.title}<small style={{display:"block",marginTop:5,opacity:.65}}>{m.material.url}</small></>:m.text}</p></article></div>)}</section>
+
+   {picker&&<div style={{position:"absolute",left:12,right:12,bottom:62,zIndex:8,maxHeight:"42%",overflowY:"auto",padding:8,border:"1px solid #cfcfcf",borderRadius:9,background:"#fff",boxShadow:"0 10px 35px #0003"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 6px 8px"}}><b style={{fontSize:13}}>选择要发送的材料</b><button onClick={()=>setPicker(false)} style={{width:28,height:28,border:0,borderRadius:6,background:"#f2f2f2",display:"grid",placeItems:"center"}}><X size={14}/></button></div>
+    {sendable.map(m=><button key={m.id} onClick={()=>sendMaterial(m)} style={{width:"100%",display:"block",padding:"9px 10px",border:0,borderTop:"1px solid #eee",background:"#fff",textAlign:"left"}}><small style={{display:"block",color:"#999",marginBottom:3}}>{m.kind}</small><b style={{fontSize:13,fontWeight:500}}>{m.title}</b></button>)}
+   </div>}
+
+   <footer style={{flex:"0 0 auto",display:"grid",gridTemplateColumns:"auto 1fr auto",gap:8,alignItems:"center",padding:"10px 12px",background:"#f7f7f7",borderTop:"1px solid #ddd"}}>
+    {sendable.length>0?<button onClick={()=>setPicker(v=>!v)} disabled={id==="x"} title="选择要发送的材料" style={{height:36,padding:"0 10px",border:"1px solid #d0d0d0",borderRadius:6,background:"#fff",display:"flex",alignItems:"center",gap:5}}><Link2 size={15}/>材料{sendable.length>1?` ${sendable.length}`:""}</button>:<span style={{width:1}}/>}
     <form onSubmit={sendText} style={{display:"contents"}}><input disabled={id==="x"} value={draft} onChange={e=>setDraft(e.target.value)} placeholder={id==="x"?"这是你自己的对话":"将以沈妍账号发送"} style={{height:36,border:"1px solid #d0d0d0",borderRadius:6,padding:"0 10px",minWidth:0}}/><button disabled={id==="x"||!draft.trim()} style={{height:36,width:42,border:0,borderRadius:6,background:"#39a65a",color:"#fff",display:"grid",placeItems:"center",opacity:id!=="x"&&draft.trim()?1:.45}}><Send size={16}/></button></form>
-    {clipboard&&id!=="x"&&<small style={{gridColumn:"1 / -1",color:"#888",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>最近复制：{clipboard.title}</small>}
    </footer>
   </main>
  </div>;
