@@ -2,15 +2,24 @@ import {
   chats,
   history,
   posts as flowPosts,
-  privateEntries,
-  profile,
+  privateEntries as flowPrivateEntries,
+  profile as flowProfile,
 } from "./gameDataFlow";
 import type {Attachment,Post,PrivateEntry,Reply} from "./gameDataFlow";
 
 export type {Attachment,Post,PrivateEntry,Reply};
-export {chats,history,privateEntries,profile};
+export {chats,history};
 
 const reply=(user:string,time:string,text:string,role?:string):Reply=>({user,time,text,role});
+
+const dreamBase=flowPosts.find(post=>post.id==="20847")!;
+const dreamPost:Post={
+  ...dreamBase,
+  terms:(dreamBase.terms||[]).map(term=>term==="红色糖盒"?"红铁皮盒":term),
+  highlights:(dreamBase.highlights||[]).map(mark=>mark==="红色铁皮糖盒"?"红铁皮盒":mark),
+  body:dreamBase.body.map((text,index)=>index===2?text.replace("红色铁皮糖盒","红铁皮盒"):text),
+  replies:dreamBase.replies.map(item=>({...item,text:item.text.replace("红铁皮糖盒","红色盒子")})),
+};
 
 const cottonBase=flowPosts.find(post=>post.id==="33897")!;
 const cottonYard:Post={
@@ -50,7 +59,7 @@ const linNanReport:Post={
   ],
 };
 
-const patched=flowPosts.map(post=>post.id==="33897"?cottonYard:post.id==="09114"?linNanReport:post);
+const patched=flowPosts.map(post=>post.id==="33897"?cottonYard:post.id==="09114"?linNanReport:post.id==="20847"?dreamPost:post);
 
 const toRank=(date:string)=>{
   const full=date.match(/(20\d{2})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2}))?/);
@@ -63,3 +72,14 @@ const toRank=(date:string)=>{
 };
 
 export const posts:Post[]=[...patched].sort((a,b)=>toRank(a.date)-toRank(b.date));
+
+export const privateEntries:PrivateEntry[]=flowPrivateEntries.map(entry=>entry.id!=="p1"?entry:{
+  ...entry,
+  highlights:(entry.highlights||[]).map(mark=>mark==="红色铁皮糖盒"?"红铁皮盒":mark),
+  body:entry.body.map((text,index)=>index===0?text.replace("红色铁皮糖盒","红铁皮盒"):text),
+});
+
+export const profile={
+  ...flowProfile,
+  topics:flowProfile.topics.filter(id=>posts.some(post=>post.id===id&&post.author==="候鸟第七年")),
+};
