@@ -23,6 +23,8 @@ jobs:
           p=Path('app/page.tsx')
           s=p.read_text()
           s=s.replace('from "../content/gameDataFlow";', 'from "../content/gameDataFlowV2";')
+          s=s.replace('<dt>主题</dt><dd>8</dd>', '<dt>主题</dt><dd>{profile.topics.length}</dd>')
+          s=s.replace('<h3>公开主题（8） <small>按发布时间从早到晚</small></h3>', '<h3>公开主题（{profile.topics.length}） <small>按发布时间从早到晚</small></h3>')
           p.write_text(s)
           PY
       - name: Commit
@@ -30,5 +32,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/page.tsx
-          git diff --cached --quiet || git commit -m "Use refined forum clue flow"
+          git diff --cached --quiet || git commit -m "Keep profile topic counts accurate"
           git push
