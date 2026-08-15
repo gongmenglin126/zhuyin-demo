@@ -166,7 +166,7 @@ export default function InteractiveWechat({materials}:{materials:SharedMaterial[
    </div>}
 
    <footer style={{flex:"0 0 auto",display:"grid",gridTemplateColumns:"auto 1fr auto",gap:8,alignItems:"center",padding:"10px 12px",background:"#f7f7f7",borderTop:"1px solid #ddd"}}>
-    {sendable.length>0?<button onClick={()=>setPicker(v=>!v)} disabled={id==="x"} title="选择要发送的材料" style={{height:36,padding:"0 10px",border:"1px solid #d0d0d0",borderRadius:6,background:"#fff",display:"flex",alignItems:"center",gap:5}}><Link2 size={15}/>材料{sendable.length>1?` ${sendable.length}`:""}</button>:<span style={{width:1}}/>}
+    {sendable.length>0?<button onClick={()=>setPicker(v=>!v)} disabled={id==="x"} title="选择要发送的材料" style={{height:36,padding:"0 10px",border:"1px solid #d0d0d0",borderRadius:6,background:"#fff",display:"flex",alignItems:"center",gap:5}}><Link2 size={15}/>选择材料{sendable.length?` ${sendable.length}`:""}</button>:<span style={{width:1}}/>}
     <form onSubmit={sendText} style={{display:"contents"}}><input disabled={id==="x"} value={draft} onChange={e=>setDraft(e.target.value)} placeholder={id==="x"?"这是你自己的对话":"将以沈妍账号发送"} style={{height:36,border:"1px solid #d0d0d0",borderRadius:6,padding:"0 10px",minWidth:0}}/><button disabled={id==="x"||!draft.trim()} style={{height:36,width:42,border:0,borderRadius:6,background:"#39a65a",color:"#fff",display:"grid",placeItems:"center",opacity:id!=="x"&&draft.trim()?1:.45}}><Send size={16}/></button></form>
    </footer>
   </main>
