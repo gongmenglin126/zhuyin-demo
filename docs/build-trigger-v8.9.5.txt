@@ -1,0 +1,2 @@
+v8.9.5
+Fix WeChat composer clipping and remove tutorial-like archive notes.
