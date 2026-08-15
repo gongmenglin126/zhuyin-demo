@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 import {FormEvent,ReactNode,useMemo,useState} from "react";
 import {ArrowLeft,ChevronRight,Clock3,ExternalLink,Globe2,History as HistoryIcon,Home,LockKeyhole,Maximize2,MessageCircle,Minimize2,NotebookPen,RefreshCw,Search,Wifi,X} from "lucide-react";
-import {chats,history,Post,posts,privateEntries,profile} from "../content/gameDataFlow";
+import {chats,history,Post,posts,privateEntries,profile} from "../content/gameDataFlowV2";
 
 type App="browser"|"wechat"|"notes"|"verse";
 type Route={kind:"home"}|{kind:"post",id:string}|{kind:"profile"}|{kind:"user",name:string}|{kind:"private"}|{kind:"history"}|{kind:"search",q:string};
