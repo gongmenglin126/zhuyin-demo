@@ -9,7 +9,7 @@ export default function LocalVault({unlocked,onUnlock,openLink}:{unlocked:boolea
 
   const submit=(e:FormEvent)=>{
     e.preventDefault();
-    if(pwd==="红盒子"){
+    if(pwd==="红铁皮盒"){
       setError("");
       onUnlock();
       return;
@@ -37,17 +37,17 @@ export default function LocalVault({unlocked,onUnlock,openLink}:{unlocked:boolea
       <h2 style={styles.title}>需要访问口令</h2>
       <div style={styles.hint}>
         <span><b>口令提示</b>　打开前会卡一下</span>
-        <small>3 个汉字</small>
+        <small>4 个汉字</small>
       </div>
       <form onSubmit={submit} style={styles.form}>
         <input
           autoFocus
           autoComplete="off"
-          aria-label="三个字访问口令"
+          aria-label="四个字访问口令"
           value={pwd}
-          onChange={e=>{setPwd([...e.target.value.replace(/[，。、“”‘’\s]/g,"")].slice(0,3).join(""));setError("")}}
+          onChange={e=>{setPwd([...e.target.value.replace(/[，。、“”‘’\s]/g,"")].slice(0,4).join(""));setError("")}}
           style={styles.input}
-          placeholder="•••"
+          placeholder="••••"
         />
         <button style={styles.primary}>解锁</button>
       </form>
@@ -65,7 +65,7 @@ const styles:{[key:string]:React.CSSProperties}={
   copy:{margin:"-10px 0 22px",color:"#77736c",fontSize:"13px"},
   hint:{display:"grid",gap:"7px",margin:"0 0 20px",padding:"14px 16px",border:"1px solid #ded9cf",borderRadius:"9px",background:"#f1eee8",textAlign:"left",color:"#5e5a53",fontSize:"12px",lineHeight:1.65},
   form:{display:"grid",gridTemplateColumns:"1fr 92px",gap:"9px"},
-  input:{minWidth:0,padding:"12px 14px",border:"1px solid #bdb8ad",borderRadius:"7px",background:"#fff",outline:"none",fontSize:"16px",letterSpacing:".45em",textAlign:"center",color:"#252925"},
+  input:{minWidth:0,padding:"12px 14px",border:"1px solid #bdb8ad",borderRadius:"7px",background:"#fff",outline:"none",fontSize:"16px",letterSpacing:".35em",textAlign:"center",color:"#252925"},
   primary:{minHeight:"43px",display:"inline-flex",alignItems:"center",justifyContent:"center",gap:"7px",padding:"0 18px",border:0,borderRadius:"7px",background:"#3d554d",color:"#fff",fontSize:"13px",cursor:"pointer"},
   error:{display:"block",marginTop:"12px",color:"#9c4037",fontSize:"11px",fontStyle:"normal"},
   address:{margin:"0 0 16px",padding:"13px 14px",border:"1px solid #ddd8ce",borderRadius:"8px",background:"#f2efe9",color:"#4b5e79",font:"12px ui-monospace,SFMono-Regular,Consolas,monospace"}
