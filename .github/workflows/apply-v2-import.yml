@@ -39,12 +39,18 @@ jobs:
           s=s.replace('<small>8 个汉字</small><button>进入</button>', '<small>2 个汉字</small><button>进入</button>')
 
           old_state=' const [intro,setIntro]=useState(true),[app,setApp]=useState<App|null>(null),[max,setMax]=useState(true),[wxRead,setWxRead]=useState(false),[privateUnlocked,setPrivateUnlocked]=useState(false),[noteUnlocked,setNoteUnlocked]=useState(false);'
-          if old_state in s and 'const [clipboard,setClipboard]' not in s:
-              s=s.replace(old_state,old_state+'\n const [clipboard,setClipboard]=useState<SharedMaterial|null>(null);',1)
+          old_clip=' const [clipboard,setClipboard]=useState<SharedMaterial|null>(null);'
+          new_materials=' const [materials,setMaterials]=useState<SharedMaterial[]>([]);\n const rememberMaterial=(m:SharedMaterial)=>setMaterials(prev=>prev.some(x=>x.id===m.id)?prev:[...prev,m]);'
+          if old_clip in s:
+              s=s.replace(old_clip,new_materials,1)
+          elif old_state in s and 'const [materials,setMaterials]' not in s:
+              s=s.replace(old_state,old_state+'\n'+new_materials,1)
 
-          s=s.replace('<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked}/>', '<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked} onCopyMaterial={setClipboard}/>',1)
-          s=s.replace('app==="wechat"?<Wechat/>', 'app==="wechat"?<InteractiveWechat clipboard={clipboard}/>',1)
-          s=s.replace(':<VersePage/>', ':<VersePage onCopyMaterial={setClipboard}/>',1)
+          s=s.replace('<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked}/>', '<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked} onCopyMaterial={rememberMaterial}/>',1)
+          s=s.replace('onCopyMaterial={setClipboard}', 'onCopyMaterial={rememberMaterial}')
+          s=s.replace('app==="wechat"?<Wechat/>', 'app==="wechat"?<InteractiveWechat materials={materials}/>',1)
+          s=s.replace('<InteractiveWechat clipboard={clipboard}/>', '<InteractiveWechat materials={materials}/>',1)
+          s=s.replace(':<VersePage/>', ':<VersePage onCopyMaterial={rememberMaterial}/>',1)
           s=s.replace('function Browser({privateUnlocked,setPrivateUnlocked}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void}){', 'function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void;onCopyMaterial:(m:SharedMaterial)=>void}){',1)
           s=s.replace('<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser}/>', '<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser} onCopyMaterial={onCopyMaterial}/>',1)
           s=s.replace('<Private unlocked={privateUnlocked} onUnlock={()=>setPrivateUnlocked(true)}/>', '<Private unlocked={privateUnlocked} onUnlock={()=>setPrivateUnlocked(true)} onCopyMaterial={onCopyMaterial}/>',1)
@@ -73,5 +79,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/page.tsx
-          git diff --cached --quiet || git commit -m "Apply idempotent layered investigation patch"
+          git diff --cached --quiet || git commit -m "Persist selectable investigation materials"
           git push
