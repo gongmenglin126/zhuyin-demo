@@ -21,20 +21,35 @@ const dreamPost:Post={
   replies:dreamBase.replies.map(item=>({...item,text:item.text.replace("红铁皮糖盒","红色盒子")})),
 };
 
+const redBoxBase=flowPosts.find(post=>post.id==="30177")!;
+const redBoxPost:Post={
+  ...redBoxBase,
+  terms:[...(redBoxBase.terms||[]),"红铁皮盒","一格胶片","旧厂房"],
+  highlights:[...new Set([...(redBoxBase.highlights||[]),"红铁皮盒","打开前会卡一下"])],
+  replies:[
+    ...redBoxBase.replies,
+    reply("一格胶片","23:18","这种红色套盖铁皮盒以前太常见了，地方糕点、茶叶、糖果都装，光看颜色认不出牌子。我上个月拍岚州一处旧厂房时，窗边也有个形制很像的。"),
+    reply("候鸟第七年","23:31","有侧面或者盒盖边缘吗？我想确认是不是套盖。","楼主"),
+    reply("一格胶片","23:44","原图里只能看到一角，我主要拍窗和走廊。那组照片我发过站里，没特写盒子。"),
+  ],
+};
+
 const cottonBase=flowPosts.find(post=>post.id==="33897")!;
 const cottonYard:Post={
   ...cottonBase,
   author:"一格胶片",
   date:"2026-07-09 22:14",
   excerpt:"岚棉三厂旧家属区的一组窗户和走廊照片。评论里有老住户补充旧房型。",
-  terms:["岚棉三厂","旧址","家属区","4栋","窗户","走廊","2004","走失","姓林","九岁"],
+  terms:["岚棉三厂","旧址","家属区","4栋","窗户","走廊","红铁皮盒","2004","走失","姓林","九岁"],
   highlights:["岚棉三厂","4栋","2004 年","孩子走失","九岁","姓林"],
   body:[
     "上周路过岚棉三厂旧家属区，拍了几张还没封死的外墙和窗户。主要想留老单位房改造前后的样子，不做灵异讨论。",
-    "第二组是4栋东侧。能看见走廊窗和厨房外墙，部分门窗应该后来换过。",
+    "第二组是4栋东侧。能看见走廊窗和厨房外墙，部分门窗应该后来换过。第二张窗边还压着一个红色盒子，看着像旧住户留下的杂物。",
     "如果有以前住过这里的人，欢迎补充哪几年改过窗、厨房门和公共走廊。"
   ],
   replies:[
+    reply("胶卷过期","22:37","第二张右下角那个红色铁皮盒挺显眼，是你摆的吗？"),
+    reply("一格胶片","22:49","不是，隔着窗拍到的。我拍的是窗和房型，没进去动东西。","楼主"),
     reply("三厂老住户","07-10 09:18","4栋我小时候住过。你第二张应该就是东侧那排，厨房门确实往走廊开。"),
     reply("候鸟第七年","07-10 09:42","请问这种门和窗大概是哪几年改的？我最近在核一个老房型。"),
     reply("三厂老住户","07-10 10:03","具体年份记不清，只记得2004年这边出过一次孩子走失，我妈当年还帮着贴过寻人启事。"),
@@ -59,7 +74,7 @@ const linNanReport:Post={
   ],
 };
 
-const patched=flowPosts.map(post=>post.id==="33897"?cottonYard:post.id==="09114"?linNanReport:post.id==="20847"?dreamPost:post);
+const patched=flowPosts.map(post=>post.id==="33897"?cottonYard:post.id==="09114"?linNanReport:post.id==="20847"?dreamPost:post.id==="30177"?redBoxPost:post);
 
 const toRank=(date:string)=>{
   const full=date.match(/(20\d{2})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2}))?/);
