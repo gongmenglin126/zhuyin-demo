@@ -6,3 +6,4 @@
 - That archive exposes 舍 / 客 / 形 / 名 / 忆 / 二客 clues and can itself be copied as material.
 - Forum threads can copy links; WeChat can send the most recently copied material to contacts.
 - Added interactive chats for 余晴、周川、梁茵 with material-specific and keyword-sensitive replies.
+- The source-patching workflow is idempotent so repeated builds do not duplicate imports or mounts.
