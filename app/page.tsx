@@ -6,8 +6,6 @@ import {chats,history,Post,posts,privateEntries,profile} from "../content/gameDa
 import LocalVault from "./LocalVault";
 import InteractiveWechat,{SharedMaterial} from "./InteractiveWechat";
 import DeepArchiveGate from "./DeepArchiveGate";
-import InteractiveWechat,{SharedMaterial} from "./InteractiveWechat";
-import InteractiveWechat,{SharedMaterial} from "./InteractiveWechat";
 
 type App="browser"|"wechat"|"notes"|"verse";
 type Route={kind:"home"}|{kind:"post",id:string}|{kind:"profile"}|{kind:"user",name:string}|{kind:"private"}|{kind:"history"}|{kind:"search",q:string};
