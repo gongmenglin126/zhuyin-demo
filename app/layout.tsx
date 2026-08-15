@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./game.css";
+import "./game-fixes.css";
 
 export const metadata: Metadata = {
   title: "烛阴旧闻：第一阶段试玩",
