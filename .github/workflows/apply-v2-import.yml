@@ -26,6 +26,7 @@ jobs:
           s=s.replace('import LocalVault from "./LocalVault";', 'import LocalVault from "./LocalVault";\nimport InteractiveWechat,{SharedMaterial} from "./InteractiveWechat";')
           s=s.replace('<dt>主题</dt><dd>8</dd>', '<dt>主题</dt><dd>{profile.topics.length}</dd>')
           s=s.replace('<h3>公开主题（8） <small>按发布时间从早到晚</small></h3>', '<h3>公开主题（{profile.topics.length}） <small>按发布时间从早到晚</small></h3>')
+          s=s.replace('<b>私密主题（3）</b>', '<b>私密主题（{investigationPrivateEntries.length}）</b>')
           s=s.replace('if(pwd==="身非我身名非我名")', 'if(pwd==="林楠")')
           s=s.replace('aria-label="八字访问口令"', 'aria-label="两个字访问口令"')
           s=s.replace('Array.from({length:8}', 'Array.from({length:2}')
