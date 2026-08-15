@@ -17,7 +17,8 @@ const investigationPrivateEntries=privateEntries;
 export default function Page(){
  const [stage,setStage]=useState<"title"|"login"|"desktop">("title");
  const [intro,setIntro]=useState(true),[app,setApp]=useState<App|null>(null),[max,setMax]=useState(true),[wxRead,setWxRead]=useState(false),[privateUnlocked,setPrivateUnlocked]=useState(false),[noteUnlocked,setNoteUnlocked]=useState(false);
- const [clipboard,setClipboard]=useState<SharedMaterial|null>(null);
+ const [materials,setMaterials]=useState<SharedMaterial[]>([]);
+ const rememberMaterial=(m:SharedMaterial)=>setMaterials(prev=>prev.some(x=>x.id===m.id)?prev:[...prev,m]);
  if(stage==="title")return <main className="title"><section><small>一段发生在朋友电脑里的调查</small><h1>烛阴旧闻</h1><p>沈妍没有赴约。<br/>至少在今天中午时，你还只把它当成爽约。</p><button onClick={()=>setStage("login")}>进入公寓 <ChevronRight/></button></section></main>;
  if(stage==="login")return <main className="login"><div className="clock"><b>19:06</b><span>10月17日　星期六</span></div><section><div className="avatar">妍</div><h2>沈妍</h2><button className="password" onClick={()=>setStage("desktop")}><span>••••••••</span><ChevronRight/></button><p>你和沈妍从小学低年级就认识。你们互为紧急联系人，也一直留着彼此的备用门锁密码。</p></section></main>;
  const open=(x:App)=>{setApp(x);setMax(x==="browser"||x==="verse");if(x==="wechat")setWxRead(true)};
@@ -25,7 +26,7 @@ export default function Page(){
  return <main className="desktop"><header className="sys"><div><b>●</b><strong>{appTitle}</strong><span>文件</span><span>编辑</span></div><div><Wifi/><span>80%</span><span>10月17日 周六 19:06</span></div></header>
   <div className="shortcuts"><Icon label="浏览器" tone="blue" icon={<Globe2/>} onClick={()=>open("browser")}/><Icon label="微信" tone="green" icon={<MessageCircle/>} badge={!wxRead} onClick={()=>open("wechat")}/><Icon label="本地资料" tone="amber" icon={<NotebookPen/>} onClick={()=>open("notes")}/></div>
   {intro&&<div className="overlay"><section className="intro"><small><Clock3/> 2026年10月17日　19:06</small><h2>沈妍没有来。</h2><p>你们约好今天中午见面。她没有出现，电话关机，微信也没有回复。</p><p>傍晚，你用她留给你的备用门锁密码进了公寓。屋里没人，电脑没有关机，微信和浏览器仍保持登录。</p><blockquote><b>徐宁　18:37</b>我去你家看看。看到回我。</blockquote><em>现在还没有理由把这件事说成犯罪。你只是想先确认，她昨天离开后原本打算去哪里。</em><button onClick={()=>setIntro(false)}>查看电脑</button></section></div>}
-  {app&&<Window title={appTitle} max={max} allowMax={app==="browser"||app==="verse"} close={()=>setApp(null)} toggle={()=>setMax(!max)}>{app==="browser"?<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked} onCopyMaterial={setClipboard}/>:app==="wechat"?<InteractiveWechat clipboard={clipboard}/>:app==="notes"?<LocalVault unlocked={noteUnlocked} onUnlock={()=>setNoteUnlocked(true)} openLink={()=>open("verse")}/>:<VersePage onCopyMaterial={setClipboard}/>}</Window>}
+  {app&&<Window title={appTitle} max={max} allowMax={app==="browser"||app==="verse"} close={()=>setApp(null)} toggle={()=>setMax(!max)}>{app==="browser"?<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked} onCopyMaterial={rememberMaterial}/>:app==="wechat"?<InteractiveWechat materials={materials}/>:app==="notes"?<LocalVault unlocked={noteUnlocked} onUnlock={()=>setNoteUnlocked(true)} openLink={()=>open("verse")}/>:<VersePage onCopyMaterial={rememberMaterial}/>}</Window>}
   <nav className="dock"><button onClick={()=>open("browser")}><i className="blue"><Globe2/></i></button><button onClick={()=>open("wechat")}><i className="green"><MessageCircle/>{!wxRead&&<b>1</b>}</i></button><button onClick={()=>open("notes")}><i className="amber"><NotebookPen/></i></button></nav>
  </main>
 }
