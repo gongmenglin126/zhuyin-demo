@@ -1,0 +1,34 @@
+name: Apply Refined Forum Flow
+
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths:
+      - '.github/workflows/apply-v2-import.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - name: Switch v8 page to refined forum data
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/page.tsx')
+          s=p.read_text()
+          s=s.replace('from "../content/gameDataFlow";', 'from "../content/gameDataFlowV2";')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx
+          git diff --cached --quiet || git commit -m "Use refined forum clue flow"
+          git push
