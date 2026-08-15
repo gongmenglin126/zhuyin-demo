@@ -25,6 +25,11 @@ jobs:
           s=s.replace('from "../content/gameDataFlow";', 'from "../content/gameDataFlowV2";')
           s=s.replace('<dt>主题</dt><dd>8</dd>', '<dt>主题</dt><dd>{profile.topics.length}</dd>')
           s=s.replace('<h3>公开主题（8） <small>按发布时间从早到晚</small></h3>', '<h3>公开主题（{profile.topics.length}） <small>按发布时间从早到晚</small></h3>')
+          s=s.replace('if(pwd==="身非我身名非我名")', 'if(pwd==="林楠")')
+          s=s.replace('slice(0,8)', 'slice(0,2)')
+          s=s.replace('aria-label="八字访问口令"', 'aria-label="两个字访问口令"')
+          s=s.replace('Array.from({length:8}', 'Array.from({length:2}')
+          s=s.replace('<small>8 个汉字</small><button>进入</button>', '<small>2 个汉字</small><button>进入</button>')
           p.write_text(s)
           PY
       - name: Commit
@@ -32,5 +37,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/page.tsx
-          git diff --cached --quiet || git commit -m "Keep profile topic counts accurate"
+          git diff --cached --quiet || git commit -m "Require Lin Nan clue for private topics"
           git push
