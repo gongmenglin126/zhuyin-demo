@@ -123,12 +123,28 @@ const textReply=(contact:string,text:string):string|null=>{
 export default function InteractiveWechat({materials}:{materials:SharedMaterial[]}){
  const [id,setId]=useState("x"),[q,setQ]=useState(""),[draft,setDraft]=useState(""),[picker,setPicker]=useState(false);
  const [extra,setExtra]=useState<Record<string,Msg[]>>({});
+ const [introduced,setIntroduced]=useState<Record<string,boolean>>({});
+ const [typing,setTyping]=useState<Record<string,boolean>>({});
  const scrollRef=useRef<HTMLElement|null>(null);
  const contact=contacts.find(x=>x.id===id)!;
  const visible=contacts.filter(x=>(x.name+x.preview).includes(q));
  const messages=useMemo(()=>[...contact.messages,...(extra[id]||[])],[contact,extra,id]);
  const sendable=useMemo(()=>materials.filter(m=>Object.prototype.hasOwnProperty.call(materialRules[m.id]||{},id)),[materials,id]);
- const append=(items:Msg[])=>setExtra(prev=>({...prev,[id]:[...(prev[id]||[]),...items]}));
+ const appendFor=(contactId:string,items:Msg[])=>setExtra(prev=>({...prev,[contactId]:[...(prev[contactId]||[]),...items]}));
+ const introFor=(contactId:string):Msg[]=>{
+  if(contactId==="x"||introduced[contactId])return [];
+  setIntroduced(prev=>({...prev,[contactId]:true}));
+  return [{who:"沈妍",text:"你好，我是徐宁，沈妍的朋友。她今天一直联系不上，我现在在她家，用的是她电脑上的微信。想问你几件她最近在查的事。"}];
+ };
+ const delayedReply=(contactId:string,reply:string|null)=>{
+  if(!reply)return;
+  setTyping(prev=>({...prev,[contactId]:true}));
+  const delay=Math.min(1500,850+reply.length*7);
+  window.setTimeout(()=>{
+   appendFor(contactId,[{who:"对方",text:reply}]);
+   setTyping(prev=>({...prev,[contactId]:false}));
+  },delay);
+ };
 
  useEffect(()=>{
   const el=scrollRef.current;
@@ -139,25 +155,26 @@ export default function InteractiveWechat({materials}:{materials:SharedMaterial[
  const sendText=(e:FormEvent)=>{
   e.preventDefault();
   const text=draft.trim(); if(!text||id==="x")return;
-  const reply=textReply(id,text);
-  append([{who:"沈妍",text},...(reply?[{who:"对方" as const,text:reply}]:[])]);
+  const contactId=id;
+  const reply=textReply(contactId,text);
+  appendFor(contactId,[...introFor(contactId),{who:"沈妍",text}]);
+  delayedReply(contactId,reply);
   setDraft("");
  };
  const sendMaterial=(material:SharedMaterial)=>{
   const rules=materialRules[material.id];
   if(!rules||!Object.prototype.hasOwnProperty.call(rules,id))return;
-  const reply=rules[id];
-  append([
-    {who:"沈妍",text:`[分享] ${material.title}`,material},
-    ...(reply?[{who:"对方" as const,text:reply}]:[]),
-  ]);
+  const contactId=id;
+  const reply=rules[contactId];
+  appendFor(contactId,[...introFor(contactId),{who:"沈妍",text:`[分享] ${material.title}`,material}]);
+  delayedReply(contactId,reply);
   setPicker(false);
  };
 
  return <div className="wechat" style={{height:"calc(100% - 39px)",minHeight:0,overflow:"hidden"}}>
   <aside style={{height:"100%",minHeight:0,overflowY:"auto"}}><header><i>妍</i><span><b>沈妍</b><small>微信已登录</small></span></header><label><Search/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索联系人和消息"/></label>{visible.map(x=><button className={x.id===id?"active":""} onClick={()=>setId(x.id)} key={x.id}><i>{x.name[0]}</i><span><b>{x.name}</b><small>{x.preview}</small></span></button>)}</aside>
   <main style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}}>
-   <header style={{flex:"0 0 auto"}}><b>{contact.name}</b><small>聊天记录</small></header>
+   <header style={{flex:"0 0 auto"}}><b>{contact.name}</b><small>{typing[id]?"正在输入…":"聊天记录"}</small></header>
    <section ref={scrollRef} style={{flex:"1 1 auto",minHeight:0,overflowY:"auto",overscrollBehavior:"contain"}}>{messages.map((m,i)=><div key={i}>{m.time&&<time>{m.time}</time>}<article className={m.who==="沈妍"?"mine":""}><i>{m.who==="沈妍"?"妍":contact.name[0]}</i><p>{m.material?<><b style={{display:"block",fontSize:12,marginBottom:4}}>{m.material.kind}</b>{m.material.title}<small style={{display:"block",marginTop:5,opacity:.65}}>{m.material.url}</small></>:m.text}</p></article></div>)}</section>
 
    {picker&&<div style={{position:"absolute",left:12,right:12,bottom:76,zIndex:8,maxHeight:"42%",overflowY:"auto",padding:8,border:"1px solid #cfcfcf",borderRadius:9,background:"#fff",boxShadow:"0 10px 35px #0003"}}>
