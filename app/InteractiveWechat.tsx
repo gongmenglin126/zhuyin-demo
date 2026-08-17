@@ -84,7 +84,7 @@ const materialReply=(contactId:string,materialId:string):ReplyPart[]|null=>{
  }
  if(contactId==="ly"&&materialId==="sanmen"){
   const hasAnomaly=received("ly","private-p3")||received("ly","14692")||received("ly","09831");
-  if(hasAnomaly)return [{text:"我看不懂。"},{text:"但“名可夺，忆可乱”这句看着很不舒服。"},{text:"跟我小时候那些事放一起更不舒服。"}];
+  if(hasAnomaly)return [{text:"我看不懂。"},{text:"但“忆可乱”这几个字看着很不舒服。"},{text:"跟我小时候那些事放一起更不舒服。"}];
   return [{text:"看不懂。"},{text:"你从哪找到的？"}];
  }
  return materialRules[materialId]?.[contactId]??null;
@@ -96,9 +96,9 @@ const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
   const hasPair=received("zc","10731")||(received("zc","09114")&&received("zc","09831"));
   return [{id:"zc-sanmen-body",text:"你觉得“舍”和“客”指什么？",reply:[{text:"硬按字面猜的话，“舍”像住的地方。"},{text:"如果前一句真是“身为舍，魂为客”，那舍就是身体，客就是……住进去的那个东西。"},{text:"我只是按中文意思说，不代表这东西真在讲这个。"}],next:[{id:"zc-sanmen-two",text:"那“二客相契，两门相应”呢？",reply:hasPair?[{text:"两个客，两个门。"},{text:"跟你前面那两个人放一起，我第一反应会是两边一起发生了什么。"},{text:"但我现在也只能到这。"}]:[{text:"两个客、两个门，大概至少不是只说一个人。"},{text:"再往下我没东西能对。"}]}]}];
  }
- if(contactId==="ly"&&materialId==="sanmen")return [{id:"ly-sanmen-memory",text:"“名可夺，忆可乱”这句你怎么看？",reply:[{text:"我不知道它原来想说什么。"},{text:"但“名”这个字让我不舒服。"},{text:"我小时候有一阵，别人喊我名字的时候，我真的会觉得他们叫错人了。"},{text:"现在想起来还是怪。"}]}];
+ if(contactId==="ly"&&materialId==="sanmen")return [{id:"ly-sanmen-memory",text:"“忆可乱”这句你怎么看？",reply:[{text:"我不知道它原来想说什么。"},{text:"我小时候有一阵，别人喊我名字的时候，我真的会觉得他们叫错人了。"},{text:"现在想起来还是怪。"}]}];
  if(contactId==="zc"&&materialId==="verse")return [{id:"zc-verse-source",text:"所以黑底那张和《三门疏》不是一份？",reply:[{text:"至少那篇旧帖里的人是这么判断的。"},{text:"文件编号和扫描方式都不一样。"},{text:"后来为什么被塞进一个包里，就没人说得清。"}]}];
- if(contactId==="zc"&&materialId==="23109")return [{id:"zc-ritual-fragment",text:"“赤烛照舍，黄符定名”像什么？",reply:[{text:"不知道。"},{text:"但这句不像网友临时编的，跟图里的摆法是一起的。"},{text:"“定名”听着像他们自己固定用的词。"}]}];
+ if(contactId==="zc"&&materialId==="23109")return [{id:"zc-ritual-fragment",text:"“赤烛引客，黄符镇舍”像什么？",reply:[{text:"不知道。"},{text:"但这句不像网友临时编的，跟图里的摆法是一起的。"},{text:"“镇舍”听着像他们自己固定用的词。"}]}];
  if(contactId==="zc"&&materialId==="27614"){
   const hasBothReports=received("zc","09114")&&received("zc","09831");
   return [{id:"zc-admin-repeat",text:"但我刚才查的几篇里都有这个号。",reply:hasBothReports?[{text:"等等。"},{text:"你前面发我的那两条旧报，也是它恢复的？"},{text:"……这么放一起确实挺巧。"}]:[{text:"哪几篇？"},{text:"你把链接留着，我也翻翻。"}]}];
