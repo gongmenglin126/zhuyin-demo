@@ -1,0 +1,106 @@
+name: Sync Material Button State
+
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths: ['.github/workflows/apply-v8.9.11-material-state-sync.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - name: Sync material UI with parent material list
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace(path, old, new):
+              p = Path(path)
+              s = p.read_text()
+              if old not in s:
+                  raise SystemExit(f'pattern not found in {path}: {old[:90]!r}')
+              p.write_text(s.replace(old, new, 1))
+
+          # page.tsx: expose the parent materials state to every material-adding surface.
+          replace('app/page.tsx',
+            'app==="browser"?<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked} onCopyMaterial={rememberMaterial} initialPostId={wxPost} onInitialPostConsumed={()=>setWxPost(null)}/>',
+            'app==="browser"?<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked} onCopyMaterial={rememberMaterial} hasMaterial={id=>materials.some(m=>m.id===id)} initialPostId={wxPost} onInitialPostConsumed={()=>setWxPost(null)}/>'
+          )
+          replace('app/page.tsx',
+            ':<VersePage onCopyMaterial={rememberMaterial}/>}</Window>}',
+            ':<VersePage onCopyMaterial={rememberMaterial} hasMaterial={id=>materials.some(m=>m.id===id)}/>}</Window>}'
+          )
+          replace('app/page.tsx',
+            'function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial,initialPostId,onInitialPostConsumed}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void;onCopyMaterial:(m:SharedMaterial)=>void;initialPostId:string|null;onInitialPostConsumed:()=>void}){',
+            'function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial,hasMaterial,initialPostId,onInitialPostConsumed}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void;onCopyMaterial:(m:SharedMaterial)=>void;hasMaterial:(id:string)=>boolean;initialPostId:string|null;onInitialPostConsumed:()=>void}){'
+          )
+          replace('app/page.tsx',
+            '<PrivateArea entries={investigationPrivateEntries} unlocked={privateUnlocked} onUnlock={()=>setPrivateUnlocked(true)} onCopyMaterial={onCopyMaterial}/>',
+            '<PrivateArea entries={investigationPrivateEntries} unlocked={privateUnlocked} onUnlock={()=>setPrivateUnlocked(true)} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>'
+          )
+          replace('app/page.tsx',
+            'function VersePage({onCopyMaterial}:{onCopyMaterial:(m:SharedMaterial)=>void}){const [added,setAdded]=useState(false);return <main className="verse-page">',
+            'function VersePage({onCopyMaterial,hasMaterial}:{onCopyMaterial:(m:SharedMaterial)=>void;hasMaterial:(id:string)=>boolean}){const added=hasMaterial("verse");return <main className="verse-page">'
+          )
+          replace('app/page.tsx',
+            'onClick={()=>{onCopyMaterial({id:"verse",title:"身非我身，名非我名",kind:"手工抄录",url:"https://www.zhuyinwen.cn/archive/cache/baishesong-1986.html"});setAdded(true)}}',
+            'disabled={added} onClick={()=>onCopyMaterial({id:"verse",title:"身非我身，名非我名",kind:"手工抄录",url:"https://www.zhuyinwen.cn/archive/cache/baishesong-1986.html"})}'
+          )
+
+          # PrivateArea: derive state from parent instead of a local flag that resets.
+          replace('app/PrivateArea.tsx',
+            ' onCopyMaterial:(m:SharedMaterial)=>void;\n}){',
+            ' onCopyMaterial:(m:SharedMaterial)=>void;\n hasMaterial:(id:string)=>boolean;\n}){'
+          )
+          replace('app/PrivateArea.tsx',
+            'export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial}:{',
+            'export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial,hasMaterial}:{'
+          )
+          replace('app/PrivateArea.tsx',
+            ' const [shared,setShared]=useState(false);\n',
+            ''
+          )
+          replace('app/PrivateArea.tsx',
+            'onClick={()=>{setId(entry.id);setShared(false)}}',
+            'onClick={()=>setId(entry.id)}'
+          )
+          replace('app/PrivateArea.tsx',
+            ' });setShared(true)};',
+            ' });};'
+          )
+          replace('app/PrivateArea.tsx',
+            '<button onClick={()=>{setId(null);setShared(false)}} style={s.back}>',
+            '<button onClick={()=>setId(null)} style={s.back}>'
+          )
+          replace('app/PrivateArea.tsx',
+            '<button onClick={share} style={s.share}><Link2 size={14}/>{shared?"已添加":"添加到材料"}</button>',
+            '<button disabled={hasMaterial(`private-${active.id}`)} onClick={share} style={{...s.share,opacity:hasMaterial(`private-${active.id}`)?.55:1,cursor:hasMaterial(`private-${active.id}`)?"default":"pointer"}}><Link2 size={14}/>{hasMaterial(`private-${active.id}`)?"已添加":"添加到材料"}</button>'
+          )
+          replace('app/PrivateArea.tsx',
+            '<DeepArchiveGate onCopyMaterial={onCopyMaterial}/>',
+            '<DeepArchiveGate onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>'
+          )
+
+          # Deep archive: sanmen button reflects actual global material state.
+          replace('app/DeepArchiveGate.tsx',
+            'export default function DeepArchiveGate({onCopyMaterial}:{onCopyMaterial:(m:SharedMaterial)=>void}){',
+            'export default function DeepArchiveGate({onCopyMaterial,hasMaterial}:{onCopyMaterial:(m:SharedMaterial)=>void;hasMaterial:(id:string)=>boolean}){'
+          )
+          replace('app/DeepArchiveGate.tsx',
+            '    <button onClick={()=>onCopyMaterial({id:"sanmen",title:"《三门疏》残页恢复记录",kind:"本地附件",url:"file:///Users/shenyan/Documents/archive_0712.zip"})} style={{display:"inline-flex",alignItems:"center",gap:6,marginTop:14,border:"1px solid #b8afa5",background:"#fff",borderRadius:6,padding:"8px 11px",fontSize:12,cursor:"pointer"}}><Link2 size={14}/>添加到材料</button>',
+            '    <button disabled={hasMaterial("sanmen")} onClick={()=>onCopyMaterial({id:"sanmen",title:"《三门疏》残页恢复记录",kind:"本地附件",url:"file:///Users/shenyan/Documents/archive_0712.zip"})} style={{display:"inline-flex",alignItems:"center",gap:6,marginTop:14,border:"1px solid #b8afa5",background:"#fff",borderRadius:6,padding:"8px 11px",fontSize:12,cursor:hasMaterial("sanmen")?"default":"pointer",opacity:hasMaterial("sanmen")?.55:1}}><Link2 size={14}/>{hasMaterial("sanmen")?"已添加":"添加到材料"}</button>'
+          )
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx app/PrivateArea.tsx app/DeepArchiveGate.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Keep material buttons in sync with collected state"
+          git push
