@@ -1,0 +1,28 @@
+name: Apply v9.0.1 Search Leak Fix
+
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths:
+      - '.github/scripts/apply_v901_search_leak_fix.py'
+      - '.github/workflows/apply-v9.0.1-search-leak.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - run: python .github/scripts/apply_v901_search_leak_fix.py
+      - name: Commit source changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Prevent account searches from leaking unrelated post bodies"
+          git push origin HEAD:agent/v8-forum-gameplay-rework
