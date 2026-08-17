@@ -39,6 +39,7 @@ export default function LocalVault({unlocked,onUnlock,openLink}:{unlocked:boolea
       <h2 style={styles.title}>需要访问口令</h2>
       <div style={styles.hint}>
         <span><b>口令提示</b>　打开前会卡一下</span>
+        <small>4 个汉字</small>
       </div>
       <form onSubmit={submit} style={styles.form}>
         <input
