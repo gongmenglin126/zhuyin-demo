@@ -102,19 +102,19 @@ const traumaCase:Post={...traumaBase,replies:[reply("营养科路过","18:52","�
 const adminAccountPost:Post={
  id:"27614",title:"旧档员-03到底是一个人还是值班号？",author:"西楼",date:"2024-02-18 01:26",board:"站务区",views:3271,hidden:true,
  excerpt:"旧档整理账号半夜也在移动帖子，说话风格还不太一样。这个号到底几个人在用？",
- terms:["旧档员-03","值班号","旧档账号验证","旧版验证","登录"],highlights:["旧档员-03","多人轮用","旧档账号验证"],
- body:[
-  "纯好奇。旧档员-03这个号经常凌晨两三点还在移动旧主题，而且有时候回复特别书面，有时候就一句话。我一直以为是机器人，后来又见它正常回人。",
-  "站务以前说过这是值班账号，但我没找到更详细的说明。它到底是一个人、几个人轮用，还是自动任务和真人混着用？"
- ],
- replies:[
-  reply("站务","01:44","多人轮用。旧档恢复也有自动任务，所以操作时间不代表某个具体成员在线。","版主"),
-  reply("纸页边角","02:03","我有次点它头像，没进普通个人主页，跳到了一个旧登录页，写着“旧档账号验证”。我还以为网站坏了。"),
-  reply("站务","02:17","早期迁移账号仍保留兼容认证页，属于历史功能。请勿反复尝试登录不属于自己的账号。","版主"),
-  reply("西楼","02:31","懂了。那半夜移动也不稀奇，自动任务加值班一起跑。","楼主"),
-  reply("旧档员-03","03:08","补一句：公开页面看到的是同一个账号名，不代表后台操作来源相同。")
- ],
+ terms:["旧档员-03","值班号","迁移账号","旧版账号","登录"],highlights:["旧档员-03","多人轮用","迁移账号"],
+ body:["纯好奇。旧档员-03这个号经常凌晨两三点还在移动旧主题，而且有时候回复特别书面，有时候就一句话。我一直以为是机器人，后来又见它正常回人。","站务以前说过这是值班账号，但我没找到更详细的说明。它到底是一个人、几个人轮用，还是自动任务和真人混着用？"],
+ replies:[reply("站务","01:44","多人轮用。旧档恢复也有自动任务，所以操作时间不代表某个具体成员在线。","版主"),reply("纸页边角","02:03","我有次点它头像，跳到一个特别旧的认证页。标题像是‘迁移账号’，页面没加载全，我就退了。"),reply("站务","02:17","早期迁移账号仍保留兼容认证，属于历史功能。请勿反复尝试登录不属于自己的账号。","版主"),reply("西楼","02:31","懂了。那半夜移动也不稀奇，自动任务加值班一起跑。","楼主"),reply("旧档员-03","03:08","公开页面看到的是同一个账号名，不代表后台操作来源相同。")],
  archive:"站务归档：2024-03-02；主题保留，停止回复。"
+};
+
+const ritualFragmentPost:Post={
+ id:"23109",title:"老帖附件只恢复出黄纸和两个纸人，有人认得吗",author:"纸页边角",date:"2016-02-11 23:18",board:"旧闻考据",views:2419,hidden:true,
+ excerpt:"旧图床缓存只剩一张模糊缩略图：黄纸、红烛、两个纸偶和一条残句。",
+ terms:["旧档员-03","黄符","红蜡烛","纸偶","纸人","赤烛照舍","黄符定名","旧档恢复"],highlights:["赤烛照舍，黄符定名","黄纸","红蜡烛","两个纸偶"],
+ body:["清旧收藏时碰到一个2012年的失效附件。原帖正文已经没了，旧图床只吐出一张很小的缩略图。","能看清的东西不多：两张黄纸、两支红蜡烛、两个面对面的纸偶，中间像画了个门。黄纸边上好像有暗红手印。","OCR残留只认出一句：‘赤烛照舍，黄符定名。’ 不知道是民俗道具、电影美术，还是哪种民间教派的东西。"],
+ replies:[reply("旧纸鸢","23:42","不像常见镇宅符。至少‘定名’这个说法我没见过。"),reply("夜航船","00:03","两个纸人面对面摆着挺瘆人的，像拿来替人的。"),reply("旧档员-03","2016-02-12 02:11","附件从旧图床缓存恢复，原始上传者字段已丢失。请勿据缩略图判断来源。","版主"),reply("纸页边角","02:26","收到。我只留图和能看清的字，不给它编出处。","楼主")],
+ archive:"旧档恢复记录：2016-02-12；执行账号“旧档员-03”。原始附件已失效。"
 };
 
 const patched=flowPosts.map(post=>post.id==="33897"?cottonYard:post.id==="09114"?linNanReport:post.id==="09831"?shenYanReport:post.id==="20847"?dreamPost:post.id==="30177"?redBoxPost:post.id==="34049"?wallPost:post.id==="14692"?returnedCase:post.id==="10731"?julyArchive:post.id==="17428"?traumaCase:post.id==="11208"?scriptureComparePost:post);
@@ -129,28 +129,21 @@ const toRank=(date:string)=>{
   return 0;
 };
 
-export const posts:Post[]=[...patched,posterMemory,adminAccountPost].sort((a,b)=>toRank(a.date)-toRank(b.date));
+export const posts:Post[]=[...patched,posterMemory,ritualFragmentPost,adminAccountPost].sort((a,b)=>toRank(a.date)-toRank(b.date));
 
-export const privateEntries:PrivateEntry[]=flowPrivateEntries
-  .filter(entry=>entry.id!=="p2")
-  .map(entry=>{
-    if(entry.id==="p1")return {
-      ...entry,
-      highlights:(entry.highlights||[]).map(mark=>mark==="红色铁皮糖盒"?"红铁皮盒":mark),
-      body:entry.body.map((text,index)=>index===0?text.replace("红色铁皮糖盒","红铁皮盒"):text),
-    };
-    if(entry.id==="p3")return {
-      ...entry,
-      title:"9月11日，几条旧帖",
-      highlights:["名字不对","另一个家","回来以后不会以前会的东西了","某种味道"],
-      body:[
-        "这两个月陆续存了几条。旧报、报警回执、当年的寻人材料能对上的我才留，剩下的先删了。",
-        "有的人回来以后只是突然讨厌某种味道；也有人原话就是‘名字不对’、‘我记得另一个家’、‘回来以后不会以前会的东西了’。单看都能解释，挨着放又有点怪。",
-        "我把年龄、走失多久、找回后的第一条异常和出处记在一张表里。今晚先到这，眼睛疼。"
-      ],
-    };
-    return entry;
-  });
+const privateP1=flowPrivateEntries.find(entry=>entry.id==="p1")!;
+const privateP3=flowPrivateEntries.find(entry=>entry.id==="p3")!;
+const sanmenPrivate:PrivateEntry={
+ id:"p2",title:"7月12日，白纸上能抄下来的几句",date:"2026-07-12 01:26",
+ highlights:["身为舍，魂为客","形可易，名可夺，忆可乱","二客相契，两门相应","再舍者，故门有声"],
+ body:["夹墙白纸和旧转载里的版本对不上，我把目前能重复辨认的原句单独抄在这里，不再往里补解释。","身为舍，魂为客。","形可易，名可夺，忆可乱；客不可凭一门自证。","二客相契，两门相应。","再舍者，故门有声。","这些句子到底在说什么，我现在没有证据。先留原文。"],
+ images:[{src:"assets/sanmen-shenyan-annotations-v1.webp",caption:"附件：沈妍保存的《三门疏》残页；只圈出处与异文"}]
+};
+export const privateEntries:PrivateEntry[]=[
+ {...privateP1,highlights:(privateP1.highlights||[]).map(mark=>mark==="红色铁皮糖盒"?"红铁皮盒":mark),body:privateP1.body.map((text,index)=>index===0?text.replace("红色铁皮糖盒","红铁皮盒"):text)},
+ {...privateP3,title:"9月11日，几条旧帖",highlights:["名字不对","另一个家","回来以后不会以前会的东西了","某种味道"],body:["这两个月陆续存了几条。旧报、报警回执、当年的寻人材料能对上的我才留，剩下的先删了。","有的人回来以后只是突然讨厌某种味道；也有人原话就是‘名字不对’、‘我记得另一个家’、‘回来以后不会以前会的东西了’。单看都能解释，挨着放又有点怪。","我把年龄、走失多久、找回后的第一条异常和出处记在一张表里。今晚先到这，眼睛疼。"]},
+ sanmenPrivate,
+];
 
 export const profile={
   ...flowProfile,

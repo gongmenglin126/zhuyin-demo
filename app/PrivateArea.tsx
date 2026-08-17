@@ -4,7 +4,6 @@
 import {FormEvent,useState} from "react";
 import {ArrowLeft,FileText,Link2,LockKeyhole,Maximize2,X} from "lucide-react";
 import type {PrivateEntry} from "../content/gameDataFlowV2";
-import DeepArchiveGate from "./DeepArchiveGate";
 import type {SharedMaterial} from "./InteractiveWechat";
 
 const normalize=(value:string)=>value.replace(/[，。、“”‘’\s]/g,"");
@@ -77,9 +76,10 @@ export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial,ha
   </main>;
  }
 
+ const materialId=active.id==="p2"?"sanmen":`private-${active.id}`;
  const share=()=>{onCopyMaterial({
-  id:`private-${active.id}`,
-  title:active.title,
+  id:materialId,
+  title:active.id==="p2"?"《三门疏》残页":active.title,
   kind:"沈妍私密记录",
   url:`local://private/${active.id}`,
  });};
@@ -90,7 +90,7 @@ export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial,ha
    <button onClick={()=>setId(null)} style={s.back}><ArrowLeft size={15}/>返回私密主题</button>
    <header style={s.threadHead}>
     <span><small style={s.eyebrow}>私密记录 · {active.date}</small><h2 style={s.threadTitle}>{active.title}</h2></span>
-    <button disabled={hasMaterial(`private-${active.id}`)} onClick={share} style={{...s.share,opacity:hasMaterial(`private-${active.id}`)?.55:1,cursor:hasMaterial(`private-${active.id}`)?"default":"pointer"}}><Link2 size={14}/>{hasMaterial(`private-${active.id}`)?"已添加":"添加到材料"}</button>
+    <button disabled={hasMaterial(materialId)} onClick={share} style={{...s.share,opacity:hasMaterial(materialId)?.55:1,cursor:hasMaterial(materialId)?"default":"pointer"}}><Link2 size={14}/>{hasMaterial(materialId)?"已添加":"添加到材料"}</button>
    </header>
    <article style={s.article}>
     <header style={s.authorLine}><i style={s.smallAvatar}>候</i><span><b>候鸟第七年</b><small>仅自己可见</small></span></header>
@@ -103,7 +103,6 @@ export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial,ha
       </button>
       <figcaption style={s.caption}>{image.caption}</figcaption>
      </figure>)}
-     {active.id==="p3"&&<DeepArchiveGate onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} 
     </div>
    </article>
   </section>
