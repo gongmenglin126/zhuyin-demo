@@ -97,7 +97,10 @@ const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
  }
  if(contactId==="ly"&&materialId==="sanmen")return [{id:"ly-sanmen-memory",text:"“名可夺，忆可乱”这句你怎么看？",reply:[{text:"我不知道它原来想说什么。"},{text:"但“名”这个字让我不舒服。"},{text:"我小时候有一阵，别人喊我名字的时候，我真的会觉得他们叫错人了。"},{text:"现在想起来还是怪。"}]}];
  if(contactId==="zc"&&materialId==="verse")return [{id:"zc-verse-source",text:"所以黑底那张和《三门疏》不是一份？",reply:[{text:"至少那篇旧帖里的人是这么判断的。"},{text:"文件编号和扫描方式都不一样。"},{text:"后来为什么被塞进一个包里，就没人说得清。"}]}];
- if(contactId==="zc"&&materialId==="27614")return [{id:"zc-admin-repeat",text:"但我刚才查的几篇里都有这个号。",reply:[{text:"哪几篇？"},{text:"你前面发我的那两条旧报里也有？"},{text:"……那确实挺巧。"}]}];
+ if(contactId==="zc"&&materialId==="27614"){
+  const hasBothReports=received("zc","09114")&&received("zc","09831");
+  return [{id:"zc-admin-repeat",text:"但我刚才查的几篇里都有这个号。",reply:hasBothReports?[{text:"等等。"},{text:"你前面发我的那两条旧报，也是它恢复的？"},{text:"……这么放一起确实挺巧。"}]:[{text:"哪几篇？"},{text:"你把链接留着，我也翻翻。"}]}];
+ }
  return [];
 };
 
