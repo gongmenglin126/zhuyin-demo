@@ -7,9 +7,6 @@ export const ADMIN_USER="旧档员-03";
 export const ADMIN_TEMP_CODE="gumen-0712";
 const OLD_OATH="身非我身名非我名";
 
-type Guest="甲客"|"乙客";
-type DoorState={left:Guest[];right:Guest[]};
-type MemorySide="舍"|"客";
 type Props={loggedIn:boolean;onAdminLogin:()=>void;onCancel:()=>void;canUseLegacy:boolean};
 
 const normalize=(v:string)=>v.replace(/[，。、“”‘’\s]/g,"");
