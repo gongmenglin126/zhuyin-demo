@@ -132,14 +132,14 @@ function LegacyVerify({onBack,onVerified}:{onBack:()=>void;onVerified:()=>void})
 
    {stage===2&&<div style={v.tableScene}>
     <div style={v.tableSeats}>
-     <TableSeat place="4栋东侧" mood={moods.lin} reach={bothReach} side="left" onDrop={()=>giveItem("lin")} items={ordinaryItems.filter(id=>items[id]==="lin")}/>
+     <TableSeat place="4栋东侧" mood={moods.lin} reach={bothReach||items.box==="center"} side="left" onDrop={()=>giveItem("lin")} items={ordinaryItems.filter(id=>items[id]==="lin")}/>
      <div style={v.centerTable} onDragOver={e=>e.preventDefault()} onDrop={()=>giveItem("center")}>
       <div style={v.tableTop}>
        {(["plum","marble","milk","clip","box"] as Item[]).filter(id=>!items[id]).map(id=><ObjectToken key={id} id={id} draggable onDragStart={()=>setDragItem(id)}/>) }
        {items.box==="center"&&<ObjectToken id="box"/>}
       </div>
      </div>
-     <TableSeat place="青梧旧楼" mood={moods.shen} reach={bothReach} side="right" onDrop={()=>giveItem("shen")} items={ordinaryItems.filter(id=>items[id]==="shen")}/>
+     <TableSeat place="青梧旧楼" mood={moods.shen} reach={bothReach||items.box==="center"} side="right" onDrop={()=>giveItem("shen")} items={ordinaryItems.filter(id=>items[id]==="shen")}/>
     </div>
    </div>}
 
