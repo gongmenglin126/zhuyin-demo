@@ -1,0 +1,215 @@
+name: Apply v8.9.13 Logic Audit
+
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths: ['.github/workflows/apply-v8.9.13-logic-audit.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - name: Audit clue provenance and reply context
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p=Path('app/InteractiveWechat.tsx')
+          s=p.read_text()
+
+          old='const ordinaryChangePost=forumPost("17428","小时候走失以后突然不吃香菜，这种变化会持续很多年吗");'
+          new=old+'\nconst scriptureComparePost=forumPost("11208","求辨《三门疏》流传页：黑底红字那张其实不是同一篇吧");'
+          if old not in s:
+              raise SystemExit('ordinaryChangePost anchor missing')
+          s=s.replace(old,new,1)
+
+          start=s.index('const materialRules:Record<string,MaterialRule>={')
+          end=s.index('\n\nconst textReply=', start)
+          rules=r'''const materialRules:Record<string,MaterialRule>={
+  "33897":{
+    yq:[{text:"这哪？"},{text:"没去过。她昨晚也没提这个。"}],
+    zc:[{text:"这个帖子我看过。"},{text:"她当时就在下面问过房型。"},{text:"照片跟她梦里那间确实有点像。"}],
+  },
+  "09114":{
+    yq:[{text:"林楠？"},{text:"没听她说过。"}],
+    zc:[],
+    ly:[{text:"林楠？"},{text:"我不认识。沈妍为什么会查这个人？"}],
+  },
+  "09831":{
+    zc:[],
+    ly:[{text:"这是沈妍？"},{text:"她没跟我说过小时候这件事。"}],
+  },
+  "10731":{
+    zc:[],
+    ly:[{text:"这篇我好像见过。"},{text:"两条都十三天，确实挺扎眼的。"}],
+  },
+  "14692":{
+    zc:[{text:"这帖我有印象。"},{text:"写得很具体，但单看这一篇我也说不好。"}],
+    ly:[{text:"这篇我看过。"},{text:"他说别人叫名字时会慢半拍，那段我记了很久。"}],
+  },
+  "17428":{
+    zc:[{text:"这篇我当时回过。"},{text:"就口味突然变了，别的都没有。"}],
+    ly:[{text:"这个跟我的情况不太像。"}],
+  },
+  "private-p1":{
+    yq:[{text:"她是说过最近总梦见同一间屋。"},{text:"盒子这些细节没跟我讲过。"}],
+    zc:[{text:"这是她电脑里自己记的？"},{text:"这版我没看过。"},{text:"她后来还是觉得那两个音像“楠楠”啊。"}],
+  },
+  "private-p3":{
+    yq:null,
+    zc:[{text:"她把这些都存一起了？"},{text:"她写到有人只是口味突然变了，我想到一篇。"},{material:ordinaryChangePost},{text:"应该就是这种。"}],
+    ly:[{text:"“另一个家”这句我记得站里有人写过。"},{material:returnedPost},{text:"我以前看过这篇。"}],
+  },
+  verse:{
+    zc:[{text:"这个黑底红字的东西我好像在旧帖里见过。"},{text:"不是这句话本身，是有人拿它跟另一批白纸混在一起传。"},{material:scriptureComparePost}],
+    ly:[{text:"看不懂。"},{text:"这个也是从她电脑里翻出来的？"}],
+  },
+  sanmen:{
+    zc:[],
+    ly:[],
+  },
+};
+
+const received=(contactId:string,materialId:string)=>!!wechatSession.sent[`${contactId}:${materialId}`];
+const materialReply=(contactId:string,materialId:string):ReplyPart[]|null=>{
+  if(contactId==="zc"&&materialId==="09114"){
+    if(received("zc","09831"))return [
+      {text:"等等。"},
+      {text:"你刚才那条沈妍也是九岁、十三天。"},
+      {text:"这条林楠也是，而且失踪日期只差一天。"},
+    ];
+    return [{text:"林楠？"},{text:"这个名字她没跟我说过。"},{text:"九岁，十三天……我先记一下。"}];
+  }
+  if(contactId==="zc"&&materialId==="09831"){
+    if(received("zc","09114"))return [
+      {text:"这是沈妍？"},
+      {text:"等一下。刚才林楠那条也是九岁、十三天。"},
+      {text:"两边失踪日期还只差一天。"},
+    ];
+    return [{text:"这是沈妍？"},{text:"她小时候也走失过？"},{text:"她从没跟我说过。"}];
+  }
+  if(contactId==="zc"&&materialId==="10731"){
+    if(received("zc","09114")&&received("zc","09831"))return [
+      {text:"我记得这帖。"},
+      {text:"我当年还回过。"},
+      {text:"原来你前面发我的就是这两起。"},
+    ];
+    return [{text:"我记得这帖。"},{text:"我当年还回过。那时候只当成目录撞得太巧。"}];
+  }
+  if(contactId==="zc"&&materialId==="sanmen"){
+    const hasPair=received("zc","10731")||(received("zc","09114")&&received("zc","09831"));
+    if(hasPair)return [
+      {text:"这份我真看不懂。"},
+      {text:"但你前面那两起案子摆在这儿，再看“二客相契”，确实很难不想到两个人。"},
+      {text:"只能算猜，别当证据。"},
+    ];
+    return [{text:"我看不懂这套。"},{text:"“身为舍，魂为客”字面挺怪的，别的我不敢猜。"}];
+  }
+  if(contactId==="ly"&&materialId==="sanmen"){
+    const hasAnomaly=received("ly","private-p3")||received("ly","14692")||received("ly","09831");
+    if(hasAnomaly)return [
+      {text:"我看不懂这个。"},
+      {text:"但你前面发我的那些“名字不对”“另一个家”，跟这几句放一起……有点吓人。"},
+    ];
+    return [{text:"我看不懂。"},{text:"你从哪找到的？"}];
+  }
+  return materialRules[materialId]?.[contactId]??null;
+};'''
+          s=s[:start]+rules+s[end:]
+
+          s=s.replace('if(/林楠/.test(t))return [{text:"这个名字先别发公开区。"}];','if(/林楠/.test(t))return [{text:"林楠？"},{text:"我不认识这个人。"}];')
+          s=s.replace('if(/换魂|灵魂|交换/.test(t))return [{text:"你也想到这个了？"},{text:"我以前想过，然后把自己吓得够呛。"}];','if(/换魂|灵魂|交换/.test(t))return [{text:"你是说真的交换？"},{text:"……我不知道，我不敢这么猜。"}];')
+
+          s=s.replace('if(contactId==="yq")return "你好，我是徐宁，沈妍的朋友。她今天一直联系不上，我现在在她家。看到你们昨晚见过，想问下她走的时候有没有说去哪。";','if(contactId==="yq")return "你好，我是徐宁，沈妍朋友。她今天一直联系不上，我现在在她家。你们昨晚是不是见过？她走的时候有说去哪吗？";')
+          s=s.replace('if(contactId==="zc")return "你好，我是徐宁，沈妍的朋友。她今天联系不上，我现在在她家。看到你们最近聊过她那些梦和旧帖子，想问你点事。";','if(contactId==="zc")return "你好，我是徐宁，沈妍朋友。她今天一直联系不上。我现在在她家，她微信还登着。看到你们最近聊过，想问你点事。";')
+          s=s.replace('if(contactId==="ly")return "你好，我是徐宁，沈妍的朋友。她今天联系不上。我看到你们之前聊过一些她在查的东西，冒昧问几句。";','if(contactId==="ly")return "你好，我是徐宁，沈妍朋友。她今天一直联系不上。我现在在她家，她微信还登着。看到你们最近聊过，想问你点事。";')
+
+          old_send='''  const rules=materialRules[material.id];
+  if(!rules||!Object.prototype.hasOwnProperty.call(rules,id))return;
+  const intro=ensureIntro(id);
+  appendFor(id,[...intro,{who:"沈妍",text:`[分享] ${material.title}`,material}]);
+  wechatSession.sent={...wechatSession.sent,[`${id}:${material.id}`]:true};
+  notifyWechat();
+  setPicker(false);
+  delayedParts(id,rules[id]);'''
+          new_send='''  const rules=materialRules[material.id];
+  if(!rules||!Object.prototype.hasOwnProperty.call(rules,id))return;
+  const reply=materialReply(id,material.id);
+  const intro=ensureIntro(id);
+  appendFor(id,[...intro,{who:"沈妍",text:`[分享] ${material.title}`,material}]);
+  wechatSession.sent={...wechatSession.sent,[`${id}:${material.id}`]:true};
+  notifyWechat();
+  setPicker(false);
+  delayedParts(id,reply);'''
+          if old_send not in s:
+              raise SystemExit('sendMaterial block missing')
+          s=s.replace(old_send,new_send,1)
+          p.write_text(s)
+
+          # Make Shen Yan's anomaly note sound like a private working note, not player instructions.
+          p=Path('content/gameDataFlow.ts')
+          s=p.read_text()
+          s=s.replace('title:"几条都是真的，但不能先当成一件事"','title:"9月11日，几条旧帖"',1)
+          old_body='''    body:[
+      "这两个月存下来的几条自述，至少都能找到独立痕迹：旧报、报警回执、当年的寻人信息，或者家属公开记录。不是谁编故事的问题。",
+      "麻烦在于每个人的后续都不一样。有人只是口味改变；有人觉得名字陌生；有人记得另一个家的空间；有人失去了原本会做的事。失踪是真的，变化也是真的，但它们是不是同一个原因，不能先替答案决定。",
+      "我现在只记四列：失踪时年龄、失踪多久、回来后最早记录到的变化、能不能找到独立来源。相似的先放在一起看，不代表要把它们合成一个解释。"
+    ],'''
+          new_body='''    body:[
+      "这两个月陆续存了几条。旧报、报警回执、当年的寻人材料能对上的我才留，剩下的先删了。",
+      "有的人回来以后只是突然讨厌某种味道；也有人原话就是“名字不对”、“我记得另一个家”、“回来以后不会以前会的东西了”。单看都能解释，挨着放又有点怪。",
+      "我把年龄、走失多久、找回后的第一条异常和出处记在一张表里。今晚先到这，眼睛疼。"
+    ],'''
+          if old_body not in s:
+              raise SystemExit('base p3 body missing')
+          s=s.replace(old_body,new_body,1)
+          p.write_text(s)
+
+          p=Path('content/gameDataFlowV2.ts')
+          s=p.read_text()
+          old='''    if(entry.id==="p3")return {
+      ...entry,
+      highlights:[...(entry.highlights||[]),"名字不对","另一个家","回来以后不会"],
+      body:[
+        entry.body[0],
+        "麻烦在于每个人的后续都不一样。有人只是口味改变；有些人用的原话却很像：‘名字不对’、‘另一个家’、‘回来以后不会以前会的事’。这些先当检索用的原话，不当结论。",
+        "我现在只记四列：失踪时年龄、失踪多久、回来后最早记录到的变化、能不能找到独立来源。相似的先放在一起看，不代表要把它们合成一个解释。"
+      ],
+    };'''
+          new='''    if(entry.id==="p3")return {
+      ...entry,
+      title:"9月11日，几条旧帖",
+      highlights:["名字不对","另一个家","回来以后不会以前会的东西了","某种味道"],
+      body:[
+        "这两个月陆续存了几条。旧报、报警回执、当年的寻人材料能对上的我才留，剩下的先删了。",
+        "有的人回来以后只是突然讨厌某种味道；也有人原话就是‘名字不对’、‘我记得另一个家’、‘回来以后不会以前会的东西了’。单看都能解释，挨着放又有点怪。",
+        "我把年龄、走失多久、找回后的第一条异常和出处记在一张表里。今晚先到这，眼睛疼。"
+      ],
+    };'''
+          if old not in s:
+              raise SystemExit('V2 p3 block missing')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+
+          # Remove game-designer tutorial voice from normal forum chrome.
+          p=Path('app/page.tsx')
+          s=p.read_text()
+          s=s.replace('placeholder="搜一个你刚看到的名字、地点或原句"','placeholder="搜索帖子、用户或关键词"')
+          s=s.replace('<section className="side"><h3>论坛提示</h3><p>旧内容不会全部出现在首页。找过去的帖子，通常要靠搜索或用户主页。</p></section>','<section className="side"><h3>旧档迁移</h3><p>2016 年前的主题已完成索引迁移，部分附件与楼层仍在恢复。</p></section>')
+          p.write_text(s)
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/InteractiveWechat.tsx content/gameDataFlow.ts content/gameDataFlowV2.ts app/page.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Ground WeChat clues in actual player context"
+          git push
