@@ -79,7 +79,7 @@ const scriptureComparePost:Post={
 const reportBase=flowPosts.find(post=>post.id==="09114")!;
 const linNanReport:Post={...reportBase,author:"报刊索引",title:"【旧报摘录】九岁女童失踪十三日后异地找回",excerpt:"2004 年岚州地方报纸索引。姓名、年龄、失踪和找回日期完整。",terms:["2004","九岁","女童","姓林","林楠","十三天","失踪","找回","7月18日","7月31日"],highlights:["2004-07-18","九岁女童林楠","十三天后","2004-07-31","无法完整说明失踪期间经历"],body:["岚州地方文献室索引：2004-07-18，九岁女童林楠在东浦区一处老厂职工宿舍附近失踪，家属当日报警，并在次日地方报刊登寻人信息。","2004-07-31 的后续简讯记载，林楠在外市旧客运站附近被找到，距离失踪十三天。","简讯只写到身体无明显外伤、意识清醒，但无法完整说明失踪期间经历。原报没有刊登后续采访。","本条为旧报索引摘录；旧索引没有录入宿舍所属厂名。"],replies:[reply("旧纸鸢","16:28","我家里那份剪报记的也是31号找回，跟你这条一致。"),reply("报刊索引","16:41","谢谢，我补到正文里。原扫描实在太糊了。","楼主"),reply("旧档员-03","2023-09-02","本帖从旧索引分类恢复。","版主")]};
 const shenYanBase=flowPosts.find(post=>post.id==="09831")!;
-const shenYanReport:Post={...shenYanBase,replies:[reply("旧纸鸢","14:28","这条我有印象，南站那张简讯糊得厉害。"),reply("报刊索引","14:46","是，能确认的主要是日期、姓名和地点。","楼主"),reply("候鸟第七年","2026-08-21","请问图书馆现在还能调 7 月 17 日和 7 月 30 日前后的整卷吗？"),reply("报刊索引","2026-08-22","账号很久没用了。你可以直接问河临地方文献室。","楼主"),reply("旧档员-03","2023-09-02","本帖从失效分类恢复。","版主")]};
+const shenYanReport:Post={...shenYanBase,terms:[...(shenYanBase.terms||[]),"红色塑料发卡"],highlights:[...(shenYanBase.highlights||[]),"红色塑料发卡"],body:[...shenYanBase.body,"当年的寻人启事衣着栏还记了一项：头发右侧别着一枚红色塑料发卡。"],replies:[reply("旧纸鸢","14:28","这条我有印象，南站那张简讯糊得厉害。"),reply("报刊索引","14:46","是，能确认的主要是日期、姓名和地点。","楼主"),reply("候鸟第七年","2026-08-21","请问图书馆现在还能调 7 月 17 日和 7 月 30 日前后的整卷吗？"),reply("报刊索引","2026-08-22","账号很久没用了。你可以直接问河临地方文献室。","楼主"),reply("旧档员-03","2023-09-02","本帖从失效分类恢复。","版主")]};
 
 // 首页上的普通旧报不能提前命中“寻人启事”。
 const wallBase=flowPosts.find(post=>post.id==="34049")!;
@@ -99,6 +99,25 @@ const julyArchive:Post={...julyBase,title:"2004 年 7 月两地地方报转载�
 const traumaBase=flowPosts.find(post=>post.id==="17428")!;
 const traumaCase:Post={...traumaBase,replies:[reply("营养科路过","18:52","会有这种可能，也可能只是儿童期口味刚好在那段时间改变。单凭时间前后真说不准。"),reply("雨衣口袋","19:02","我家里也是拿“走失回来以后变了”讲了二十多年，所以我自己也不知道是不是硬连在一起了。","楼主"),reply("折柳","19:14","你这篇我反而觉得挺普通的。除了香菜，别的生活都没变，对吧？"),reply("雨衣口袋","19:22","对，其他都正常。","楼主"),reply("照骨","19:41","那名字、家里房间、以前会做的事这些，有没有哪样突然觉得不对？"),reply("雨衣口袋","19:53","都没有。就是香菜。","楼主"),reply("纸页边角","20:07","照骨你是不是在别的走失帖也问过这几个问题？看着好眼熟。"),reply("照骨","20:16","问过，类似帖子我一般都这么问。")]};
 
+const linSnackPost:Post={
+ id:"16544",title:"三厂门口那种酸话梅糖到底叫什么",author:"旧电扇",date:"2015-08-12 21:06",board:"闲聊灌水",views:814,hidden:true,
+ excerpt:"聊三厂家属区门口旧小卖部的零食，楼里老住户顺带认出当年的孩子。",terms:["林楠","话梅糖","三厂","小卖部","酸话梅"],highlights:["林楠","话梅糖"],
+ body:["突然想起三厂门口小卖部以前卖过一种散装话梅糖，纸是半透明的，酸得牙疼。有人记得叫什么吗？","我小时候住4栋，每次放学都有人蹲门口挑那个吃。"],
+ replies:[reply("三厂老住户","21:33","牌子真想不起来。林家那个林楠小时候特别爱吃这个，买一把能一路吃到楼上。"),reply("旧电扇","21:51","对，就是那种。看来我没记错。","楼主")]
+};
+const linMarblePost:Post={
+ id:"16802",title:"小时候那种蓝玻璃弹珠现在还有吗",author:"胶卷过期",date:"2017-05-04 18:42",board:"闲聊灌水",views:632,hidden:true,
+ excerpt:"一群老住户聊小时候玩的玻璃弹珠。",terms:["林楠","蓝玻璃弹珠","弹珠","三厂家属区"],highlights:["林楠","蓝玻璃弹珠"],
+ body:["收拾旧柜子翻到一颗蓝玻璃弹珠，里面像有一缕白线。小时候三厂那边是不是特别流行这种？"],
+ replies:[reply("南门摆摊","19:10","流行。我小学那会儿跟林楠换过好几颗，她只要蓝的，别的颜色都不要。"),reply("胶卷过期","19:26","哈哈原来真有这种执念。","楼主")]
+};
+const shenCandyPost:Post={
+ id:"28641",title:"有人小时候会把奶糖藏枕头下面吗",author:"候鸟第七年",date:"2021-11-06 23:17",board:"闲聊灌水",views:477,hidden:true,
+ excerpt:"翻到家里的旧相册，顺手吐槽一件小时候藏糖的蠢事。",terms:["奶糖","小时候","候鸟第七年"],highlights:["奶糖"],
+ body:["我妈今天翻旧相册，又开始讲我小时候把奶糖藏枕头下面，第二天化得床单黏成一块。","她说我那几年只认白纸包的奶糖，水果糖塞给我我还不要。有没有人也干过这种蠢事。"],
+ replies:[reply("白粥配蛋","23:39","我藏过巧克力，夏天更惨。"),reply("候鸟第七年","23:44","看来小孩都很会给家长制造家务。","楼主")]
+};
+
 const adminAccountPost:Post={
  id:"27614",title:"旧档员-03到底是一个人还是值班号？",author:"西楼",date:"2024-02-18 01:26",board:"站务区",views:3271,hidden:true,
  excerpt:"旧档整理账号半夜也在移动帖子，说话风格还不太一样。这个号到底几个人在用？",
@@ -111,8 +130,8 @@ const adminAccountPost:Post={
 const ritualFragmentPost:Post={
  id:"23109",title:"老帖附件只恢复出黄纸和两个纸人，有人认得吗",author:"纸页边角",date:"2016-02-11 23:18",board:"旧闻考据",views:2419,hidden:true,
  excerpt:"旧图床缓存只剩一张模糊缩略图：黄纸、红烛、两个纸偶和一条残句。",
- terms:["旧档员-03","黄符","红蜡烛","纸偶","纸人","赤烛照舍","黄符定名","旧档恢复"],highlights:["赤烛照舍，黄符定名","黄纸","红蜡烛","两个纸偶"],
- body:["清旧收藏时碰到一个2012年的失效附件。原帖正文已经没了，旧图床只吐出一张很小的缩略图。","能看清的东西不多：两张黄纸、两支红蜡烛、两个面对面的纸偶，中间像画了个门。黄纸边上好像有暗红手印。","OCR残留只认出一句：‘赤烛照舍，黄符定名。’ 不知道是民俗道具、电影美术，还是哪种民间教派的东西。"],
+ terms:["旧档员-03","黄符","红蜡烛","纸偶","纸人","赤烛照舍","黄符镇舍","旧档恢复"],highlights:["赤烛引客，黄符镇舍","黄纸","红蜡烛","两个纸偶"],
+ body:["清旧收藏时碰到一个2012年的失效附件。原帖正文已经没了，旧图床只吐出一张很小的缩略图。","能看清的东西不多：两张黄纸、两支红蜡烛、两个面对面的纸偶，中间像画了个门。黄纸边上好像有暗红手印。","OCR残留只认出一句：‘赤烛引客，黄符镇舍。’ 不知道是民俗道具、电影美术，还是哪种民间教派的东西。"],
  replies:[reply("旧纸鸢","23:42","不像常见镇宅符。至少‘定名’这个说法我没见过。"),reply("夜航船","00:03","两个纸人面对面摆着挺瘆人的，像拿来替人的。"),reply("旧档员-03","2016-02-12 02:11","附件从旧图床缓存恢复，原始上传者字段已丢失。请勿据缩略图判断来源。","版主"),reply("纸页边角","02:26","收到。我只留图和能看清的字，不给它编出处。","楼主")],
  archive:"旧档恢复记录：2016-02-12；执行账号“旧档员-03”。原始附件已失效。"
 };
@@ -129,15 +148,15 @@ const toRank=(date:string)=>{
   return 0;
 };
 
-export const posts:Post[]=[...patched,posterMemory,ritualFragmentPost,adminAccountPost].sort((a,b)=>toRank(a.date)-toRank(b.date));
+export const posts:Post[]=[...patched,posterMemory,linSnackPost,linMarblePost,shenCandyPost,ritualFragmentPost,adminAccountPost].sort((a,b)=>toRank(a.date)-toRank(b.date));
 
 const privateP1=flowPrivateEntries.find(entry=>entry.id==="p1")!;
 const privateP3=flowPrivateEntries.find(entry=>entry.id==="p3")!;
 const sanmenPrivate:PrivateEntry={
  id:"p2",title:"7月12日，白纸上能抄下来的几句",date:"2026-07-12 01:26",
- highlights:["身为舍，魂为客","形可易，名可夺，忆可乱","二客相契，两门相应","再舍者，故门有声"],
- body:["夹墙白纸和旧转载里的版本对不上，我把目前能重复辨认的原句单独抄在这里，不再往里补解释。","身为舍，魂为客。","形可易，名可夺，忆可乱；客不可凭一门自证。","二客相契，两门相应。","再舍者，故门有声。","这些句子到底在说什么，我现在没有证据。先留原文。"],
- images:[{src:"assets/sanmen-shenyan-annotations-v1.webp",caption:"附件：沈妍保存的《三门疏》残页；只圈出处与异文"}]
+ highlights:["身为舍，魂为客","形可易，忆可乱","二客相契，两门相应","再舍者，故门有声"],
+ body:["夹墙白纸和旧转载里的版本对不上，我把目前能重复辨认的原句单独抄在这里，不再往里补解释。","身为舍，魂为客。","形可易，忆可乱；客不可凭一门自证。","二客相契，两门相应。","再舍者，故门有声。","这些句子到底在说什么，我现在没有证据。先留原文。"],
+ images:[]
 };
 export const privateEntries:PrivateEntry[]=[
  {...privateP1,highlights:(privateP1.highlights||[]).map(mark=>mark==="红色铁皮糖盒"?"红铁皮盒":mark),body:privateP1.body.map((text,index)=>index===0?text.replace("红色铁皮糖盒","红铁皮盒"):text)},
@@ -147,5 +166,5 @@ export const privateEntries:PrivateEntry[]=[
 
 export const profile={
   ...flowProfile,
-  topics:flowProfile.topics.filter(id=>posts.some(post=>post.id===id&&post.author==="候鸟第七年")),
+  topics:[...flowProfile.topics.filter(id=>posts.some(post=>post.id===id&&post.author==="候鸟第七年")),"28641"].filter((id,index,arr)=>arr.indexOf(id)===index),
 };

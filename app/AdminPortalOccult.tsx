@@ -56,84 +56,99 @@ export default function AdminPortalOccult({loggedIn,onAdminLogin,onCancel,canUse
 }
 
 function LegacyVerify({onBack,onVerified}:{onBack:()=>void;onVerified:()=>void}){
+ type Child="lin"|"shen";
+ type Home="factory"|"qingwu";
+ type Item="plum"|"marble"|"milk"|"clip"|"box";
  const [stage,setStage]=useState(0);
  const [oath,setOath]=useState("");
- const [doors,setDoors]=useState<DoorState>({left:["甲客"],right:["乙客"]});
- const [selected,setSelected]=useState<Guest|null>(null);
  const [error,setError]=useState("");
- const [memory,setMemory]=useState<Record<string,MemorySide|undefined>>({});
+ const [dragChild,setDragChild]=useState<Child|null>(null);
+ const [homes,setHomes]=useState<Partial<Record<Home,Child>>>({});
+ const [wrongHome,setWrongHome]=useState<Home|null>(null);
+ const [dragItem,setDragItem]=useState<Item|null>(null);
+ const [items,setItems]=useState<Partial<Record<Item,Child|"center">>>({});
+ const [moods,setMoods]=useState<Record<Child,"neutral"|"frown">>({lin:"neutral",shen:"neutral"});
+ const [bothReach,setBothReach]=useState(false);
 
- const move=(target:"left"|"right")=>{
-  if(!selected)return;
-  setDoors(prev=>({left:[...prev.left.filter(x=>x!==selected),...(target==="left"&&!prev.left.includes(selected)?[selected]:[])],right:[...prev.right.filter(x=>x!==selected),...(target==="right"&&!prev.right.includes(selected)?[selected]:[])]}));
-  setSelected(null);setError("");
+ const childInfo:Record<Child,{stamp:string}>={lin:{stamp:"07·18"},shen:{stamp:"07·17"}};
+ const homeAnswer:Record<Home,Child>={factory:"lin",qingwu:"shen"};
+ const itemAnswer:Record<Exclude<Item,"box">,Child>={plum:"lin",marble:"lin",milk:"shen",clip:"shen"};
+ const ordinaryItems:(Exclude<Item,"box">)[]=["plum","marble","milk","clip"];
+ const allOrdinaryPlaced=(next=items)=>ordinaryItems.every(id=>!!next[id]);
+ const completeTable=(nextItems:Partial<Record<Item,Child|"center">>)=>{
+  if(allOrdinaryPlaced(nextItems)&&nextItems.box==="center")window.setTimeout(()=>setStage(3),1100);
  };
- const checkSwap=()=>{
-  if(doors.left.length===1&&doors.left[0]==="乙客"&&doors.right.length===1&&doors.right[0]==="甲客"){setStage(2);setError("");return;}
-  if(!doors.left.length||!doors.right.length||doors.left.length>1||doors.right.length>1)setError("一门无客，一门有余。");
-  else setError("二客未易。");
+ const placeChild=(home:Home)=>{
+  if(!dragChild)return;
+  if(homeAnswer[home]!==dragChild){setWrongHome(home);window.setTimeout(()=>setWrongHome(null),520);return;}
+  const next={...homes,[home]:dragChild};
+  setHomes(next);setDragChild(null);
+  if(next.factory&&next.qingwu)window.setTimeout(()=>setStage(2),900);
  };
- const memoryRules:Record<string,MemorySide>={"惯用手":"舍","气味与口味":"舍","另一个家的依恋":"客","听见旧名时的刺痛":"客"};
- const checkMemory=()=>{
-  if(Object.entries(memoryRules).every(([k,v])=>memory[k]===v)){setStage(4);setError("");return;}
-  setError("忆序未定。");
+ const frown=(child:Child)=>{
+  setMoods(m=>({...m,[child]:"frown"}));
+  window.setTimeout(()=>setMoods(m=>({...m,[child]:"neutral"})),680);
  };
- const progress=stage===0?"旧誓":stage===1?"一 / 三":stage===2?"二 / 三":stage===3?"三 / 三":"完成";
+ const giveItem=(target:Child|"center")=>{
+  if(!dragItem)return;
+  const id=dragItem;
+  if(id==="box"){
+   if(target==="center"){
+    const next={...items,box:"center" as const};
+    setItems(next);setBothReach(true);setDragItem(null);completeTable(next);return;
+   }
+   setBothReach(true);setDragItem(null);window.setTimeout(()=>{if(items.box!=="center")setBothReach(false)},850);return;
+  }
+  if(target==="center"){setDragItem(null);return;}
+  if(itemAnswer[id]===target){
+   const next={...items,[id]:target};
+   setItems(next);setDragItem(null);completeTable(next);return;
+  }
+  setDragItem(null);frown(target);
+ };
+ const progress=stage===0?"旧誓":stage===1?"1 / 2":stage===2?"2 / 2":"完成";
 
  return <main style={s.verifyPage}>
   <section style={s.verifyShell}>
-   <header style={s.verifyHead}><button onClick={onBack} style={s.darkBack}><ArrowLeft size={15}/>返回登录</button><span><small>旧档账号验证</small><b>还真验门</b></span><em>{progress}</em></header>
+   <header style={s.verifyHead}><button onClick={onBack} style={s.darkBack}><ArrowLeft size={15}/>返回登录</button><span><small>旧档账号验证</small><b>兼容认证</b></span><em>{progress}</em></header>
 
    {stage===0&&<div style={s.oathPage}>
     <div style={s.oathSigil}><span>門</span><i/></div>
     <small style={s.redSmall}>迁移账号 · 旧誓核验</small>
     <h2 style={s.oathTitle}>请录入旧誓</h2>
-    <p style={s.oathCopy}>不接受账号密码。旧档认证仅校验留存誓文。</p>
     <form onSubmit={e=>{e.preventDefault();if(normalize(oath)===OLD_OATH){setStage(1);setError("")}else setError(oath.trim()?"旧誓不合。":"请录入旧誓。")}} style={s.oathForm}>
      <input autoFocus value={oath} onChange={e=>{setOath(e.target.value);setError("")}} placeholder="旧誓" autoComplete="off"/>
-     <button>验誓</button>
+     <button>确认</button>
     </form>
     {error&&<p style={s.ritualError}>{error}</p>}
    </div>}
 
-   {stage===1&&<div style={s.ritual}>
-    <p style={s.blessing}>舍身无量。</p>
-    <p style={s.verse}>赤烛照舍，黄符定名。</p>
-    <RitualAltar/>
-    <div style={s.doors}>
-     <Door title="甲舍" name="甲名" guests={doors.left} selected={selected} onSelect={setSelected} onDrop={()=>move("left")}/>
-     <div style={s.swapMark}>⇄</div>
-     <Door title="乙舍" name="乙名" guests={doors.right} selected={selected} onSelect={setSelected} onDrop={()=>move("right")}/>
+   {stage===1&&<div style={v.puzzle}>
+    <div style={v.dollShelf}>
+     {(["lin","shen"] as Child[]).filter(id=>!Object.values(homes).includes(id)).map(id=><PaperPerson key={id} stamp={childInfo[id].stamp} mood="smile" draggable onDragStart={()=>setDragChild(id)}/>) }
     </div>
-    <p style={s.help}>{selected?`已取 ${selected}。择舍安置。`:"二客各有所舍。"}</p>
-    {error&&<p style={s.ritualError}>{error}</p>}
-    <button onClick={checkSwap} style={s.verifyButton}>验舍</button>
-   </div>}
-
-   {stage===2&&<div style={s.ritual}>
-    <p style={s.blessing}>旧客退位，新客安门。</p>
-    <p style={s.verse}>二客相易，门外仍呼旧名。</p>
-    <div style={s.doors}>
-     <StaticDoor title="甲舍" name="甲名" guest="乙客"/>
-     <div style={s.swapMark}>⇄</div>
-     <StaticDoor title="乙舍" name="乙名" guest="甲客"/>
+    <div style={v.homeGrid}>
+     <HomeRoom kind="factory" wrong={wrongHome==="factory"} onDrop={()=>placeChild("factory")}>{homes.factory&&<PaperPerson stamp={childInfo[homes.factory].stamp} mood="neutral"/>}</HomeRoom>
+     <HomeRoom kind="qingwu" wrong={wrongHome==="qingwu"} onDrop={()=>placeChild("qingwu")}>{homes.qingwu&&<PaperPerson stamp={childInfo[homes.qingwu].stamp} mood="neutral"/>}</HomeRoom>
     </div>
-    {error&&<p style={s.ritualError}>{error}</p>}
-    <div style={s.choiceRow}><button onClick={()=>setError("名逐客，则门外不认。黄符未定。")}>随客易名</button><button onClick={()=>{setStage(3);setError("")}}>守原名</button></div>
    </div>}
 
-   {stage===3&&<div style={s.ritual}>
-    <p style={s.blessing}>形可易，名可夺，忆可乱。</p>
-    <p style={s.help}>将残片归入你认为更接近的承载处。</p>
-    <div style={s.memoryTable}>{Object.keys(memoryRules).map(item=><div key={item} style={s.memoryRow}><b>{item}</b><span><button className={memory[item]==="舍"?"active":""} onClick={()=>setMemory(m=>({...m,[item]:"舍"}))}>归舍</button><button className={memory[item]==="客"?"active":""} onClick={()=>setMemory(m=>({...m,[item]:"客"}))}>归客</button></span></div>)}</div>
-    {error&&<p style={s.ritualError}>{error}</p>}
-    <button onClick={checkMemory} style={s.verifyButton}>定忆</button>
+   {stage===2&&<div style={v.tableScene}>
+    <div style={v.tableSeats}>
+     <TableSeat place="4栋东侧" mood={moods.lin} reach={bothReach} side="left" onDrop={()=>giveItem("lin")} items={ordinaryItems.filter(id=>items[id]==="lin")}/>
+     <div style={v.centerTable} onDragOver={e=>e.preventDefault()} onDrop={()=>giveItem("center")}>
+      <div style={v.tableTop}>
+       {(["plum","marble","milk","clip","box"] as Item[]).filter(id=>!items[id]).map(id=><ObjectToken key={id} id={id} draggable onDragStart={()=>setDragItem(id)}/>) }
+       {items.box==="center"&&<ObjectToken id="box"/>}
+      </div>
+     </div>
+     <TableSeat place="青梧旧楼" mood={moods.shen} reach={bothReach} side="right" onDrop={()=>giveItem("shen")} items={ordinaryItems.filter(id=>items[id]==="shen")}/>
+    </div>
    </div>}
 
-   {stage===4&&<div style={s.success}>
-    <p style={s.afterVerse}>舍身无量。</p>
+   {stage===3&&<div style={s.success}>
     <ShieldCheck size={34}/>
-    <small>验门通过</small>
+    <small>验证完成</small>
     <h2>旧档账号临时口令</h2>
     <code>{ADMIN_TEMP_CODE}</code>
     <p>临时口令仅用于本次旧档认证。</p>
@@ -143,19 +158,83 @@ function LegacyVerify({onBack,onVerified}:{onBack:()=>void;onVerified:()=>void})
  </main>;
 }
 
-function RitualAltar(){return <div style={s.altar} aria-hidden="true">
- <span style={{...s.candle,left:38}}/><span style={{...s.candle,right:38}}/>
- <span style={{...s.flame,left:35}}/><span style={{...s.flame,right:35}}/>
- <i style={{...s.paperDoll,left:105}}><b>甲</b></i><i style={{...s.paperDoll,right:105}}><b>乙</b></i>
- <span style={s.threadA}/><span style={s.threadB}/><span style={s.threadC}/>
- <div style={s.altarRing}><b>門</b><small>还真</small></div>
- <div style={s.yellowCharm}><b>定名</b><small>舍</small></div>
- <div style={s.bloodBowl}><i/></div>
- <div style={s.ash}>· · · · · · ·</div>
-</div>}
+function PaperPerson({stamp,mood,draggable,onDragStart}:{stamp:string;mood:"smile"|"neutral"|"frown";draggable?:boolean;onDragStart?:()=>void}){
+ return <div draggable={draggable} onDragStart={e=>{e.dataTransfer.effectAllowed="move";onDragStart?.()}} style={{...v.person,cursor:draggable?"grab":"default"}}>
+  <div style={v.personHead}><i style={{...v.eye,left:16}}/><i style={{...v.eye,right:16}}/><span style={mood==="smile"?v.smile:mood==="frown"?v.frown:v.flatMouth}/></div>
+  <div style={v.personBody}><b>{stamp}</b></div>
+ </div>
+}
 
-function Door({title,name,guests,selected,onSelect,onDrop}:{title:string;name:string;guests:Guest[];selected:Guest|null;onSelect:(g:Guest)=>void;onDrop:()=>void}){return <section style={s.door}><header><b>{title}</b><span>{name}</span></header><div style={s.guestBox}>{guests.length?guests.map(g=><button key={g} onClick={()=>onSelect(g)} style={{...s.guest,...(selected===g?s.guestSelected:{})}}>{g}</button>):<em>空</em>}</div><button onClick={onDrop} disabled={!selected} style={s.drop}>安入此舍</button></section>}
-function StaticDoor({title,name,guest}:{title:string;name:string;guest:Guest}){return <section style={s.door}><header><b>{title}</b><span>{name}</span></header><div style={s.guestBox}><i style={{...s.guest,...s.guestSelected}}>{guest}</i></div></section>}
+function HomeRoom({kind,wrong,onDrop,children}:{kind:"factory"|"qingwu";wrong:boolean;onDrop:()=>void;children:React.ReactNode}){
+ const factory=kind==="factory";
+ return <section onDragOver={e=>e.preventDefault()} onDrop={onDrop} style={{...v.home,...(wrong?v.homeWrong:{})}}>
+  <small style={v.roomStamp}>{factory?"4栋东侧":"青梧旧楼"}</small>
+  <div style={v.roomVisual}>
+   {factory?<><span style={v.blueCurtain}/><i style={v.redTin}/><em style={v.oldCup}/></>:<><span style={v.woodDesk}/><i style={v.redClip}/><em style={v.candyJar}/></>}
+   <div style={v.homeDoor}/>
+   <div style={v.homeOccupant}>{children}</div>
+  </div>
+ </section>
+}
+
+function TableSeat({place,mood,reach,side,onDrop,items}:{place:string;mood:"neutral"|"frown";reach:boolean;side:"left"|"right";onDrop:()=>void;items:string[]}){
+ return <section onDragOver={e=>e.preventDefault()} onDrop={onDrop} style={v.seat}>
+  <small style={v.roomStamp}>{place}</small>
+  <div style={v.seatedPerson}>
+   <PaperPerson stamp={side==="left"?"07·18":"07·17"} mood={mood}/>
+   {reach&&<span style={{...v.arm, ...(side==="left"?{right:-52,transform:"rotate(-8deg)"}:{left:-52,transform:"rotate(8deg)"})}}/>}
+  </div>
+  <div style={v.kept}>{items.map(id=><ObjectToken key={id} id={id}/>)}</div>
+ </section>
+}
+
+function ObjectToken({id,draggable,onDragStart}:{id:string;draggable?:boolean;onDragStart?:()=>void}){
+ const labels:Record<string,string>={plum:"话梅糖",marble:"蓝玻璃弹珠",milk:"奶糖",clip:"红色发卡",box:"红铁皮盒"};
+ return <div draggable={draggable} onDragStart={e=>{e.dataTransfer.effectAllowed="move";onDragStart?.()}} style={{...v.object,cursor:draggable?"grab":"default"}}>
+  <i style={{...v.objectIcon,...(id==="plum"?v.plum:id==="marble"?v.marble:id==="milk"?v.milk:id==="clip"?v.clip:v.box)}}/>
+  <small>{labels[id]}</small>
+ </div>
+}
+
+const v:Record<string,React.CSSProperties>={
+ puzzle:{padding:"34px 44px 40px",minHeight:510,background:"radial-gradient(circle at 50% 28%,#301614 0,#171414 42%,#0b0b0b 100%)"},
+ dollShelf:{height:150,display:"flex",justifyContent:"center",alignItems:"flex-end",gap:52},
+ person:{position:"relative",width:88,height:128,userSelect:"none",filter:"drop-shadow(0 8px 9px #0009)"},
+ personHead:{position:"absolute",left:20,top:0,width:48,height:48,borderRadius:"50% 50% 44% 44%",background:"#d8c9a9",border:"1px solid #8d745c"},
+ eye:{position:"absolute",top:16,width:5,height:6,borderRadius:"50%",background:"#1b1714"},
+ smile:{position:"absolute",left:12,top:25,width:24,height:11,borderBottom:"3px solid #4b1714",borderRadius:"0 0 18px 18px"},
+ frown:{position:"absolute",left:12,top:30,width:24,height:10,borderTop:"3px solid #4b1714",borderRadius:"18px 18px 0 0"},
+ flatMouth:{position:"absolute",left:15,top:31,width:18,height:2,background:"#4b302a"},
+ personBody:{position:"absolute",left:4,top:39,width:80,height:88,display:"grid",placeItems:"center",clipPath:"polygon(34% 0,66% 0,72% 14%,100% 34%,82% 47%,75% 100%,25% 100%,18% 47%,0 34%,28% 14%)",background:"linear-gradient(90deg,#c8b894,#e1d3b3 48%,#bba987)",border:"1px solid #8a7358",color:"#5e4a3c",fontStyle:"normal"},
+ homeGrid:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:28,maxWidth:690,margin:"18px auto 0"},
+ home:{minHeight:280,padding:"15px 16px 17px",border:"1px solid #59423a",borderRadius:7,background:"#211b19",boxShadow:"inset 0 0 42px #0008",transition:".16s"},
+ homeWrong:{borderColor:"#a94339",transform:"translateX(4px)",boxShadow:"inset 0 0 42px #4b0b0b66,0 0 0 1px #7f2e29"},
+ roomStamp:{display:"block",marginBottom:8,color:"#8f837b",font:"11px ui-monospace,monospace",letterSpacing:".08em"},
+ roomVisual:{position:"relative",height:230,overflow:"hidden",border:"7px solid #171313",background:"linear-gradient(#29221f 0 68%,#3a2d25 68% 100%)"},
+ blueCurtain:{position:"absolute",left:18,top:18,width:62,height:112,background:"linear-gradient(90deg,#425c6d,#6d8490,#364f61)",boxShadow:"inset -8px 0 0 #2c4352"},
+ redTin:{position:"absolute",left:40,bottom:24,width:58,height:38,border:"2px solid #54201c",borderRadius:5,background:"#8a322b",boxShadow:"inset 0 7px 0 #aa4940"},
+ oldCup:{position:"absolute",left:110,bottom:26,width:24,height:28,border:"2px solid #8a8475",borderRadius:"2px 2px 9px 9px",background:"#c3bc9f"},
+ woodDesk:{position:"absolute",left:18,right:18,bottom:38,height:48,background:"#6d4936",boxShadow:"0 5px 0 #3d2a22"},
+ redClip:{position:"absolute",left:50,top:55,width:50,height:13,border:"4px solid #9a2f2b",borderRadius:"50%",transform:"rotate(-12deg)"},
+ candyJar:{position:"absolute",right:42,bottom:82,width:42,height:54,border:"2px solid #aaa59a",borderRadius:"5px 5px 12px 12px",background:"#d8d1c344",boxShadow:"inset 0 -16px 0 #e7dbb388"},
+ homeDoor:{position:"absolute",right:18,top:20,width:88,height:148,border:"5px solid #181413",background:"#382c27",boxShadow:"inset -13px 0 0 #2b211e"},
+ homeOccupant:{position:"absolute",left:"50%",bottom:12,transform:"translateX(-50%) scale(.72)",transformOrigin:"bottom center"},
+ tableScene:{minHeight:515,padding:"26px 28px 38px",background:"radial-gradient(circle at 50% 46%,#35211a 0,#181514 45%,#0a0a0a 100%)"},
+ tableSeats:{display:"grid",gridTemplateColumns:"190px 1fr 190px",gap:16,alignItems:"stretch",maxWidth:760,margin:"0 auto"},
+ seat:{minHeight:430,padding:"14px",border:"1px solid #4e3c36",borderRadius:7,background:"#1b1716",textAlign:"center"},
+ seatedPerson:{position:"relative",width:88,margin:"22px auto 10px"},
+ arm:{position:"absolute",top:70,width:64,height:8,borderRadius:8,background:"#d3c19d",border:"1px solid #8b735c",zIndex:5},
+ kept:{minHeight:110,display:"flex",flexWrap:"wrap",justifyContent:"center",alignContent:"flex-start",gap:7,paddingTop:10},
+ centerTable:{minHeight:430,display:"flex",alignItems:"center",padding:"0 8px"},
+ tableTop:{position:"relative",width:"100%",minHeight:300,display:"flex",flexWrap:"wrap",alignContent:"center",justifyContent:"center",gap:14,padding:"36px 22px",border:"8px solid #2b1d18",borderRadius:"48% 48% 12px 12px / 12% 12% 8px 8px",background:"linear-gradient(90deg,#5a3527,#754631 50%,#563225)",boxShadow:"inset 0 0 38px #25100a99,0 18px 35px #0008"},
+ object:{width:82,minHeight:72,display:"grid",placeItems:"center",gap:4,padding:"7px 5px",border:"1px solid #655044",borderRadius:7,background:"#eee2c9",color:"#3f3028",boxShadow:"0 5px 9px #0006",userSelect:"none"},
+ objectIcon:{display:"block",position:"relative",width:38,height:30},
+ plum:{width:30,height:24,borderRadius:"45%",background:"#6f292b",boxShadow:"-12px 1px 0 -6px #c7ad78,12px 1px 0 -6px #c7ad78"},
+ marble:{width:28,height:28,borderRadius:"50%",background:"radial-gradient(circle at 32% 30%,#d6f4ff 0 12%,#69a8c5 22%,#275d79 58%,#17394c 100%)",boxShadow:"inset -5px -4px 8px #0a2637"},
+ milk:{width:36,height:22,borderRadius:4,background:"#eee6d2",border:"2px solid #c8b98d",boxShadow:"-10px 0 0 -5px #e0d3ab,10px 0 0 -5px #e0d3ab"},
+ clip:{width:38,height:15,border:"5px solid #9f302c",borderRadius:"50%",transform:"rotate(-12deg)"},
+ box:{width:42,height:30,border:"2px solid #5a1714",borderRadius:4,background:"#913028",boxShadow:"inset 0 7px 0 #b24b3f"},
+};
 
 function AdminDesk(){
  const [tab,setTab]=useState<"users"|"ops"|"recycle">("users");
@@ -183,7 +262,7 @@ function UserRecord(){return <article style={s.userRecord}>
  </article>}
 function Operations(){return <><h2>操作记录</h2><div style={s.adminPanel}><Record date="2026-10-16 21:06" title="祭品状态变更：候鸟第七年" meta="旧档员-03" text="待接触 → 已收容"/><Record date="2026-10-16 20:52" title="血样登记" meta="内部任务" text="引契血：已取"/><Record date="2026-10-16 19:49" title="线下转接" meta="旧档员-03" text="已执行"/><Record date="2026-08-22 04:12" title="添加归门标记" meta="照骨" text="对契异常：是；旧客回响：高"/></div></>}
 function Recycle(){return <><h2>回收记录</h2><div style={s.adminPanel}><Record date="2026-10-16 18:31" title="未发布草稿" meta="候鸟第七年 · 已删除" text="照骨问的问题不是随机的。旧档员-03也反复碰过这些帖。"/><Record date="2026-10-16 20:47" title="IMG_1016_2047.jpg" meta="旧档员-03 · 原始来源字段缺失" text="标签：祭坛 / 黄符 / 纸偶 / 引契血。仅恢复缩略图。"/><RitualPhoto/><Record date="2013-07-09 03:14" title="旧教页缓存" meta="旧档恢复 · 已删除" text="黑底朱字页面，页脚重复：舍身无量。"/><figure style={s.scripture}><img src="assets/occult/huanzhen-scripture.webp" alt="无相还真会黑底朱字旧教页"/></figure></div></>}
-function RitualPhoto(){return <figure style={s.photo}><div style={s.photoRoom}><span style={{...s.photoCandle,left:"16%"}}/><span style={{...s.photoCandle,right:"16%"}}/><i style={{...s.photoDoll,left:"23%"}}>沈</i><i style={{...s.photoDoll,right:"23%"}}>林</i><b style={s.photoGate}>門</b><em style={s.photoThread}/><strong style={s.photoBowl}/><u style={{...s.photoPaper,left:"8%"}}/><u style={{...s.photoPaper,right:"8%"}}/></div><figcaption style={s.photoCaption}>IMG_1016_2047.jpg　恢复 14%</figcaption></figure>}
+function RitualPhoto(){return <figure style={s.photo}><div style={s.photoRoom}><span style={{...s.photoCandle,left:"16%"}}/><span style={{...s.photoCandle,right:"16%"}}/><i style={{...s.photoDoll,left:"23%"}}/><i style={{...s.photoDoll,right:"23%"}}/><b style={s.photoGate}>門</b><em style={s.photoThread}/><strong style={s.photoBowl}/><u style={{...s.photoPaper,left:"8%"}}/><u style={{...s.photoPaper,right:"8%"}}/></div><figcaption style={s.photoCaption}>IMG_1016_2047.jpg　恢复 14%</figcaption></figure>}
 function Record({date,title,meta,text}:{date:string;title:string;meta:string;text:string}){return <div style={s.record}><time>{date}</time><span><b>{title}</b><small>{meta}</small><p>{text}</p></span></div>}
 
 const s:Record<string,React.CSSProperties>={
