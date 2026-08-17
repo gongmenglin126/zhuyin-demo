@@ -7,12 +7,14 @@ export type SharedMaterial={id:string;title:string;kind:string;url:string};
 type Msg={time?:string;who:"沈妍"|"对方";text:string;material?:SharedMaterial};
 type Contact={id:string;name:string;note:string;preview:string;messages:Msg[]};
 type ReplyPart={text?:string;material?:SharedMaterial};
+type QuickReply={id:string;text:string;reply:ReplyPart[];next?:QuickReply[]};
 type MaterialRule=Record<string,ReplyPart[]|null>;
 
 const forumPost=(id:string,title:string):SharedMaterial=>({id,title,kind:"论坛帖子",url:`https://www.zhuyinwen.cn/thread/${id}`});
 const returnedPost=forumPost("14692","有没有人记得“被找回来”之前的家");
 const ordinaryChangePost=forumPost("17428","小时候走失以后突然不吃香菜，这种变化会持续很多年吗");
 const scriptureComparePost=forumPost("11208","求辨《三门疏》流传页：黑底红字那张其实不是同一篇吧");
+const adminAccountPost=forumPost("27614","旧档员-03到底是一个人还是值班号？");
 
 // Desktop apps are unmounted when switching windows. Keep the current WeChat session
 // at module scope so messages and one-shot material sends survive app switches.
@@ -20,6 +22,7 @@ const wechatSession={
   extra:{} as Record<string,Msg[]>,
   introduced:{} as Record<string,boolean>,
   sent:{} as Record<string,boolean>,
+  quick:{} as Record<string,QuickReply[]>,
 };
 const wechatSubscribers=new Set<()=>void>();
 const notifyWechat=()=>wechatSubscribers.forEach(fn=>fn());
@@ -56,6 +59,8 @@ const materialRules:Record<string,MaterialRule>={
  "private-p3":{yq:null,zc:[{text:"她把这些都存一起了？"},{text:"里面那个“突然不吃某种味道”我有印象。"},{text:"有篇旧帖就这样。"},{material:ordinaryChangePost},{text:"好像就是这个。"}],ly:[{text:"“另一个家”这几个字我见过。"},{text:"有个旧帖里也这么写。"},{material:returnedPost},{text:"我以前看过，不一定是一回事。"}]},
  verse:{zc:[{text:"这张黑底的我眼熟。"},{text:"以前有个帖子专门吵它跟白纸抄本是不是一套。"},{material:scriptureComparePost}],ly:[{text:"看不懂。"},{text:"这也是她电脑里的？"}]},
  sanmen:{zc:[],ly:[]},
+ "31002":{zc:[{text:"这个站务说明我见过。"},{text:"你是觉得旧档员-03有问题？"}],ly:[{text:"这个号我见过。迟迟那边的旧帖也被它动过。"}]},
+ "27614":{zc:[{text:"对，就是这篇。"},{text:"当时大家最后都当普通值班号看了。"}],ly:[{text:"我以前没点进去看过。"}]},
 };
 
 const received=(contactId:string,materialId:string)=>!!wechatSession.sent[`${contactId}:${materialId}`];
@@ -83,6 +88,22 @@ const materialReply=(contactId:string,materialId:string):ReplyPart[]|null=>{
   return [{text:"看不懂。"},{text:"你从哪找到的？"}];
  }
  return materialRules[materialId]?.[contactId]??null;
+};
+
+
+const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
+ if(contactId==="zc"&&materialId==="sanmen"){
+  const hasPair=received("zc","10731")||(received("zc","09114")&&received("zc","09831"));
+  return [{id:"zc-sanmen-body",text:"你觉得“舍”和“客”指什么？",reply:[{text:"硬按字面猜的话，“舍”像住的地方。"},{text:"如果前一句真是“身为舍，魂为客”，那舍就是身体，客就是……住进去的那个东西。"},{text:"我只是按中文意思说，不代表这东西真在讲这个。"}],next:[{id:"zc-sanmen-two",text:"那“二客相契，两门相应”呢？",reply:hasPair?[{text:"两个客，两个门。"},{text:"跟你前面那两个人放一起，我第一反应会是两边一起发生了什么。"},{text:"但我现在也只能到这。"}]:[{text:"两个客、两个门，大概至少不是只说一个人。"},{text:"再往下我没东西能对。"}]}]}];
+ }
+ if(contactId==="ly"&&materialId==="sanmen")return [{id:"ly-sanmen-memory",text:"“名可夺，忆可乱”这句你怎么看？",reply:[{text:"我不知道它原来想说什么。"},{text:"但“名”这个字让我不舒服。"},{text:"我小时候有一阵，别人喊我名字的时候，我真的会觉得他们叫错人了。"},{text:"现在想起来还是怪。"}]}];
+ if(contactId==="zc"&&materialId==="verse")return [{id:"zc-verse-source",text:"所以黑底那张和《三门疏》不是一份？",reply:[{text:"至少那篇旧帖里的人是这么判断的。"},{text:"文件编号和扫描方式都不一样。"},{text:"后来为什么被塞进一个包里，就没人说得清。"}]}];
+ if(contactId==="zc"&&materialId==="31002"){
+  const hasRelevant=received("zc","09114")||received("zc","09831")||received("zc","10731")||received("zc","verse")||received("zc","sanmen")||received("zc","14692");
+  if(hasRelevant)return [{id:"zc-admin-repeat",text:"我查的几篇怪帖子里总能看到它。",reply:[{text:"……那确实有点烦。"},{text:"我记得以前有人专门问过这个号到底是不是一个人。"},{material:adminAccountPost},{text:"应该是这篇。"}]}];
+ }
+ if(contactId==="zc"&&materialId==="27614")return [{id:"zc-admin-doubt",text:"多人轮用能解释它为什么到处出现吗？",reply:[{text:"能解释一部分。"},{text:"但如果你说的那几篇刚好都是同一类走失和旧抄本，我也会觉得巧得有点过头。"},{text:"我没有后台权限，只能看到公开操作记录。"}]}];
+ return [];
 };
 
 const textReply=(contact:string,text:string):ReplyPart[]|null=>{
@@ -122,6 +143,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  const [introduced,setIntroduced]=useState<Record<string,boolean>>(()=>({...wechatSession.introduced}));
  const [typing,setTyping]=useState<Record<string,boolean>>({});
  const [sent,setSent]=useState<Record<string,boolean>>(()=>({...wechatSession.sent}));
+ const [quick,setQuick]=useState<Record<string,QuickReply[]>>(()=>({...wechatSession.quick}));
  const scrollRef=useRef<HTMLElement|null>(null);
  const contact=contacts.find(x=>x.id===id)!;
  const visible=contacts.filter(x=>(x.name+x.note+x.preview).includes(q));
@@ -137,8 +159,12 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
   notifyWechat();
   return [{who:"沈妍",text:introText(contactId)}];
  };
- const delayedParts=(contactId:string,parts:ReplyPart[]|null)=>{
-  if(!parts?.length)return;
+ const setQuickFor=(contactId:string,items:QuickReply[])=>{
+  wechatSession.quick={...wechatSession.quick,[contactId]:items};
+  notifyWechat();
+ };
+ const delayedParts=(contactId:string,parts:ReplyPart[]|null,nextQuick:QuickReply[]=[] )=>{
+  if(!parts?.length){setQuickFor(contactId,nextQuick);return;}
   let elapsed=1000+Math.floor(Math.random()*900);
   setTyping(prev=>({...prev,[contactId]:true}));
   parts.forEach((part,index)=>{
@@ -147,7 +173,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
    window.setTimeout(()=>{
     if(part.material)appendFor(contactId,[{who:"对方",text:`[链接] ${part.material.title}`,material:part.material}]);
     else if(part.text)appendFor(contactId,[{who:"对方",text:part.text}]);
-    if(index===parts.length-1)setTyping(prev=>({...prev,[contactId]:false}));
+    if(index===parts.length-1){setTyping(prev=>({...prev,[contactId]:false}));setQuickFor(contactId,nextQuick)}
    },elapsed);
   });
  };
@@ -157,6 +183,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
    setExtra({...wechatSession.extra});
    setIntroduced({...wechatSession.introduced});
    setSent({...wechatSession.sent});
+   setQuick({...wechatSession.quick});
   };
   wechatSubscribers.add(sync);
   sync();
@@ -173,6 +200,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
   const text=draft.trim(); if(!text||id==="x")return;
   const intro=ensureIntro(id);
   appendFor(id,[...intro,{who:"沈妍",text}]);
+  setQuickFor(id,[]);
   setDraft("");
   delayedParts(id,textReply(id,text));
  };
@@ -185,7 +213,13 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
   wechatSession.sent={...wechatSession.sent,[`${id}:${material.id}`]:true};
   notifyWechat();
   setPicker(false);
-  delayedParts(id,reply);
+  delayedParts(id,reply,quickAfterMaterial(id,material.id));
+ };
+ const sendQuick=(item:QuickReply)=>{
+  if(id==="x")return;
+  setQuickFor(id,[]);
+  appendFor(id,[{who:"沈妍",text:item.text}]);
+  delayedParts(id,item.reply,item.next||[]);
  };
  const openMaterial=(material:SharedMaterial)=>{
   if(material.kind==="论坛帖子"&&/^\d+$/.test(material.id)&&onOpenPost)onOpenPost(material.id);
@@ -201,6 +235,9 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 6px 8px"}}><b style={{fontSize:13}}>发送文件</b><button onClick={()=>setPicker(false)} style={{width:28,height:28,border:0,borderRadius:6,background:"#f2f2f2",display:"grid",placeItems:"center"}}><X size={14}/></button></div>
     {sendable.length?sendable.map(m=><button key={m.id} onClick={()=>sendMaterial(m)} style={{width:"100%",display:"block",padding:"10px",border:0,borderTop:"1px solid #eee",background:"#fff",textAlign:"left"}}><small style={{display:"block",color:"#999",marginBottom:3}}>{m.kind}</small><b style={{fontSize:13,fontWeight:500}}>{m.title}</b></button>):<p style={{margin:0,padding:"18px 10px",borderTop:"1px solid #eee",color:"#999",fontSize:12,textAlign:"center"}}>暂无可发送文件</p>}
    </div>}
+
+
+   {!typing[id]&&(quick[id]||[]).length>0&&<div style={{flex:"0 0 auto",display:"flex",gap:8,flexWrap:"wrap",padding:"9px 14px 0",background:"#f7f7f7"}}>{(quick[id]||[]).map(item=><button key={item.id} onClick={()=>sendQuick(item)} style={{maxWidth:"100%",padding:"7px 11px",border:"1px solid #cfd8d2",borderRadius:15,background:"#fff",color:"#3c6250",fontSize:12,textAlign:"left"}}>{item.text}</button>)}</div>}
 
    <footer style={{flex:"0 0 auto",padding:"12px 14px",background:"#f7f7f7",borderTop:"1px solid #ddd"}}>
     <form onSubmit={sendText} style={{display:"grid",gridTemplateColumns:"1fr 44px 48px",gap:8,alignItems:"center"}}>

@@ -99,6 +99,24 @@ const julyArchive:Post={...julyBase,title:"2004 年 7 月两地地方报转载�
 const traumaBase=flowPosts.find(post=>post.id==="17428")!;
 const traumaCase:Post={...traumaBase,replies:[reply("营养科路过","18:52","会有这种可能，也可能只是儿童期口味刚好在那段时间改变。单凭时间前后真说不准。"),reply("雨衣口袋","19:02","我家里也是拿“走失回来以后变了”讲了二十多年，所以我自己也不知道是不是硬连在一起了。","楼主"),reply("折柳","19:14","你这篇我反而觉得挺普通的。除了香菜，别的生活都没变，对吧？"),reply("雨衣口袋","19:22","对，其他都正常。","楼主"),reply("照骨","19:41","那名字、家里房间、以前会做的事这些，有没有哪样突然觉得不对？"),reply("雨衣口袋","19:53","都没有。就是香菜。","楼主"),reply("纸页边角","20:07","照骨你是不是在别的走失帖也问过这几个问题？看着好眼熟。"),reply("照骨","20:16","问过，类似帖子我一般都这么问。")]};
 
+const adminAccountPost:Post={
+ id:"27614",title:"旧档员-03到底是一个人还是值班号？",author:"西楼",date:"2024-02-18 01:26",board:"站务区",views:3271,hidden:true,
+ excerpt:"旧档整理账号半夜也在移动帖子，说话风格还不太一样。这个号到底几个人在用？",
+ terms:["旧档员-03","值班号","旧档账号验证","旧版验证","登录"],highlights:["旧档员-03","多人轮用","旧档账号验证"],
+ body:[
+  "纯好奇。旧档员-03这个号经常凌晨两三点还在移动旧主题，而且有时候回复特别书面，有时候就一句话。我一直以为是机器人，后来又见它正常回人。",
+  "站务以前说过这是值班账号，但我没找到更详细的说明。它到底是一个人、几个人轮用，还是自动任务和真人混着用？"
+ ],
+ replies:[
+  reply("站务-槐序","01:44","多人轮用。旧档恢复也有自动任务，所以操作时间不代表某个具体成员在线。","版主"),
+  reply("纸页边角","02:03","我有次点它头像，没进普通个人主页，跳到了一个旧登录页，写着“旧档账号验证”。我还以为网站坏了。"),
+  reply("站务-槐序","02:17","早期迁移账号仍保留兼容认证页，属于历史功能。请勿反复尝试登录不属于自己的账号。","版主"),
+  reply("西楼","02:31","懂了。那半夜移动也不稀奇，自动任务加值班一起跑。","楼主"),
+  reply("旧档员-03","03:08","补一句：公开页面看到的是同一个账号名，不代表后台操作来源相同。")
+ ],
+ archive:"站务归档：2024-03-02；主题保留，停止回复。"
+};
+
 const patched=flowPosts.map(post=>post.id==="33897"?cottonYard:post.id==="09114"?linNanReport:post.id==="09831"?shenYanReport:post.id==="20847"?dreamPost:post.id==="30177"?redBoxPost:post.id==="34049"?wallPost:post.id==="14692"?returnedCase:post.id==="10731"?julyArchive:post.id==="17428"?traumaCase:post.id==="11208"?scriptureComparePost:post);
 
 const toRank=(date:string)=>{
@@ -111,7 +129,7 @@ const toRank=(date:string)=>{
   return 0;
 };
 
-export const posts:Post[]=[...patched,posterMemory].sort((a,b)=>toRank(a.date)-toRank(b.date));
+export const posts:Post[]=[...patched,posterMemory,adminAccountPost].sort((a,b)=>toRank(a.date)-toRank(b.date));
 
 export const privateEntries:PrivateEntry[]=flowPrivateEntries
   .filter(entry=>entry.id!=="p2")

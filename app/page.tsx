@@ -6,13 +6,15 @@ import {history,Post,posts,privateEntries,profile} from "../content/gameDataFlow
 import LocalVault from "./LocalVault";
 import InteractiveWechat,{SharedMaterial} from "./InteractiveWechat";
 import PrivateArea from "./PrivateArea";
+import AdminPortal from "./AdminPortal";
 
 type App="browser"|"wechat"|"notes"|"verse";
-type Route={kind:"home"}|{kind:"post",id:string}|{kind:"profile"}|{kind:"user",name:string}|{kind:"private"}|{kind:"history"}|{kind:"search",q:string};
+type Route={kind:"home"}|{kind:"post",id:string}|{kind:"profile"}|{kind:"user",name:string}|{kind:"private"}|{kind:"history"}|{kind:"search",q:string}|{kind:"account"};
 
 const contextPosts:Post[]=[];
 const investigationPosts=posts;
 const investigationPrivateEntries=privateEntries;
+let persistedForumIdentity:"shenyan"|"admin"="shenyan";
 
 export default function Page(){
  const [stage,setStage]=useState<"title"|"login"|"desktop">("title");
@@ -36,23 +38,27 @@ function Window({title,max,allowMax,close,toggle,children}:{title:string;max:boo
 
 function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial,hasMaterial,initialPostId,onInitialPostConsumed}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void;onCopyMaterial:(m:SharedMaterial)=>void;hasMaterial:(id:string)=>boolean;initialPostId:string|null;onInitialPostConsumed:()=>void}){
  const [route,setRoute]=useState<Route>(initialPostId?{kind:"post",id:initialPostId}:{kind:"home"}),[stack,setStack]=useState<Route[]>([]),[q,setQ]=useState(""),[read,setRead]=useState<string[]>(initialPostId?[initialPostId]:[]);
+ const [forumIdentity,setForumIdentity]=useState<"shenyan"|"admin">(()=>persistedForumIdentity);
  useEffect(()=>{if(initialPostId)onInitialPostConsumed()},[]);
  const go=(next:Route)=>{setStack([...stack,route]);setRoute(next);if(next.kind==="post")setRead([...new Set([...read,next.id])])};
- const back=()=>{if(!stack.length)return;setRoute(stack[stack.length-1]);setStack(stack.slice(0,-1))};
+ const back=()=>{if(forumIdentity==="admin"||!stack.length)return;setRoute(stack[stack.length-1]);setStack(stack.slice(0,-1))};
  const search=(value=q)=>{if(value.trim()){setQ(value);go({kind:"search",q:value.trim()})}};
  const openUser=(name:string)=>name==="候鸟第七年"?go({kind:"profile"}):go({kind:"user",name});
- return <div className="browser"><div className="tabs"><span>烛</span><b>烛阴旧闻</b></div><div className="bar"><button onClick={back}><ArrowLeft/></button><button onClick={()=>setRoute({...route})}><RefreshCw/></button><div><LockKeyhole/>www.zhuyinwen.cn / {route.kind}</div><button onClick={()=>go({kind:"history"})}><HistoryIcon/></button></div>
-  <div className="site"><ForumHeader q={q} setQ={setQ} search={search} home={()=>go({kind:"home"})} me={()=>go({kind:"profile"})}/>
-   {route.kind==="home"&&<ForumHome read={read} open={id=>go({kind:"post",id})} me={()=>go({kind:"profile"})}/>} 
-   {route.kind==="post"&&<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser} onCopyMaterial={onCopyMaterial}/>} 
-   {route.kind==="profile"&&<Profile open={id=>go({kind:"post",id})} secret={()=>go({kind:"private"})}/>} 
-   {route.kind==="user"&&<UserProfile name={route.name} open={id=>go({kind:"post",id})}/>} 
-   {route.kind==="private"&&<PrivateArea entries={investigationPrivateEntries} unlocked={privateUnlocked} onUnlock={()=>setPrivateUnlocked(true)} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} 
-   {route.kind==="history"&&<HistoryPage open={id=>go({kind:"post",id})} me={()=>go({kind:"profile"})} search={search}/>} 
-   {route.kind==="search"&&<Results q={route.q} read={read} open={id=>go({kind:"post",id})} openUser={openUser}/>} 
+ return <div className="browser"><div className="tabs"><span>烛</span><b>烛阴旧闻</b></div><div className="bar"><button onClick={back}><ArrowLeft/></button><button onClick={()=>setRoute({...route})}><RefreshCw/></button><div><LockKeyhole/>www.zhuyinwen.cn / {forumIdentity==="admin"?"admin":route.kind}</div><button onClick={()=>forumIdentity==="shenyan"&&go({kind:"history"})}><HistoryIcon/></button></div>
+  <div className="site">
+   {forumIdentity==="admin"?<AdminPortal loggedIn={true} onAdminLogin={()=>{}} onCancel={()=>{}}/>:route.kind==="account"?<AdminPortal loggedIn={false} onCancel={back} onAdminLogin={()=>{persistedForumIdentity="admin";setForumIdentity("admin");setStack([])}}/>:<>
+    <ForumHeader q={q} setQ={setQ} search={search} home={()=>go({kind:"home"})} me={()=>go({kind:"profile"})} switchAccount={()=>go({kind:"account"})}/>
+    {route.kind==="home"&&<ForumHome read={read} open={id=>go({kind:"post",id})} me={()=>go({kind:"profile"})}/>} 
+    {route.kind==="post"&&<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser} onCopyMaterial={onCopyMaterial}/>} 
+    {route.kind==="profile"&&<Profile open={id=>go({kind:"post",id})} secret={()=>go({kind:"private"})}/>} 
+    {route.kind==="user"&&<UserProfile name={route.name} open={id=>go({kind:"post",id})}/>} 
+    {route.kind==="private"&&<PrivateArea entries={investigationPrivateEntries} unlocked={privateUnlocked} onUnlock={()=>setPrivateUnlocked(true)} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} 
+    {route.kind==="history"&&<HistoryPage open={id=>go({kind:"post",id})} me={()=>go({kind:"profile"})} search={search}/>} 
+    {route.kind==="search"&&<Results q={route.q} read={read} open={id=>go({kind:"post",id})} openUser={openUser}/>} 
+   </>}
   </div></div>
 }
-function ForumHeader({q,setQ,search,home,me}:{q:string;setQ:(x:string)=>void;search:(x?:string)=>void;home:()=>void;me:()=>void}){return <><header className="forum-head"><button onClick={home} className="brand"><i>烛</i><span><b>烛阴旧闻</b><small>民俗 · 旧闻 · 城市记忆</small></span></button><div><button onClick={me}><i className="bird">候</i><span><b>候鸟第七年</b><small>当前登录账号</small></span></button></div></header>
+function ForumHeader({q,setQ,search,home,me,switchAccount}:{q:string;setQ:(x:string)=>void;search:(x?:string)=>void;home:()=>void;me:()=>void;switchAccount:()=>void}){return <><header className="forum-head"><button onClick={home} className="brand"><i>烛</i><span><b>烛阴旧闻</b><small>民俗 · 旧闻 · 城市记忆</small></span></button><div style={{display:"flex",alignItems:"center",gap:8}}><button onClick={me}><i className="bird">候</i><span><b>候鸟第七年</b><small>当前登录账号</small></span></button><button onClick={switchAccount} style={{height:34,padding:"0 10px",border:"1px solid #d8d3c8",borderRadius:6,background:"#f7f4ee",color:"#6b675f",fontSize:11}}>登录其他账号</button></div></header>
  <nav className="forum-nav"><button onClick={home}><Home/>论坛首页</button><button onClick={me}>我的主页</button></nav>
  <form className="forum-search" onSubmit={e=>{e.preventDefault();search()}}><span><Search/><b>全站搜索</b><small>站内主题与用户</small></span><label><input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索帖子、用户或关键词"/><button>搜索</button></label></form></>}
 function ForumHome({read,open,me}:{read:string[];open:(id:string)=>void;me:()=>void}){const [board,setBoard]=useState("全部");const visible=investigationPosts.filter(p=>!p.hidden).slice(0,10);const shown=board==="全部"?visible:visible.filter(p=>p.board===board);return <main className="forum-page"><div className="columns"><section className="topics"><div className="boards">{["全部","闲聊灌水","旧闻考据","梦与睡眠","生活求助","站务区"].map(x=><button className={x===board?"active":""} onClick={()=>setBoard(x)} key={x}>{x}</button>)}</div><div className="notice"><b>站务</b><button onClick={()=>open("31002")}>旧帖合并、原链接与存档编号说明</button></div><header className="list-head"><b>最新 / 热门</b><span>{shown.length}个主题</span><span>回复 / 浏览</span></header>{shown.map(p=><Row key={p.id} p={p} read={read.includes(p.id)} open={()=>open(p.id)}/>)}</section><aside><button className="account" onClick={me}><i>候</i><b>候鸟第七年</b><small>上次活动：10月16日 19:48</small><dl><div><dt>主题</dt><dd>{profile.topics.length}</dd></div><div><dt>回复</dt><dd>47</dd></div><div><dt>收藏</dt><dd>12</dd></div></dl><span>查看个人主页</span></button><section className="side"><h3>旧档迁移</h3><p>2016 年前的主题已完成索引迁移，部分附件与楼层仍在恢复。</p></section></aside></div><footer>烛阴旧闻 · 建站于 2008 年 7 月 12 日 · 当前在线 127 人</footer></main>}
