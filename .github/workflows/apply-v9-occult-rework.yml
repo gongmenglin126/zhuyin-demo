@@ -1,0 +1,29 @@
+name: Apply v9 Occult Rework
+
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths:
+      - '.github/scripts/apply_v900_occult_rework.py'
+      - '.github/workflows/apply-v9-occult-rework.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - name: Apply occult gameplay rework
+        run: python .github/scripts/apply_v900_occult_rework.py
+      - name: Commit source changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app content docs
+          git diff --cached --quiet && exit 0
+          git commit -m "Rework occult progression and admin gate"
+          git push origin HEAD:agent/v8-forum-gameplay-rework
