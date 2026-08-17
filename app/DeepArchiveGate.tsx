@@ -6,7 +6,7 @@ import type {SharedMaterial} from "./InteractiveWechat";
 
 const normalize=(value:string)=>value.replace(/[，。、“”‘’\s]/g,"");
 
-export default function DeepArchiveGate({onCopyMaterial}:{onCopyMaterial:(m:SharedMaterial)=>void}){
+export default function DeepArchiveGate({onCopyMaterial,hasMaterial}:{onCopyMaterial:(m:SharedMaterial)=>void;hasMaterial:(id:string)=>boolean}){
  const [pwd,setPwd]=useState(""),[error,setError]=useState(""),[unlocked,setUnlocked]=useState(false);
  const submit=(e:FormEvent)=>{
   e.preventDefault();
@@ -24,7 +24,7 @@ export default function DeepArchiveGate({onCopyMaterial}:{onCopyMaterial:(m:Shar
      <p style={{margin:"9px 0 0"}}><strong>二客相契，两门相应。</strong></p>
      <p style={{margin:"9px 0 0"}}><strong>再舍者，故门有声。</strong></p>
     </section>
-    <button onClick={()=>onCopyMaterial({id:"sanmen",title:"《三门疏》残页恢复记录",kind:"本地附件",url:"file:///Users/shenyan/Documents/archive_0712.zip"})} style={{display:"inline-flex",alignItems:"center",gap:6,marginTop:14,border:"1px solid #b8afa5",background:"#fff",borderRadius:6,padding:"8px 11px",fontSize:12,cursor:"pointer"}}><Link2 size={14}/>添加到材料</button>
+    <button disabled={hasMaterial("sanmen")} onClick={()=>onCopyMaterial({id:"sanmen",title:"《三门疏》残页恢复记录",kind:"本地附件",url:"file:///Users/shenyan/Documents/archive_0712.zip"})} style={{display:"inline-flex",alignItems:"center",gap:6,marginTop:14,border:"1px solid #b8afa5",background:"#fff",borderRadius:6,padding:"8px 11px",fontSize:12,cursor:hasMaterial("sanmen")?"default":"pointer",opacity:hasMaterial("sanmen")?.55:1}}><Link2 size={14}/>{hasMaterial("sanmen")?"已添加":"添加到材料"}</button>
    </article>}
  </section>;
 }

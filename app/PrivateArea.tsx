@@ -9,17 +9,17 @@ import type {SharedMaterial} from "./InteractiveWechat";
 
 const normalize=(value:string)=>value.replace(/[，。、“”‘’\s]/g,"");
 
-export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial}:{
+export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial,hasMaterial}:{
  entries:PrivateEntry[];
  unlocked:boolean;
  onUnlock:()=>void;
  onCopyMaterial:(m:SharedMaterial)=>void;
+ hasMaterial:(id:string)=>boolean;
 }){
  const [pwd,setPwd]=useState("");
  const [error,setError]=useState("");
  const [id,setId]=useState<string|null>(null);
  const [zoom,setZoom]=useState<{src:string;caption:string}|null>(null);
- const [shared,setShared]=useState(false);
  const active=id?entries.find(entry=>entry.id===id):null;
 
  const submit=(e:FormEvent)=>{
@@ -68,7 +68,7 @@ export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial}:{
    </section>
    <section style={s.list}>
     <header style={s.listHead}><span><b>保存的私密记录</b><small style={s.listSmall}>{entries.length} 篇 · 按保存时间排列</small></span></header>
-    {entries.map(entry=><button key={entry.id} onClick={()=>{setId(entry.id);setShared(false)}} style={s.row}>
+    {entries.map(entry=><button key={entry.id} onClick={()=>setId(entry.id)} style={s.row}>
      <i style={s.fileIcon}><FileText size={18}/></i>
      <span style={s.rowText}><b style={s.rowTitle}>{entry.title}</b><p style={s.rowPreview}>{entry.body[0]}</p></span>
      <time style={s.time}>{entry.date.split(" ")[0]}<small>{entry.date.split(" ")[1]}</small></time>
@@ -82,15 +82,15 @@ export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial}:{
   title:active.title,
   kind:"沈妍私密记录",
   url:`local://private/${active.id}`,
- });setShared(true)};
+ });};
 
  return <main style={s.page}>
   <div style={s.crumb}>个人主页　/　私密主题　/　{active.title}</div>
   <section style={s.thread}>
-   <button onClick={()=>{setId(null);setShared(false)}} style={s.back}><ArrowLeft size={15}/>返回私密主题</button>
+   <button onClick={()=>setId(null)} style={s.back}><ArrowLeft size={15}/>返回私密主题</button>
    <header style={s.threadHead}>
     <span><small style={s.eyebrow}>私密记录 · {active.date}</small><h2 style={s.threadTitle}>{active.title}</h2></span>
-    <button onClick={share} style={s.share}><Link2 size={14}/>{shared?"已添加":"添加到材料"}</button>
+    <button disabled={hasMaterial(`private-${active.id}`)} onClick={share} style={{...s.share,opacity:hasMaterial(`private-${active.id}`)?.55:1,cursor:hasMaterial(`private-${active.id}`)?"default":"pointer"}}><Link2 size={14}/>{hasMaterial(`private-${active.id}`)?"已添加":"添加到材料"}</button>
    </header>
    <article style={s.article}>
     <header style={s.authorLine}><i style={s.smallAvatar}>候</i><span><b>候鸟第七年</b><small>仅自己可见</small></span></header>
@@ -103,7 +103,7 @@ export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial}:{
       </button>
       <figcaption style={s.caption}>{image.caption}</figcaption>
      </figure>)}
-     {active.id==="p3"&&<DeepArchiveGate onCopyMaterial={onCopyMaterial}/>} 
+     {active.id==="p3"&&<DeepArchiveGate onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} 
     </div>
    </article>
   </section>
