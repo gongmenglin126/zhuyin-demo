@@ -14,122 +14,158 @@ const returnedPost=forumPost("14692","有没有人记得“被找回来”之前
 const ordinaryChangePost=forumPost("17428","小时候走失以后突然不吃香菜，这种变化会持续很多年吗");
 
 const contacts:Contact[]=[
- {id:"x",name:"徐宁",note:"小学低年级起认识 · 紧急联系人",preview:"我去你家看看。",messages:[
-  {time:"10月16日 11:26",who:"对方",text:"明天中午老地方？这次别临时加活啊。"},
-  {who:"沈妍",text:"不会，保证准时。我要是迟到就请你吃一个月。"},
-  {who:"对方",text:"截图了。"},
-  {time:"10月16日 19:48",who:"沈妍",text:"我先出去一趟，明天还是靠窗那桌。"},
-  {time:"今天 12:02",who:"对方",text:"我到了，你人呢？"},
-  {time:"今天 12:37",who:"对方",text:"电话也不接。看到回我。"},
-  {time:"今天 18:37",who:"对方",text:"我去你家看看。"},
+ {id:"x",name:"徐宁",note:"自己",preview:"我去你家看看。",messages:[
+  {time:"10月16日 11:26",who:"对方",text:"明天中午老地方？"},
+  {who:"沈妍",text:"嗯"},
+  {who:"对方",text:"你别又临时加活"},
+  {who:"沈妍",text:"不会，我迟到请你吃一个月"},
+  {who:"对方",text:"截图了"},
+  {time:"10月16日 19:48",who:"沈妍",text:"我出去一趟，明天还是靠窗那桌"},
+  {time:"今天 12:02",who:"对方",text:"我到了"},
+  {who:"对方",text:"你人呢？"},
+  {time:"今天 12:37",who:"对方",text:"电话也不接，看到回我"},
+  {time:"今天 18:37",who:"对方",text:"我去你家看看"},
  ]},
- {id:"yq",name:"余晴",note:"朋友介绍认识 · 认识四年，平时线下见面",preview:"等下见",messages:[
-  {time:"10月16日 19:31",who:"对方",text:"到了？"},
+ {id:"yq",name:"余晴",note:"朋友介绍的",preview:"你别又先点一堆",messages:[
+  {time:"10月16日 19:31",who:"对方",text:"到了没"},
+  {who:"沈妍",text:"到了"},
+  {who:"对方",text:"还是里面那桌？"},
   {who:"沈妍",text:"嗯"},
   {who:"对方",text:"我还有十分钟"},
+  {who:"沈妍",text:"慢慢来"},
+  {who:"对方",text:"你别又先点一堆"},
+  {who:"沈妍",text:"已经点了"},
+  {who:"对方",text:"……服了"},
+ ]},
+ {id:"zc",name:"周川",note:"论坛加的",preview:"我在帖里回你了",messages:[
+  {time:"10月12日 22:08",who:"对方",text:"你又发帖了？"},
+  {who:"沈妍",text:"你刷到了？"},
+  {who:"对方",text:"嗯"},
+  {who:"对方",text:"这次还是那两个音？"},
+  {who:"沈妍",text:"差不多"},
+  {who:"沈妍",text:"但我现在越看越像“楠楠”"},
+  {who:"对方",text:"你先别自己把自己绕进去"},
+  {who:"沈妍",text:"已经进去了"},
+  {who:"对方",text:"那你还不睡"},
+  {who:"沈妍",text:"睡不着啊"},
+  {who:"对方",text:"明早醒了再写，今晚别翻前几次的"},
+  {who:"沈妍",text:"行吧"},
+  {time:"10月13日 00:17",who:"对方",text:"我在帖里回你了"},
+  {who:"沈妍",text:"你还真回啊"},
+  {who:"对方",text:"不然呢"},
+  {who:"沈妍",text:"你说话真的很像审稿"},
+  {who:"对方",text:"职业病"},
+ ]},
+ {id:"ly",name:"梁茵",note:"论坛私聊加的",preview:"那个号我先不上了",messages:[
+  {time:"9月28日 00:42",who:"对方",text:"你还在查那个？"},
+  {who:"沈妍",text:"哪个"},
+  {who:"对方",text:"名字那个"},
+  {who:"沈妍",text:"嗯"},
+  {who:"对方",text:"我不想在帖子里讲了"},
   {who:"沈妍",text:"好"},
-  {who:"对方",text:"等下见"},
+  {who:"对方",text:"私下可以"},
+  {who:"沈妍",text:"你确定？"},
+  {who:"对方",text:"嗯，但别写真名"},
+  {who:"沈妍",text:"行"},
+  {time:"9月28日 01:03",who:"对方",text:"刚又有人私信问我回来以后认不认家"},
+  {who:"对方",text:"烦死了"},
+  {who:"沈妍",text:"那你那个号先别上了"},
+  {who:"对方",text:"我也是这么想"},
+  {who:"沈妍",text:"去睡吧，都一点了"},
+  {who:"对方",text:"你也好意思说我"},
  ]},
- {id:"zc",name:"周川",note:"旧闻论坛认识 · 常帮沈妍查旧报和原始资料",preview:"先把原始记录留好。",messages:[
-  {time:"10月12日 22:08",who:"对方",text:"梦里的称呼还是只有最后两个音？"},
-  {who:"沈妍",text:"嗯，我没敢补字。"},
-  {who:"对方",text:"那就先别补。你醒来第一遍怎么记的就怎么留。"},
-  {who:"沈妍",text:"知道。"},
-  {time:"10月13日 00:17",who:"对方",text:"我刚在你梦帖下面也回了。"},
-  {who:"沈妍",text:"看到了。你在哪都像在给人审稿。"},
+ {id:"f",name:"方嘉",note:"公司",preview:"周一的表我先帮你交？",messages:[
+  {time:"昨天 16:22",who:"对方",text:"甲方又改表头了"},
+  {who:"对方",text:"我真的服"},
+  {who:"沈妍",text:"哈哈哈哈发我"},
+  {who:"对方",text:"你还笑"},
+  {who:"沈妍",text:"先别动，我明早统一"},
+  {time:"今天 09:14",who:"对方",text:"你今天来不来？"},
+  {time:"今天 14:05",who:"对方",text:"周一的表我先帮你交？"},
  ]},
- {id:"ly",name:"梁茵",note:"旧闻论坛认识 · 小时候有过走失经历",preview:"公开区别写真名。",messages:[
-  {time:"9月28日 00:42",who:"对方",text:"我不太想在论坛公开区继续说那个名字的问题。"},
-  {who:"沈妍",text:"可以。你不想说的我不会追问。"},
-  {who:"对方",text:"真查旧报的话，公开区别写真名，也别发我现在在哪。"},
-  {who:"沈妍",text:"好。"},
-  {time:"9月28日 01:03",who:"对方",text:"我那个旧号也先不回了。有人又来问我回来以后会不会认错家。"},
-  {who:"沈妍",text:"知道。"},
- ]},
- {id:"f",name:"方嘉",note:"同事 · 同项目",preview:"周一的表我先替你交？",messages:[
-  {time:"昨天",who:"对方",text:"甲方又改表头了，我真的服。"},
-  {who:"沈妍",text:"先别动，我明早统一格式。"},
-  {time:"今天",who:"对方",text:"周一的表我先替你交？"},
- ]},
- {id:"p",name:"爸妈",note:"家人",preview:"下周回来吃饭吗",messages:[
-  {time:"8月20日",who:"对方",text:"下周回来吃饭吗，你爸买了排骨。"},
-  {who:"沈妍",text:"看加班，确定了跟你说。"},
-  {who:"对方",text:"少熬夜。"},
+ {id:"p",name:"爸妈",note:"家人",preview:"这周回来吃饭吗",messages:[
+  {time:"10月15日 18:44",who:"对方",text:"这周回来吃饭吗"},
+  {who:"沈妍",text:"不一定"},
+  {who:"对方",text:"你爸买了排骨"},
+  {who:"沈妍",text:"你们吃吧，我这两天有点事"},
+  {who:"对方",text:"又加班？"},
+  {who:"沈妍",text:"不是工作"},
+  {who:"对方",text:"那也别熬太晚"},
  ]},
 ];
 
 const materialRules:Record<string,MaterialRule>={
   "33897":{
-    yq:[{text:"这个地方我没去过。她昨晚也没跟我提三厂。"}],
-    zc:[{text:"这张图我看过。"},{text:"房型能和她梦里对上，确实有点怪。先留着。"}],
+    yq:[{text:"这哪？"},{text:"没去过。她昨晚也没提这个。"}],
+    zc:[{text:"哦这个，我看过。"},{text:"就是她梦里那个房型吧？"},{text:"确实挺像。"}],
   },
   "09114":{
-    yq:[{text:"林楠？没听她说过。"}],
-    zc:[{text:"林楠……她之前没跟我确认过这个名字。"},{text:"沈妍小时候那条旧报你也找到了吗？我想看下日期。"}],
-    ly:[{text:"……你已经查到这个名字了？"},{text:"她之前只跟我说在翻一个旧案，没告诉我名字。"}],
+    yq:[{text:"林楠？"},{text:"没听她说过。"}],
+    zc:[{text:"林楠？"},{text:"等等。"},{text:"这个名字她没跟我说过。"},{text:"沈妍小时候那条你也找到了吗？"}],
+    ly:[{text:"你怎么找到这个的"},{text:"她没跟我说已经查到名字了。"}],
   },
   "09831":{
-    zc:[{text:"嗯，这条我见过。"},{text:"和林楠那条挨得太近了。先别急着往下猜。"}],
-    ly:[{text:"这是沈妍自己的？"},{text:"她没跟我说过她小时候也丢过。"}],
+    zc:[{text:"……"},{text:"这两条日期挨得也太近了。"}],
+    ly:[{text:"这是沈妍？"},{text:"她从来没跟我说过这段。"}],
   },
   "10731":{
-    zc:[{text:"这个帖子我以前回过。"},{text:"当时只觉得两条目录长得太像。现在再看……是有点不舒服。"}],
-    ly:[{text:"我也见过这篇。那时候没多想。"}],
+    zc:[{text:"我记得这帖。"},{text:"我当年还回过。"},{text:"没想到又绕回来了。"}],
+    ly:[{text:"这篇我也看过。"},{text:"那时候真没多想。"}],
   },
   "14692":{
-    zc:[{text:"这个人写得挺具体。"},{text:"但我突然想到另一个帖子，刚好反过来。"},{material:ordinaryChangePost},{text:"这个就只有口味变了，别的都正常。"}],
-    ly:[{text:"这篇我看过。"},{text:"‘名字叫错了’那种感觉……我有过。"}],
+    zc:[{text:"这人我记得。"},{text:"等下，我给你找个完全不像的。"},{material:ordinaryChangePost},{text:"这个就只有口味变了。"}],
+    ly:[{text:"这篇别往公开群里发。"},{text:"我以前看完一晚上没睡。"}],
   },
   "17428":{
-    zc:[{text:"这个就很像普通应激，至少我看不出别的。"}],
+    zc:[{text:"这个我反而觉得没啥。"},{text:"小时候受惊以后口味变了，也不是不能解释。"}],
     ly:[{text:"这个不像我。"}],
   },
   "private-p1":{
-    yq:[{text:"她最近是说过梦越来越像真的。"},{text:"但林楠这个名字，她没跟我讲。"}],
-    zc:[{text:"这是她自己留的记录？"},{text:"她之前只给我看过公开版。林楠这两个字是后来才对上的吧。"}],
-    ly:[{text:"这段我看着有点难受。"},{material:returnedPost},{text:"我以前存过这个帖子。你看看，尤其是他说名字那段。"}],
+    yq:[{text:"她是跟我说过最近老做同一个梦。"},{text:"但是林楠……真没提过。"}],
+    zc:[{text:"这是她电脑里的？"},{text:"她没给我看过这一版。"},{text:"林楠是后来加上去的？"}],
+    ly:[{text:"你先等下。"},{material:returnedPost},{text:"这个帖子你看一眼。"}],
   },
   "private-p3":{
     yq:null,
-    zc:[{text:"她居然存了这么多。"},{material:ordinaryChangePost},{text:"这篇也在她记录里吗？我记得它其实挺普通的。"}],
-    ly:[{text:"有几条我见过。"},{text:"‘另一个家’那个我印象很深。"},{material:returnedPost}],
+    zc:[{text:"她居然存了这么多。"},{text:"等下。"},{material:ordinaryChangePost},{text:"这篇她也存了吗？这个其实挺普通的。"}],
+    ly:[{text:"有几条我见过。"},{text:"“另一个家”那个我一直记得。"},{material:returnedPost}],
   },
   verse:{
-    zc:[{text:"这什么东西？"},{text:"沈妍从哪弄到的？"}],
-    ly:[{text:"这句话我见过。"},{text:"等一下。"},{text:"以前有人私信给我一张很糊的纸，就是这句。"}],
+    zc:[{text:"这啥"},{text:"她从哪翻出来的？"}],
+    ly:[{text:"等等"},{text:"这句我好像见过。"},{text:"以前有人私信给我一张特别糊的纸，也是这几个字。"}],
   },
   sanmen:{
-    zc:[{text:"我不懂这套宗教文本。"},{text:"不过‘二客、两门’这个写法，像是在说成对的两边。"},{text:"先别把它当证据。"}],
-    ly:[{text:"……我第一反应有点吓人。"},{text:"像两边的人弄错位置了。"},{text:"只是第一反应，我也说不准。"}],
+    zc:[{text:"我看不懂这个。"},{text:"“二客”是不是两个人？"},{text:"我瞎猜的。"}],
+    ly:[{text:"……"},{text:"我第一眼觉得像两边位置弄反了。"},{text:"当我没说，我也不知道。"}],
   },
 };
 
 const textReply=(contact:string,text:string):ReplyPart[]|null=>{
  const t=text.replace(/\s/g,"");
  if(contact==="yq"){
-  if(/昨晚|见面|去哪|在哪/.test(t))return [{text:"昨晚见到了。后来她说还有点事，我就先走了。"},{text:"她没说去哪。"}];
-  if(/林楠/.test(t))return [{text:"没听过这个名字。"}];
+  if(/昨晚|见面|去哪|在哪/.test(t))return [{text:"昨晚是见到了。"},{text:"后来她说还有点事，我就先走了。"},{text:"她没说去哪。"}];
+  if(/林楠/.test(t))return [{text:"真没听过这个名字。"}];
  }
  if(contact==="zc"){
-  if(/林楠/.test(t))return [{text:"她之前没跟我确认过这个名字。你是从旧报里翻到的？"}];
-  if(/失踪|不见了|联系不上/.test(t))return [{text:"她现在是真的完全联系不上，对吧？"},{text:"你报警了吗？"}];
-  if(/换魂|灵魂|交换/.test(t))return [{text:"……先别急着给它起名字。"},{text:"我现在也不敢这么猜。"}];
-  if(/名字不对|另一个家|回来以后不会/.test(t))return [{text:"这种说法我在旧帖里见过，不止一个人。"}];
+  if(/林楠/.test(t))return [{text:"她没跟我说过这个名字。"},{text:"你从哪翻到的？"}];
+  if(/失踪|不见了|联系不上/.test(t))return [{text:"她现在还是完全联系不上？"},{text:"电话也不通？"}];
+  if(/换魂|灵魂|交换/.test(t))return [{text:"……你先别吓自己。"},{text:"我现在也不知道。"}];
+  if(/名字不对|另一个家|回来以后不会/.test(t))return [{text:"这种说法我好像见过几次。"},{text:"我找找。"}];
  }
  if(contact==="ly"){
-  if(/林楠/.test(t))return [{text:"私下说可以，公开帖里先别写真名。"}];
-  if(/名字|另一个家|不会/.test(t))return [{text:"嗯。"},{text:"我有过。尤其是别人叫我名字的时候。"}];
-  if(/换魂|灵魂|交换/.test(t))return [{text:"我以前也想过这种很离谱的可能。"},{text:"后来不敢想了。"}];
+  if(/林楠/.test(t))return [{text:"这个名字先别发公开区。"}];
+  if(/名字|另一个家|不会/.test(t))return [{text:"嗯。"},{text:"我小时候也说过差不多的话。"}];
+  if(/换魂|灵魂|交换/.test(t))return [{text:"你也想到这个了？"},{text:"我以前想过，然后把自己吓得够呛。"}];
  }
- if(contact==="f"&&/沈妍|联系不上|没来/.test(t))return [{text:"她今天也没回我。怎么了？"}];
- if(contact==="p"&&/沈妍|联系不上|没回/.test(t))return [{text:"她没跟我们说今天有什么事。电话也打不通吗？"}];
+ if(contact==="f"&&/沈妍|联系不上|没来/.test(t))return [{text:"她今天也没回我。"},{text:"怎么了？"}];
+ if(contact==="p"&&/沈妍|联系不上|没回/.test(t))return [{text:"她没跟我们说今天去哪。"},{text:"电话也打不通吗？"}];
  return null;
 };
 
 const introText=(contactId:string)=>{
- if(contactId==="yq")return "你好，我是徐宁，沈妍的朋友。她今天一直联系不上，我现在在她家。看到你们昨晚见过，想问下她离开时有没有说去哪。";
- if(contactId==="zc")return "你好，我是徐宁，沈妍的朋友。她今天联系不上，我现在在她家。她电脑上留了不少你们聊旧报的记录，想问你几个地方。";
- if(contactId==="ly")return "你好，我是徐宁，沈妍的朋友。她今天联系不上。我看到你们之前聊过她在查的那些旧事，冒昧问几句。";
+ if(contactId==="yq")return "你好，我是徐宁，沈妍的朋友。她今天一直联系不上，我现在在她家。看到你们昨晚见过，想问下她走的时候有没有说去哪。";
+ if(contactId==="zc")return "你好，我是徐宁，沈妍的朋友。她今天联系不上，我现在在她家。看到你们最近聊过她那些梦和旧帖子，想问你点事。";
+ if(contactId==="ly")return "你好，我是徐宁，沈妍的朋友。她今天联系不上。我看到你们之前聊过一些她在查的东西，冒昧问几句。";
  if(contactId==="f")return "你好，我是徐宁，沈妍的朋友。她今天联系不上，我现在在她家，用一下她电脑上的微信。";
  if(contactId==="p")return "叔叔阿姨好，我是徐宁。沈妍今天一直联系不上，我现在在她家。";
  return "你好，我是徐宁，沈妍的朋友。她今天联系不上，我现在在她家。";
@@ -154,11 +190,11 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  };
  const delayedParts=(contactId:string,parts:ReplyPart[]|null)=>{
   if(!parts?.length)return;
-  let elapsed=900+Math.floor(Math.random()*500);
+  let elapsed=1000+Math.floor(Math.random()*900);
   setTyping(prev=>({...prev,[contactId]:true}));
   parts.forEach((part,index)=>{
-   const extraDelay=part.text?Math.min(1700,part.text.length*28):500;
-   elapsed+=extraDelay+Math.floor(Math.random()*650);
+   const extraDelay=part.text?Math.min(2200,part.text.length*35):700;
+   elapsed+=extraDelay+Math.floor(Math.random()*1000);
    window.setTimeout(()=>{
     if(part.material)appendFor(contactId,[{who:"对方",text:`[链接] ${part.material.title}`,material:part.material}]);
     else if(part.text)appendFor(contactId,[{who:"对方",text:part.text}]);
