@@ -12,6 +12,7 @@ type MaterialRule=Record<string,ReplyPart[]|null>;
 const forumPost=(id:string,title:string):SharedMaterial=>({id,title,kind:"论坛帖子",url:`https://www.zhuyinwen.cn/thread/${id}`});
 const returnedPost=forumPost("14692","有没有人记得“被找回来”之前的家");
 const ordinaryChangePost=forumPost("17428","小时候走失以后突然不吃香菜，这种变化会持续很多年吗");
+const scriptureComparePost=forumPost("11208","求辨《三门疏》流传页：黑底红字那张其实不是同一篇吧");
 
 // Desktop apps are unmounted when switching windows. Keep the current WeChat session
 // at module scope so messages and one-shot material sends survive app switches.
@@ -107,47 +108,92 @@ const contacts:Contact[]=[
 const materialRules:Record<string,MaterialRule>={
   "33897":{
     yq:[{text:"这哪？"},{text:"没去过。她昨晚也没提这个。"}],
-    zc:[{text:"哦这个，我看过。"},{text:"就是她梦里那个房型吧？"},{text:"确实挺像。"}],
+    zc:[{text:"这个帖子我看过。"},{text:"她当时就在下面问过房型。"},{text:"照片跟她梦里那间确实有点像。"}],
   },
   "09114":{
     yq:[{text:"林楠？"},{text:"没听她说过。"}],
-    zc:[{text:"林楠？"},{text:"等等。"},{text:"这个名字她没跟我说过。"},{text:"沈妍小时候那条你也找到了吗？"}],
-    ly:[{text:"你怎么找到这个的"},{text:"她没跟我说已经查到名字了。"}],
+    zc:[],
+    ly:[{text:"林楠？"},{text:"我不认识。沈妍为什么会查这个人？"}],
   },
   "09831":{
-    zc:[{text:"……"},{text:"这两条日期挨得也太近了。"}],
-    ly:[{text:"这是沈妍？"},{text:"她从来没跟我说过这段。"}],
+    zc:[],
+    ly:[{text:"这是沈妍？"},{text:"她没跟我说过小时候这件事。"}],
   },
   "10731":{
-    zc:[{text:"我记得这帖。"},{text:"我当年还回过。"},{text:"没想到又绕回来了。"}],
-    ly:[{text:"这篇我也看过。"},{text:"那时候真没多想。"}],
+    zc:[],
+    ly:[{text:"这篇我好像见过。"},{text:"两条都十三天，确实挺扎眼的。"}],
   },
   "14692":{
-    zc:[{text:"这人我记得。"},{text:"等下，我给你找个完全不像的。"},{material:ordinaryChangePost},{text:"这个就只有口味变了。"}],
-    ly:[{text:"这篇别往公开群里发。"},{text:"我以前看完一晚上没睡。"}],
+    zc:[{text:"这帖我有印象。"},{text:"写得很具体，但单看这一篇我也说不好。"}],
+    ly:[{text:"这篇我看过。"},{text:"他说别人叫名字时会慢半拍，那段我记了很久。"}],
   },
   "17428":{
-    zc:[{text:"这个我反而觉得没啥。"},{text:"小时候受惊以后口味变了，也不是不能解释。"}],
-    ly:[{text:"这个不像我。"}],
+    zc:[{text:"这篇我当时回过。"},{text:"就口味突然变了，别的都没有。"}],
+    ly:[{text:"这个跟我的情况不太像。"}],
   },
   "private-p1":{
-    yq:[{text:"她是跟我说过最近老做同一个梦。"},{text:"但没跟我讲过这么细。"}],
-    zc:[{text:"这是她电脑里的？"},{text:"她没给我看过这一版。"},{text:"她最后还是觉得那两个音像“楠楠”啊。"}],
-    ly:[{text:"这个感觉让我想到一个旧帖。"},{material:returnedPost},{text:"不一定有关系，就是有点像。"}],
+    yq:[{text:"她是说过最近总梦见同一间屋。"},{text:"盒子这些细节没跟我讲过。"}],
+    zc:[{text:"这是她电脑里自己记的？"},{text:"这版我没看过。"},{text:"她后来还是觉得那两个音像“楠楠”啊。"}],
   },
   "private-p3":{
     yq:null,
-    zc:[{text:"她居然存了这么多。"},{text:"等下。"},{material:ordinaryChangePost},{text:"这篇她也存了吗？这个其实挺普通的。"}],
-    ly:[{text:"有几条我见过。"},{text:"“另一个家”那个我一直记得。"},{material:returnedPost}],
+    zc:[{text:"她把这些都存一起了？"},{text:"她写到有人只是口味突然变了，我想到一篇。"},{material:ordinaryChangePost},{text:"应该就是这种。"}],
+    ly:[{text:"“另一个家”这句我记得站里有人写过。"},{material:returnedPost},{text:"我以前看过这篇。"}],
   },
   verse:{
-    zc:[{text:"这啥"},{text:"她从哪翻出来的？"}],
-    ly:[{text:"等等"},{text:"这句我好像见过。"},{text:"以前有人私信给我一张特别糊的纸，也是这几个字。"}],
+    zc:[{text:"这个黑底红字的东西我好像在旧帖里见过。"},{text:"不是这句话本身，是有人拿它跟另一批白纸混在一起传。"},{material:scriptureComparePost}],
+    ly:[{text:"看不懂。"},{text:"这个也是从她电脑里翻出来的？"}],
   },
   sanmen:{
-    zc:[{text:"我看不懂这个。"},{text:"“二客”是不是两个人？"},{text:"我瞎猜的。"}],
-    ly:[{text:"……"},{text:"我第一眼觉得像两边位置弄反了。"},{text:"当我没说，我也不知道。"}],
+    zc:[],
+    ly:[],
   },
+};
+
+const received=(contactId:string,materialId:string)=>!!wechatSession.sent[`${contactId}:${materialId}`];
+const materialReply=(contactId:string,materialId:string):ReplyPart[]|null=>{
+  if(contactId==="zc"&&materialId==="09114"){
+    if(received("zc","09831"))return [
+      {text:"等等。"},
+      {text:"你刚才那条沈妍也是九岁、十三天。"},
+      {text:"这条林楠也是，而且失踪日期只差一天。"},
+    ];
+    return [{text:"林楠？"},{text:"这个名字她没跟我说过。"},{text:"九岁，十三天……我先记一下。"}];
+  }
+  if(contactId==="zc"&&materialId==="09831"){
+    if(received("zc","09114"))return [
+      {text:"这是沈妍？"},
+      {text:"等一下。刚才林楠那条也是九岁、十三天。"},
+      {text:"两边失踪日期还只差一天。"},
+    ];
+    return [{text:"这是沈妍？"},{text:"她小时候也走失过？"},{text:"她从没跟我说过。"}];
+  }
+  if(contactId==="zc"&&materialId==="10731"){
+    if(received("zc","09114")&&received("zc","09831"))return [
+      {text:"我记得这帖。"},
+      {text:"我当年还回过。"},
+      {text:"原来你前面发我的就是这两起。"},
+    ];
+    return [{text:"我记得这帖。"},{text:"我当年还回过。那时候只当成目录撞得太巧。"}];
+  }
+  if(contactId==="zc"&&materialId==="sanmen"){
+    const hasPair=received("zc","10731")||(received("zc","09114")&&received("zc","09831"));
+    if(hasPair)return [
+      {text:"这份我真看不懂。"},
+      {text:"但你前面那两起案子摆在这儿，再看“二客相契”，确实很难不想到两个人。"},
+      {text:"只能算猜，别当证据。"},
+    ];
+    return [{text:"我看不懂这套。"},{text:"“身为舍，魂为客”字面挺怪的，别的我不敢猜。"}];
+  }
+  if(contactId==="ly"&&materialId==="sanmen"){
+    const hasAnomaly=received("ly","private-p3")||received("ly","14692")||received("ly","09831");
+    if(hasAnomaly)return [
+      {text:"我看不懂这个。"},
+      {text:"但你前面发我的那些“名字不对”“另一个家”，跟这几句放一起……有点吓人。"},
+    ];
+    return [{text:"我看不懂。"},{text:"你从哪找到的？"}];
+  }
+  return materialRules[materialId]?.[contactId]??null;
 };
 
 const textReply=(contact:string,text:string):ReplyPart[]|null=>{
@@ -163,9 +209,9 @@ const textReply=(contact:string,text:string):ReplyPart[]|null=>{
   if(/名字不对|另一个家|回来以后不会/.test(t))return [{text:"这种说法我好像见过几次。"},{text:"我找找。"}];
  }
  if(contact==="ly"){
-  if(/林楠/.test(t))return [{text:"这个名字先别发公开区。"}];
+  if(/林楠/.test(t))return [{text:"林楠？"},{text:"我不认识这个人。"}];
   if(/名字|另一个家|不会/.test(t))return [{text:"嗯。"},{text:"我小时候也说过差不多的话。"}];
-  if(/换魂|灵魂|交换/.test(t))return [{text:"你也想到这个了？"},{text:"我以前想过，然后把自己吓得够呛。"}];
+  if(/换魂|灵魂|交换/.test(t))return [{text:"你是说真的交换？"},{text:"……我不知道，我不敢这么猜。"}];
  }
  if(contact==="f"&&/沈妍|联系不上|没来/.test(t))return [{text:"她今天也没回我。"},{text:"怎么了？"}];
  if(contact==="p"&&/沈妍|联系不上|没回/.test(t))return [{text:"她没跟我们说今天去哪。"},{text:"电话也打不通吗？"}];
@@ -173,9 +219,9 @@ const textReply=(contact:string,text:string):ReplyPart[]|null=>{
 };
 
 const introText=(contactId:string)=>{
- if(contactId==="yq")return "你好，我是徐宁，沈妍的朋友。她今天一直联系不上，我现在在她家。看到你们昨晚见过，想问下她走的时候有没有说去哪。";
- if(contactId==="zc")return "你好，我是徐宁，沈妍的朋友。她今天联系不上，我现在在她家。看到你们最近聊过她那些梦和旧帖子，想问你点事。";
- if(contactId==="ly")return "你好，我是徐宁，沈妍的朋友。她今天联系不上。我看到你们之前聊过一些她在查的东西，冒昧问几句。";
+ if(contactId==="yq")return "你好，我是徐宁，沈妍朋友。她今天一直联系不上，我现在在她家。你们昨晚是不是见过？她走的时候有说去哪吗？";
+ if(contactId==="zc")return "你好，我是徐宁，沈妍朋友。她今天一直联系不上。我现在在她家，她微信还登着。看到你们最近聊过，想问你点事。";
+ if(contactId==="ly")return "你好，我是徐宁，沈妍朋友。她今天一直联系不上。我现在在她家，她微信还登着。看到你们最近聊过，想问你点事。";
  if(contactId==="f")return "你好，我是徐宁，沈妍的朋友。她今天联系不上，我现在在她家，用一下她电脑上的微信。";
  if(contactId==="p")return "叔叔阿姨好，我是徐宁。沈妍今天一直联系不上，我现在在她家。";
  return "你好，我是徐宁，沈妍的朋友。她今天联系不上，我现在在她家。";
@@ -244,12 +290,13 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  const sendMaterial=(material:SharedMaterial)=>{
   const rules=materialRules[material.id];
   if(!rules||!Object.prototype.hasOwnProperty.call(rules,id))return;
+  const reply=materialReply(id,material.id);
   const intro=ensureIntro(id);
   appendFor(id,[...intro,{who:"沈妍",text:`[分享] ${material.title}`,material}]);
   wechatSession.sent={...wechatSession.sent,[`${id}:${material.id}`]:true};
   notifyWechat();
   setPicker(false);
-  delayedParts(id,rules[id]);
+  delayedParts(id,reply);
  };
  const openMaterial=(material:SharedMaterial)=>{
   if(material.kind==="论坛帖子"&&/^\d+$/.test(material.id)&&onOpenPost)onOpenPost(material.id);
