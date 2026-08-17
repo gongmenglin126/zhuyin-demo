@@ -82,6 +82,30 @@ const posterMemory:Post={
   ],
 };
 
+const scriptureComparePost:Post={
+  id:"11208",
+  title:"求辨《三门疏》流传页：黑底红字那张其实不是同一篇吧",
+  author:"旧纸鸢",
+  date:"2016-04-03 21:17",
+  board:"旧闻考据",
+  views:1864,
+  hidden:true,
+  excerpt:"一个旧转载包里混着两种完全不同的页面：黑底反相页和白纸抄本。来源字段都已经丢了。",
+  terms:["三门疏","身非我身","名非我名","黑底红字","白纸抄本","残页"],
+  highlights:["身非我身，名非我名","《三门疏》","不是同一批扫描","来源字段都缺了"],
+  body:[
+    "前几年存过一个民俗资料转载包，最近整理硬盘才发现里面其实混了两种东西。",
+    "一类是反相处理过的黑底页面，最清楚的只有“身非我身，名非我名”反复出现；另一类是普通白纸抄本，边角有一页能看见《三门疏》三个字。",
+    "两类文件的分辨率、压缩方式和编号都不一样，我倾向于不是同一批扫描，只是后来被人塞进了同一个压缩包。",
+    "原网页已经没了，两个目录里的来源字段也都缺了。想问问有没有人见过更早的转载，至少能确认它们最初是不是一起出现的。"
+  ],
+  replies:[
+    reply("旧档员-03","21:46","站内 2012 年前的附件索引不全，我只能确认这两组文件曾经在不同主题里出现过，原附件已失效。","版主"),
+    reply("纸页边角","22:08","如果文件编号和压缩方式都不同，我不会先当成一篇。可能只是后来的整理者觉得内容像，顺手放一起了。"),
+    reply("旧纸鸢","22:21","我也是这个意思。先把两组分开记，等找到更早来源再说。","楼主")
+  ],
+};
+
 const reportBase=flowPosts.find(post=>post.id==="09114")!;
 const linNanReport:Post={
   ...reportBase,
@@ -160,7 +184,7 @@ const toRank=(date:string)=>{
   return 0;
 };
 
-export const posts:Post[]=[...patched,posterMemory].sort((a,b)=>toRank(a.date)-toRank(b.date));
+export const posts:Post[]=[...patched,posterMemory,scriptureComparePost].sort((a,b)=>toRank(a.date)-toRank(b.date));
 
 export const privateEntries:PrivateEntry[]=flowPrivateEntries
   .filter(entry=>entry.id!=="p2")
