@@ -1,6 +1,5 @@
 import {
   chats,
-  history as baseHistory,
   posts as basePosts,
   privateEntries as basePrivateEntries,
   profile,
@@ -158,13 +157,11 @@ export const privateEntries:PrivateEntry[]=[
 ];
 
 export const history=[
-  {title:"最近总梦见一间没住过的房子",info:"烛阴旧闻 · #20847",id:"20847"},
-  {title:"候鸟第七年 - 用户主页",info:"烛阴旧闻 · 个人中心",profile:true},
-  {title:"河临天气 - 未来七天",info:"澄川搜索 · 昨天 18:51"},
-  {title:"岚棉三厂旧址附近公交",info:"地图搜索 · 昨天 18:43"},
-  {title:"胶片扫描店 营业时间",info:"澄川搜索 · 10月15日"},
-  {title:"分享一组岚棉三厂旧址的窗户照片",info:"烛阴旧闻 · #33897",id:"33897"},
-  {title:"旧帖合并、原链接与存档编号说明",info:"烛阴旧闻 · #31002",id:"31002"},
-  {title:"睡眠门诊 反复梦境",info:"澄川搜索 · 10月12日"},
-  ...baseHistory.filter(item=>item.id==="14692").slice(0,1),
+ {title:"最近总梦见一间没住过的房子",info:"烛阴旧闻 · #20847",id:"20847"},
+ {title:"候鸟第七年 - 用户主页",info:"烛阴旧闻 · 个人中心",profile:true},
+ {title:"河临天气 - 未来七天",info:"澄川搜索 · 昨天 18:51"},
+ {title:"胶片扫描店 营业时间",info:"澄川搜索 · 10月15日"},
+ {title:"老电影里常见的红铁皮盒是哪家出的",info:"烛阴旧闻 · #30177",id:"30177"},
+ {title:"旧帖合并、原链接与存档编号说明",info:"烛阴旧闻 · #31002",id:"31002"},
+ {title:"睡眠门诊 反复梦境",info:"澄川搜索 · 10月12日"},
 ];

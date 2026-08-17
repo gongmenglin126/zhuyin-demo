@@ -41,13 +41,13 @@ export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial,ha
     <h2 style={s.gateTitle}>私密主题</h2>
     <p style={s.gateCopy}>这个区域设置了独立访问口令。</p>
     <form onSubmit={submit} style={s.gateForm}>
-     <label style={s.label}>访问口令 <span style={s.labelHint}>2 个汉字</span></label>
+     <label style={s.label}>访问口令</label>
      <input
       autoFocus
       autoComplete="off"
       value={pwd}
       onChange={e=>{setPwd(e.target.value);setError("")}}
-      aria-label="两个字访问口令"
+      aria-label="访问口令"
       placeholder="输入口令"
       style={s.input}
      />

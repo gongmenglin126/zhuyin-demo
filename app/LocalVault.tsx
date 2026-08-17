@@ -25,7 +25,7 @@ export default function LocalVault({unlocked,onUnlock,openLink}:{unlocked:boolea
         <div style={styles.lockMark}><LockKeyhole size={26}/></div>
         <small style={styles.eyebrow}>本地缓存 · 已解锁</small>
         <h2 style={styles.title}>保存的缓存页</h2>
-        <p style={styles.copy}>一条被单独锁起来的本地记录。</p>
+        <p style={styles.copy}>已保存的离线页面。</p>
         <div style={styles.address}>https://www.zhuyinwen.cn/archive/cache/baishesong-1986.html</div>
         <button style={styles.primary} onClick={openLink}><ExternalLink size={16}/>打开缓存页面</button>
       </section>
@@ -39,17 +39,16 @@ export default function LocalVault({unlocked,onUnlock,openLink}:{unlocked:boolea
       <h2 style={styles.title}>需要访问口令</h2>
       <div style={styles.hint}>
         <span><b>口令提示</b>　打开前会卡一下</span>
-        <small>4 个汉字</small>
       </div>
       <form onSubmit={submit} style={styles.form}>
         <input
           autoFocus
           autoComplete="off"
-          aria-label="四个字访问口令"
+          aria-label="访问口令"
           value={pwd}
           onChange={e=>{setPwd(e.target.value);setError("")}}
           style={styles.input}
-          placeholder="输入 4 个汉字"
+          placeholder="输入口令"
         />
         <button style={styles.primary}>解锁</button>
       </form>
