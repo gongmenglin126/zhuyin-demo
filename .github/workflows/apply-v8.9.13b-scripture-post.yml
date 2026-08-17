@@ -1,0 +1,30 @@
+name: Add Missing Scripture Forum Post
+
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths: ['.github/workflows/apply-v8.9.13b-scripture-post.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - name: Add linked forum post
+        shell: bash
+        run: |
+          echo 'H4sIAGJ9gmoC/6VWXU/bVhi+z6/wfEMihYxkqOtSuRf7uptUbdJuUDUZYsAa+ZDtDtA0yUBCEshnNwiQBEgKhfJhaAslcZzwX4rPsX3Vv7D3+KQoRVWnbVKU+LV93vd5n+c574lnUopHmQSvTM+I44wYTcQlhXkEoceT4Mivl52IxxQhpnw+xUeFb3mF/34mPvtzKKDIrM8jc4mAJPCRXxRhTvH6PB4+NjEdl7ghWCQrjCSQfF/zssBNwqpHcVmRA5NiLOJNwCX3kHwHxAjHcezIV8HgKOv77MGQR4zJgqRw0tBQP408IYkJ5YkkfBOPJnhJIHnC5Iv73cMwYiTMBoOhkfusHyJFVGaEMItfLtq9wxt1xWxlncqhtV68UVfx5YJp7DqNy3fGltMpI33N0pvotOIsPkPGLkq9Qdq22crjjTNUypkt1TpLo9KBm5Z/okBfkLdyYOktp9V070Z4BWqFRoL3hkdGh0e+YELBcPBL99F4nJci7vtOpWOrSzivufd/E4VZORy8f2+URNNiJCLEwor0RCChMDchSAklzEJxs3UEi+3uid3tolzKSefw1ZVVh/t71kEeaTmUOgSwgNTaSkJPTr152xYq5q1qC26ipzlrswuI8UoS105u1EVc38d6CZrG2qWz1EVXr6xO0Ww1TX0ZnlIKBSkqh8fYW+pYP2vrx059G2fKcAEhKuVpCBcQDpIJ4WBJCLG2ClDYx7ThKXDa1LRCCgwmfWfk7iS9Ix7cGdQGZ9s4e4yLBNydnixDh25ovfF4ZD48BhcMw6JsHqV3UfsCnW7Y1+k+x+dl87piXybx+uYt2QAG11T7uozXLqzSstU4saobGJYXy1bhHKQAsqldQBOoRTUxWzV7//o9i1CQWOhlh0B29UB7SUgGlYlgLmPvZSPVcCuF97fgESoe4Vr2rVr7BD1v1TrkRHvQkA6I3hlVVHx+Ww5vao66NagCLLd7bfvgKWSG16CuDTzVVu2DhTs0wzWwAlx+0MceSbyeNjtvCMDMMuwtq5C+URdQYdUyXuD1NjKKxGzGOipegQYgFRFp94o0B5DVHiqVTb3wUQlJc9A0uV8ALe3msanrqLFtX1eBXPoyAeXWAnkGoKHCjtUtE6e7RsavGrAC8gFkWGFVNdRdA70A9aBJzPbOrU/Inlh67VQ0+AA7kIFwpOtADUiFqxe48gKWU28QHtOv0XmZ0NfQbG0PaUtm5wT0Q5k6dED7A7z25RXVBtYSvADXNSSMxBlRkPueJNG8l0wJ3HiGyhswQ8DPMEVG75F9dLyJllMMzJcQQ2ybzRPnbCaJDBdNZKyR/Z867FNcPLoFZV9vEs06SaoZrvaAG1Trzwuz1XGaG8AKBQhdEgEKOzQzEIn2XuK1jMsya2Uz8D7r8w/iJSMQLOQ6iuANhcn0ZdHzRbxd6/vEdQJYYtAh1BgAgUImJjG2UCqDun/iTIlOXCiLimfQyqAliH7uVrTVlH2QRb0KEIO0Nloi5nEaOs6u4r96lPf+KPsQ8sDgJnhDQTI3AEJ7B4q4fB3hZBGrdVI/lcErK5RBMDsyVFuDPZazTrM420OZc+qKvqOW8/bZBSUL7xsuWVTsPx54PP/jHByCk3CSoQcqE4srjBhj5DDtiRdlgflpXlaE6HdzouJlaYX3b0dFWRZjU+4BLQcIA/yE4KUP/fR49QfhtI7PRLghYc5dSpESJLJ7to495sYCgQD8NZiYFiJ+8kCQfhCicWn+cUCGFV4v7x/3cQ+V+I987FcvHyCnoW+4H47T0AfneUyY/S9V/B879v9laSAQevxH9lw8DC9J/PynKYRkfmiHkJcIzEqiItB/PrLP8zcg0J7BSgkAAA=' | base64 -d | gunzip > /tmp/add_post.py
+          python /tmp/add_post.py
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add content/gameDataFlowV2.ts
+          git diff --cached --quiet && exit 0
+          git commit -m "Add linked scripture comparison post"
+          git push
