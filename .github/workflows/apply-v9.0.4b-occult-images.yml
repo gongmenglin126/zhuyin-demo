@@ -1,0 +1,29 @@
+name: Apply v9.0.4b Occult Images
+
+on:
+  push:
+    branches:
+      - agent/v8-forum-gameplay-rework
+    paths:
+      - '.github/workflows/apply-v9.0.4b-occult-images.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - name: Apply corrected source patch
+        run: python .github/scripts/apply_v904b_verse_then_occult_patch.py
+      - name: Commit source changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx app/AdminPortalOccult.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Integrate recovered occult images and replace paper-doll reach feedback"
+          git push origin HEAD:agent/v8-forum-gameplay-rework
