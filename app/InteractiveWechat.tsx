@@ -13,6 +13,16 @@ const forumPost=(id:string,title:string):SharedMaterial=>({id,title,kind:"论坛
 const returnedPost=forumPost("14692","有没有人记得“被找回来”之前的家");
 const ordinaryChangePost=forumPost("17428","小时候走失以后突然不吃香菜，这种变化会持续很多年吗");
 
+// Desktop apps are unmounted when switching windows. Keep the current WeChat session
+// at module scope so messages and one-shot material sends survive app switches.
+const wechatSession={
+  extra:{} as Record<string,Msg[]>,
+  introduced:{} as Record<string,boolean>,
+  sent:{} as Record<string,boolean>,
+};
+const wechatSubscribers=new Set<()=>void>();
+const notifyWechat=()=>wechatSubscribers.forEach(fn=>fn());
+
 const contacts:Contact[]=[
  {id:"x",name:"徐宁",note:"自己",preview:"我去你家看看。",messages:[
   {time:"10月16日 11:26",who:"对方",text:"明天中午老地方？"},
@@ -121,9 +131,9 @@ const materialRules:Record<string,MaterialRule>={
     ly:[{text:"这个不像我。"}],
   },
   "private-p1":{
-    yq:[{text:"她是跟我说过最近老做同一个梦。"},{text:"但是林楠……真没提过。"}],
-    zc:[{text:"这是她电脑里的？"},{text:"她没给我看过这一版。"},{text:"林楠是后来加上去的？"}],
-    ly:[{text:"你先等下。"},{material:returnedPost},{text:"这个帖子你看一眼。"}],
+    yq:[{text:"她是跟我说过最近老做同一个梦。"},{text:"但没跟我讲过这么细。"}],
+    zc:[{text:"这是她电脑里的？"},{text:"她没给我看过这一版。"},{text:"她最后还是觉得那两个音像“楠楠”啊。"}],
+    ly:[{text:"这个感觉让我想到一个旧帖。"},{material:returnedPost},{text:"不一定有关系，就是有点像。"}],
   },
   "private-p3":{
     yq:null,
@@ -173,19 +183,23 @@ const introText=(contactId:string)=>{
 
 export default function InteractiveWechat({materials,onOpenPost}:{materials:SharedMaterial[];onOpenPost?:(id:string)=>void}){
  const [id,setId]=useState("x"),[q,setQ]=useState(""),[draft,setDraft]=useState(""),[picker,setPicker]=useState(false);
- const [extra,setExtra]=useState<Record<string,Msg[]>>({});
- const [introduced,setIntroduced]=useState<Record<string,boolean>>({});
+ const [extra,setExtra]=useState<Record<string,Msg[]>>(()=>({...wechatSession.extra}));
+ const [introduced,setIntroduced]=useState<Record<string,boolean>>(()=>({...wechatSession.introduced}));
  const [typing,setTyping]=useState<Record<string,boolean>>({});
- const [sent,setSent]=useState<Record<string,boolean>>({});
+ const [sent,setSent]=useState<Record<string,boolean>>(()=>({...wechatSession.sent}));
  const scrollRef=useRef<HTMLElement|null>(null);
  const contact=contacts.find(x=>x.id===id)!;
  const visible=contacts.filter(x=>(x.name+x.note+x.preview).includes(q));
  const messages=useMemo(()=>[...contact.messages,...(extra[id]||[])],[contact,extra,id]);
  const sendable=useMemo(()=>materials.filter(m=>Object.prototype.hasOwnProperty.call(materialRules[m.id]||{},id)&&!sent[`${id}:${m.id}`]),[materials,id,sent]);
- const appendFor=(contactId:string,items:Msg[])=>setExtra(prev=>({...prev,[contactId]:[...(prev[contactId]||[]),...items]}));
+ const appendFor=(contactId:string,items:Msg[])=>{
+  wechatSession.extra={...wechatSession.extra,[contactId]:[...(wechatSession.extra[contactId]||[]),...items]};
+  notifyWechat();
+ };
  const ensureIntro=(contactId:string):Msg[]=>{
-  if(contactId==="x"||introduced[contactId])return [];
-  setIntroduced(prev=>({...prev,[contactId]:true}));
+  if(contactId==="x"||wechatSession.introduced[contactId])return [];
+  wechatSession.introduced={...wechatSession.introduced,[contactId]:true};
+  notifyWechat();
   return [{who:"沈妍",text:introText(contactId)}];
  };
  const delayedParts=(contactId:string,parts:ReplyPart[]|null)=>{
@@ -203,6 +217,16 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
   });
  };
 
+ useEffect(()=>{
+  const sync=()=>{
+   setExtra({...wechatSession.extra});
+   setIntroduced({...wechatSession.introduced});
+   setSent({...wechatSession.sent});
+  };
+  wechatSubscribers.add(sync);
+  sync();
+  return ()=>{wechatSubscribers.delete(sync)};
+ },[]);
  useEffect(()=>{
   const el=scrollRef.current;
   if(el)el.scrollTop=el.scrollHeight;
@@ -222,7 +246,8 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
   if(!rules||!Object.prototype.hasOwnProperty.call(rules,id))return;
   const intro=ensureIntro(id);
   appendFor(id,[...intro,{who:"沈妍",text:`[分享] ${material.title}`,material}]);
-  setSent(prev=>({...prev,[`${id}:${material.id}`]:true}));
+  wechatSession.sent={...wechatSession.sent,[`${id}:${material.id}`]:true};
+  notifyWechat();
   setPicker(false);
   delayedParts(id,rules[id]);
  };
