@@ -1,6 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
-import {FormEvent,ReactNode,useMemo,useState} from "react";
+import {FormEvent,ReactNode,useEffect,useMemo,useState} from "react";
 import {ArrowLeft,ChevronRight,Clock3,ExternalLink,Globe2,History as HistoryIcon,Home,LockKeyhole,Maximize2,MessageCircle,Minimize2,NotebookPen,RefreshCw,Search,Wifi,X} from "lucide-react";
 import {chats,history,Post,posts,privateEntries,profile} from "../content/gameDataFlowV2";
 import LocalVault from "./LocalVault";
@@ -18,6 +18,7 @@ export default function Page(){
  const [stage,setStage]=useState<"title"|"login"|"desktop">("title");
  const [intro,setIntro]=useState(true),[app,setApp]=useState<App|null>(null),[max,setMax]=useState(true),[wxRead,setWxRead]=useState(false),[privateUnlocked,setPrivateUnlocked]=useState(false),[noteUnlocked,setNoteUnlocked]=useState(false);
  const [materials,setMaterials]=useState<SharedMaterial[]>([]);
+ const [wxPost,setWxPost]=useState<string|null>(null);
  const rememberMaterial=(m:SharedMaterial)=>setMaterials(prev=>prev.some(x=>x.id===m.id)?prev:[...prev,m]);
  if(stage==="title")return <main className="title"><section><small>一段发生在朋友电脑里的调查</small><h1>烛阴旧闻</h1><p>沈妍没有赴约。<br/>至少在今天中午时，你还只把它当成爽约。</p><button onClick={()=>setStage("login")}>进入公寓 <ChevronRight/></button></section></main>;
  if(stage==="login")return <main className="login"><div className="clock"><b>19:06</b><span>10月17日　星期六</span></div><section><div className="avatar">妍</div><h2>沈妍</h2><button className="password" onClick={()=>setStage("desktop")}><span>••••••••</span><ChevronRight/></button><p>你和沈妍从小学低年级就认识。你们互为紧急联系人，也一直留着彼此的备用门锁密码。</p></section></main>;
@@ -26,15 +27,16 @@ export default function Page(){
  return <main className="desktop"><header className="sys"><div><b>●</b><strong>{appTitle}</strong><span>文件</span><span>编辑</span></div><div><Wifi/><span>80%</span><span>10月17日 周六 19:06</span></div></header>
   <div className="shortcuts"><Icon label="浏览器" tone="blue" icon={<Globe2/>} onClick={()=>open("browser")}/><Icon label="微信" tone="green" icon={<MessageCircle/>} badge={!wxRead} onClick={()=>open("wechat")}/><Icon label="本地资料" tone="amber" icon={<NotebookPen/>} onClick={()=>open("notes")}/></div>
   {intro&&<div className="overlay"><section className="intro"><small><Clock3/> 2026年10月17日　19:06</small><h2>沈妍没有来。</h2><p>你们约好今天中午见面。她没有出现，电话关机，微信也没有回复。</p><p>傍晚，你用她留给你的备用门锁密码进了公寓。屋里没人，电脑没有关机，微信和浏览器仍保持登录。</p><blockquote><b>徐宁　18:37</b>我去你家看看。看到回我。</blockquote><em>现在还没有理由把这件事说成犯罪。你只是想先确认，她昨天离开后原本打算去哪里。</em><button onClick={()=>setIntro(false)}>查看电脑</button></section></div>}
-  {app&&<Window title={appTitle} max={max} allowMax={app==="browser"||app==="verse"} close={()=>setApp(null)} toggle={()=>setMax(!max)}>{app==="browser"?<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked} onCopyMaterial={rememberMaterial}/>:app==="wechat"?<InteractiveWechat materials={materials}/>:app==="notes"?<LocalVault unlocked={noteUnlocked} onUnlock={()=>setNoteUnlocked(true)} openLink={()=>open("verse")}/>:<VersePage onCopyMaterial={rememberMaterial}/>}</Window>}
+  {app&&<Window title={appTitle} max={max} allowMax={app==="browser"||app==="verse"} close={()=>setApp(null)} toggle={()=>setMax(!max)}>{app==="browser"?<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked} onCopyMaterial={rememberMaterial} initialPostId={wxPost} onInitialPostConsumed={()=>setWxPost(null)}/>:app==="wechat"?<InteractiveWechat materials={materials} onOpenPost={id=>{setWxPost(id);setApp("browser");setMax(true)}}/>:app==="notes"?<LocalVault unlocked={noteUnlocked} onUnlock={()=>setNoteUnlocked(true)} openLink={()=>open("verse")}/>:<VersePage onCopyMaterial={rememberMaterial}/>}</Window>}
   <nav className="dock"><button onClick={()=>open("browser")}><i className="blue"><Globe2/></i></button><button onClick={()=>open("wechat")}><i className="green"><MessageCircle/>{!wxRead&&<b>1</b>}</i></button><button onClick={()=>open("notes")}><i className="amber"><NotebookPen/></i></button></nav>
  </main>
 }
 function Icon({label,tone,icon,badge,onClick}:{label:string;tone:string;icon:ReactNode;badge?:boolean;onClick:()=>void}){return <button className="desktop-icon" onClick={onClick}><i className={tone}>{icon}{badge&&<b>1</b>}</i><span>{label}</span></button>}
 function Window({title,max,allowMax,close,toggle,children}:{title:string;max:boolean;allowMax:boolean;close:()=>void;toggle:()=>void;children:ReactNode}){return <section className={"window "+(max?"max":"float")}><header><div><button className="red" onClick={close}><X/></button><button className="yellow" onClick={close}><Minimize2/></button>{allowMax&&<button className="green-dot" onClick={toggle}><Maximize2/></button>}</div><b>{title}</b><span/></header>{children}</section>}
 
-function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void;onCopyMaterial:(m:SharedMaterial)=>void}){
- const [route,setRoute]=useState<Route>({kind:"home"}),[stack,setStack]=useState<Route[]>([]),[q,setQ]=useState(""),[read,setRead]=useState<string[]>([]);
+function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial,initialPostId,onInitialPostConsumed}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void;onCopyMaterial:(m:SharedMaterial)=>void;initialPostId:string|null;onInitialPostConsumed:()=>void}){
+ const [route,setRoute]=useState<Route>(initialPostId?{kind:"post",id:initialPostId}:{kind:"home"}),[stack,setStack]=useState<Route[]>([]),[q,setQ]=useState(""),[read,setRead]=useState<string[]>(initialPostId?[initialPostId]:[]);
+ useEffect(()=>{if(initialPostId)onInitialPostConsumed()},[]);
  const go=(next:Route)=>{setStack([...stack,route]);setRoute(next);if(next.kind==="post")setRead([...new Set([...read,next.id])])};
  const back=()=>{if(!stack.length)return;setRoute(stack[stack.length-1]);setStack(stack.slice(0,-1))};
  const search=(value=q)=>{if(value.trim()){setQ(value);go({kind:"search",q:value.trim()})}};

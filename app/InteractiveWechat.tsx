@@ -5,11 +5,16 @@ import {Plus,Search,Send,X} from "lucide-react";
 
 export type SharedMaterial={id:string;title:string;kind:string;url:string};
 type Msg={time?:string;who:"沈妍"|"对方";text:string;material?:SharedMaterial};
-type Contact={id:string;name:string;preview:string;messages:Msg[]};
-type MaterialRule=Record<string,string|null>;
+type Contact={id:string;name:string;note:string;preview:string;messages:Msg[]};
+type ReplyPart={text?:string;material?:SharedMaterial};
+type MaterialRule=Record<string,ReplyPart[]|null>;
+
+const forumPost=(id:string,title:string):SharedMaterial=>({id,title,kind:"论坛帖子",url:`https://www.zhuyinwen.cn/thread/${id}`});
+const returnedPost=forumPost("14692","有没有人记得“被找回来”之前的家");
+const ordinaryChangePost=forumPost("17428","小时候走失以后突然不吃香菜，这种变化会持续很多年吗");
 
 const contacts:Contact[]=[
- {id:"x",name:"徐宁",preview:"我去你家看看。",messages:[
+ {id:"x",name:"徐宁",note:"小学低年级起认识 · 紧急联系人",preview:"我去你家看看。",messages:[
   {time:"10月16日 11:26",who:"对方",text:"明天中午老地方？这次别临时加活啊。"},
   {who:"沈妍",text:"不会，保证准时。我要是迟到就请你吃一个月。"},
   {who:"对方",text:"截图了。"},
@@ -18,164 +23,182 @@ const contacts:Contact[]=[
   {time:"今天 12:37",who:"对方",text:"电话也不接。看到回我。"},
   {time:"今天 18:37",who:"对方",text:"我去你家看看。"},
  ]},
- {id:"yq",name:"余晴",preview:"等下见",messages:[
+ {id:"yq",name:"余晴",note:"朋友介绍认识 · 认识四年，平时线下见面",preview:"等下见",messages:[
   {time:"10月16日 19:31",who:"对方",text:"到了？"},
   {who:"沈妍",text:"嗯"},
   {who:"对方",text:"我还有十分钟"},
   {who:"沈妍",text:"好"},
   {who:"对方",text:"等下见"},
  ]},
- {id:"zc",name:"周川",preview:"先把原始记录留好。",messages:[
+ {id:"zc",name:"周川",note:"旧闻论坛认识 · 常帮沈妍查旧报和原始资料",preview:"先把原始记录留好。",messages:[
   {time:"10月12日 22:08",who:"对方",text:"梦里的称呼还是只有最后两个音？"},
   {who:"沈妍",text:"嗯，我没敢补字。"},
-  {who:"对方",text:"对。先把原始记录留好。回来后突然怕什么、以前会做后来不会什么，也分开记，别混成一个解释。"},
-  {who:"沈妍",text:"知道。我现在只记时间和原句。"},
-  {time:"10月13日 00:17",who:"对方",text:"我刚在你梦帖下面也回了。还是那句：先别急着给那两个音补名字。"},
+  {who:"对方",text:"那就先别补。你醒来第一遍怎么记的就怎么留。"},
+  {who:"沈妍",text:"知道。"},
+  {time:"10月13日 00:17",who:"对方",text:"我刚在你梦帖下面也回了。"},
   {who:"沈妍",text:"看到了。你在哪都像在给人审稿。"},
  ]},
- {id:"ly",name:"梁茵",preview:"公开区别写真名。",messages:[
+ {id:"ly",name:"梁茵",note:"旧闻论坛认识 · 小时候有过走失经历",preview:"公开区别写真名。",messages:[
   {time:"9月28日 00:42",who:"对方",text:"我不太想在论坛公开区继续说那个名字的问题。"},
   {who:"沈妍",text:"可以。你不想说的我不会追问。"},
-  {who:"对方",text:"如果你后面真查旧报，公开区别写真名，也别发找到我的城市。"},
+  {who:"对方",text:"真查旧报的话，公开区别写真名，也别发我现在在哪。"},
   {who:"沈妍",text:"好。"},
-  {time:"9月28日 01:03",who:"对方",text:"我那个旧号也先不回帖了。有人又在下面问我回来以后会不会认错家。"},
-  {who:"沈妍",text:"知道，我不会在公开帖里叫你真名。"},
+  {time:"9月28日 01:03",who:"对方",text:"我那个旧号也先不回了。有人又来问我回来以后会不会认错家。"},
+  {who:"沈妍",text:"知道。"},
  ]},
- {id:"f",name:"方嘉",preview:"周一的表我先替你交？",messages:[
+ {id:"f",name:"方嘉",note:"同事 · 同项目",preview:"周一的表我先替你交？",messages:[
   {time:"昨天",who:"对方",text:"甲方又改表头了，我真的服。"},
   {who:"沈妍",text:"先别动，我明早统一格式。"},
   {time:"今天",who:"对方",text:"周一的表我先替你交？"},
  ]},
- {id:"p",name:"爸妈",preview:"下周回来吃饭吗",messages:[
+ {id:"p",name:"爸妈",note:"家人",preview:"下周回来吃饭吗",messages:[
   {time:"8月20日",who:"对方",text:"下周回来吃饭吗，你爸买了排骨。"},
   {who:"沈妍",text:"看加班，确定了跟你说。"},
   {who:"对方",text:"少熬夜。"},
  ]},
 ];
 
-// 只有这些“材料 × 联系人”组合允许发送。null 表示能发，但对方不会立刻回复。
 const materialRules:Record<string,MaterialRule>={
   "33897":{
-    yq:null,
-    zc:"嗯，这个房型确实像。旧住户那段我会更在意。",
+    yq:[{text:"这个地方我没去过。她昨晚也没跟我提三厂。"}],
+    zc:[{text:"这张图我看过。"},{text:"房型能和她梦里对上，确实有点怪。先留着。"}],
   },
   "09114":{
-    yq:"林楠？没听她提过。你从哪翻出来的？",
-    zc:"这就有点怪了。沈妍那条旧报你也找到了吗？我想看两边时间。",
-    ly:"……林楠？你先别在论坛里写真名。她回来以后，有没有说过“这不是我家”之类的话？",
+    yq:[{text:"林楠？没听她说过。"}],
+    zc:[{text:"林楠……她之前没跟我确认过这个名字。"},{text:"沈妍小时候那条旧报你也找到了吗？我想看下日期。"}],
+    ly:[{text:"……你已经查到这个名字了？"},{text:"她之前只跟我说在翻一个旧案，没告诉我名字。"}],
   },
   "09831":{
-    zc:"对，就是这条。你先看日期。还有，她回来以后家里有没有说过她哪儿变了？",
-    ly:null,
+    zc:[{text:"嗯，这条我见过。"},{text:"和林楠那条挨得太近了。先别急着往下猜。"}],
+    ly:[{text:"这是沈妍自己的？"},{text:"她没跟我说过她小时候也丢过。"}],
   },
   "10731":{
-    zc:"时间挨得太近了。不过先别急着当成同一伙人。",
-    ly:"我以前也看过。那时候觉得只是巧合，现在再看……有点不舒服。",
+    zc:[{text:"这个帖子我以前回过。"},{text:"当时只觉得两条目录长得太像。现在再看……是有点不舒服。"}],
+    ly:[{text:"我也见过这篇。那时候没多想。"}],
   },
   "14692":{
-    zc:"这篇先留着。“名字不对”和“另一个家”这两句，我感觉不止一个人说过。",
-    ly:"这篇我记得。“名字不对”那句……我自己也有过。",
+    zc:[{text:"这个人写得挺具体。"},{text:"但我突然想到另一个帖子，刚好反过来。"},{material:ordinaryChangePost},{text:"这个就只有口味变了，别的都正常。"}],
+    ly:[{text:"这篇我看过。"},{text:"‘名字叫错了’那种感觉……我有过。"}],
   },
   "17428":{
-    zc:"这个反而不像。只是不吃东西，太普通了。",
-    ly:"这个跟我不太一样。",
+    zc:[{text:"这个就很像普通应激，至少我看不出别的。"}],
+    ly:[{text:"这个不像我。"}],
   },
   "private-p1":{
-    yq:"她跟我提过那个梦，说最近越来越清楚。林楠这个名字我真没听过。",
-    zc:"等下。她梦里的房间后来真找到了？那林楠那边你查过没有？",
-    ly:"她写“手自己会动”那句……我有点懂。你搜搜“名字不对”或者“另一个家”吧，我以前看到过类似的。",
+    yq:[{text:"她最近是说过梦越来越像真的。"},{text:"但林楠这个名字，她没跟我讲。"}],
+    zc:[{text:"这是她自己留的记录？"},{text:"她之前只给我看过公开版。林楠这两个字是后来才对上的吧。"}],
+    ly:[{text:"这段我看着有点难受。"},{material:returnedPost},{text:"我以前存过这个帖子。你看看，尤其是他说名字那段。"}],
   },
   "private-p3":{
     yq:null,
-    zc:"这里面有几条我见过类似说法。“名字不对”“另一个家”“回来以后不会”。你分开搜吧。",
-    ly:"“名字不对”和“另一个家”这两种我都经历过。旧号里可能还留着。",
+    zc:[{text:"她居然存了这么多。"},{material:ordinaryChangePost},{text:"这篇也在她记录里吗？我记得它其实挺普通的。"}],
+    ly:[{text:"有几条我见过。"},{text:"‘另一个家’那个我印象很深。"},{material:returnedPost}],
   },
   verse:{
-    zc:"这句我不懂。先留着吧，别因为它看着像答案就硬往上套。",
-    ly:"这句……我见过。以前有人给我发过一张旧纸，差不多就是这个。",
+    zc:[{text:"这什么东西？"},{text:"沈妍从哪弄到的？"}],
+    ly:[{text:"这句话我见过。"},{text:"等一下。"},{text:"以前有人私信给我一张很糊的纸，就是这句。"}],
   },
   sanmen:{
-    zc:"这下稍微能看懂点了。“舍”像身体，“客”像人……但“二客相契”到底什么意思，我也不敢下结论。你把沈妍和林楠两边对着看。",
-    ly:"我第一反应挺邪门的：像是人进错了地方。你别当我结论，我只是看到这几句会这么想。",
+    zc:[{text:"我不懂这套宗教文本。"},{text:"不过‘二客、两门’这个写法，像是在说成对的两边。"},{text:"先别把它当证据。"}],
+    ly:[{text:"……我第一反应有点吓人。"},{text:"像两边的人弄错位置了。"},{text:"只是第一反应，我也说不准。"}],
   },
 };
 
-const textReply=(contact:string,text:string):string|null=>{
+const textReply=(contact:string,text:string):ReplyPart[]|null=>{
  const t=text.replace(/\s/g,"");
  if(contact==="yq"){
-  if(/昨晚|见面|去哪|在哪/.test(t))return "见到了。后来她说还有点事，让我先走。我真以为她回家了。";
-  if(/林楠/.test(t))return "真没听她提过这个名字。";
+  if(/昨晚|见面|去哪|在哪/.test(t))return [{text:"昨晚见到了。后来她说还有点事，我就先走了。"},{text:"她没说去哪。"}];
+  if(/林楠/.test(t))return [{text:"没听过这个名字。"}];
  }
  if(contact==="zc"){
-  if(/林楠/.test(t))return "沈妍那条旧报你也翻出来了吗？我想先看时间。";
-  if(/失踪|不见了|联系不上/.test(t))return "现在还联系不上？那你先报警，也跟她家里说一声。这个别只在网上查。";
-  if(/换魂|灵魂|交换/.test(t))return "你先别把“换魂”当答案。两边有没有什么东西能互相对上？没有的话我不敢这么猜。";
-  if(/名字不对|另一个家|回来以后不会/.test(t))return "嗯，搜原话吧。比搜“换魂”靠谱。";
+  if(/林楠/.test(t))return [{text:"她之前没跟我确认过这个名字。你是从旧报里翻到的？"}];
+  if(/失踪|不见了|联系不上/.test(t))return [{text:"她现在是真的完全联系不上，对吧？"},{text:"你报警了吗？"}];
+  if(/换魂|灵魂|交换/.test(t))return [{text:"……先别急着给它起名字。"},{text:"我现在也不敢这么猜。"}];
+  if(/名字不对|另一个家|回来以后不会/.test(t))return [{text:"这种说法我在旧帖里见过，不止一个人。"}];
  }
  if(contact==="ly"){
-  if(/林楠/.test(t))return "你先别在公开区写真名。她回来以后最早哪里不对，你有看到吗？";
-  if(/名字|另一个家|不会/.test(t))return "有。我自己也有过。名字像别人的，脑子里又会冒出一个不认识的家。";
-  if(/换魂|灵魂|交换/.test(t))return "我也想过……但我不敢说就是。要是两个人的东西真能互相对上，那才吓人。";
+  if(/林楠/.test(t))return [{text:"私下说可以，公开帖里先别写真名。"}];
+  if(/名字|另一个家|不会/.test(t))return [{text:"嗯。"},{text:"我有过。尤其是别人叫我名字的时候。"}];
+  if(/换魂|灵魂|交换/.test(t))return [{text:"我以前也想过这种很离谱的可能。"},{text:"后来不敢想了。"}];
  }
+ if(contact==="f"&&/沈妍|联系不上|没来/.test(t))return [{text:"她今天也没回我。怎么了？"}];
+ if(contact==="p"&&/沈妍|联系不上|没回/.test(t))return [{text:"她没跟我们说今天有什么事。电话也打不通吗？"}];
  return null;
 };
 
-export default function InteractiveWechat({materials}:{materials:SharedMaterial[]}){
+const introText=(contactId:string)=>{
+ if(contactId==="yq")return "你好，我是徐宁，沈妍的朋友。她今天一直联系不上，我现在在她家。看到你们昨晚见过，想问下她离开时有没有说去哪。";
+ if(contactId==="zc")return "你好，我是徐宁，沈妍的朋友。她今天联系不上，我现在在她家。她电脑上留了不少你们聊旧报的记录，想问你几个地方。";
+ if(contactId==="ly")return "你好，我是徐宁，沈妍的朋友。她今天联系不上。我看到你们之前聊过她在查的那些旧事，冒昧问几句。";
+ if(contactId==="f")return "你好，我是徐宁，沈妍的朋友。她今天联系不上，我现在在她家，用一下她电脑上的微信。";
+ if(contactId==="p")return "叔叔阿姨好，我是徐宁。沈妍今天一直联系不上，我现在在她家。";
+ return "你好，我是徐宁，沈妍的朋友。她今天联系不上，我现在在她家。";
+};
+
+export default function InteractiveWechat({materials,onOpenPost}:{materials:SharedMaterial[];onOpenPost?:(id:string)=>void}){
  const [id,setId]=useState("x"),[q,setQ]=useState(""),[draft,setDraft]=useState(""),[picker,setPicker]=useState(false);
  const [extra,setExtra]=useState<Record<string,Msg[]>>({});
  const [introduced,setIntroduced]=useState<Record<string,boolean>>({});
  const [typing,setTyping]=useState<Record<string,boolean>>({});
+ const [sent,setSent]=useState<Record<string,boolean>>({});
  const scrollRef=useRef<HTMLElement|null>(null);
  const contact=contacts.find(x=>x.id===id)!;
- const visible=contacts.filter(x=>(x.name+x.preview).includes(q));
+ const visible=contacts.filter(x=>(x.name+x.note+x.preview).includes(q));
  const messages=useMemo(()=>[...contact.messages,...(extra[id]||[])],[contact,extra,id]);
- const sendable=useMemo(()=>materials.filter(m=>Object.prototype.hasOwnProperty.call(materialRules[m.id]||{},id)),[materials,id]);
+ const sendable=useMemo(()=>materials.filter(m=>Object.prototype.hasOwnProperty.call(materialRules[m.id]||{},id)&&!sent[`${id}:${m.id}`]),[materials,id,sent]);
  const appendFor=(contactId:string,items:Msg[])=>setExtra(prev=>({...prev,[contactId]:[...(prev[contactId]||[]),...items]}));
- const introFor=(contactId:string):Msg[]=>{
+ const ensureIntro=(contactId:string):Msg[]=>{
   if(contactId==="x"||introduced[contactId])return [];
   setIntroduced(prev=>({...prev,[contactId]:true}));
-  return [{who:"沈妍",text:"你好，我是徐宁，沈妍的朋友。她今天一直联系不上，我现在在她家。她电脑上微信还登着，冒昧问你两句。"}];
+  return [{who:"沈妍",text:introText(contactId)}];
  };
- const delayedReply=(contactId:string,reply:string|null)=>{
-  if(!reply)return;
+ const delayedParts=(contactId:string,parts:ReplyPart[]|null)=>{
+  if(!parts?.length)return;
+  let elapsed=900+Math.floor(Math.random()*500);
   setTyping(prev=>({...prev,[contactId]:true}));
-  const delay=Math.min(1500,850+reply.length*7);
-  window.setTimeout(()=>{
-   appendFor(contactId,[{who:"对方",text:reply}]);
-   setTyping(prev=>({...prev,[contactId]:false}));
-  },delay);
+  parts.forEach((part,index)=>{
+   const extraDelay=part.text?Math.min(1700,part.text.length*28):500;
+   elapsed+=extraDelay+Math.floor(Math.random()*650);
+   window.setTimeout(()=>{
+    if(part.material)appendFor(contactId,[{who:"对方",text:`[链接] ${part.material.title}`,material:part.material}]);
+    else if(part.text)appendFor(contactId,[{who:"对方",text:part.text}]);
+    if(index===parts.length-1)setTyping(prev=>({...prev,[contactId]:false}));
+   },elapsed);
+  });
  };
 
  useEffect(()=>{
   const el=scrollRef.current;
   if(el)el.scrollTop=el.scrollHeight;
- },[id,messages.length]);
+ },[id,messages.length,typing[id]]);
  useEffect(()=>setPicker(false),[id]);
 
  const sendText=(e:FormEvent)=>{
   e.preventDefault();
   const text=draft.trim(); if(!text||id==="x")return;
-  const contactId=id;
-  const reply=textReply(contactId,text);
-  appendFor(contactId,[...introFor(contactId),{who:"沈妍",text}]);
-  delayedReply(contactId,reply);
+  const intro=ensureIntro(id);
+  appendFor(id,[...intro,{who:"沈妍",text}]);
   setDraft("");
+  delayedParts(id,textReply(id,text));
  };
  const sendMaterial=(material:SharedMaterial)=>{
   const rules=materialRules[material.id];
   if(!rules||!Object.prototype.hasOwnProperty.call(rules,id))return;
-  const contactId=id;
-  const reply=rules[contactId];
-  appendFor(contactId,[...introFor(contactId),{who:"沈妍",text:`[分享] ${material.title}`,material}]);
-  delayedReply(contactId,reply);
+  const intro=ensureIntro(id);
+  appendFor(id,[...intro,{who:"沈妍",text:`[分享] ${material.title}`,material}]);
+  setSent(prev=>({...prev,[`${id}:${material.id}`]:true}));
   setPicker(false);
+  delayedParts(id,rules[id]);
+ };
+ const openMaterial=(material:SharedMaterial)=>{
+  if(material.kind==="论坛帖子"&&/^\d+$/.test(material.id)&&onOpenPost)onOpenPost(material.id);
  };
 
  return <div className="wechat" style={{height:"calc(100% - 39px)",minHeight:0,overflow:"hidden"}}>
-  <aside style={{height:"100%",minHeight:0,overflowY:"auto"}}><header><i>妍</i><span><b>沈妍</b><small>微信已登录</small></span></header><label><Search/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索联系人和消息"/></label>{visible.map(x=><button className={x.id===id?"active":""} onClick={()=>setId(x.id)} key={x.id}><i>{x.name[0]}</i><span><b>{x.name}</b><small>{x.preview}</small></span></button>)}</aside>
+  <aside style={{height:"100%",minHeight:0,overflowY:"auto"}}><header><i>妍</i><span><b>沈妍</b><small>微信已登录</small></span></header><label><Search/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索联系人和消息"/></label>{visible.map(x=><button className={x.id===id?"active":""} onClick={()=>setId(x.id)} key={x.id}><i>{x.name[0]}</i><span style={{minWidth:0}}><b>{x.name}</b><small style={{display:"block",marginTop:2,color:"#7f8783",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{x.note}</small><small style={{display:"block",marginTop:3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{x.preview}</small></span></button>)}</aside>
   <main style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}}>
-   <header style={{flex:"0 0 auto"}}><b>{contact.name}</b><small>{typing[id]?"正在输入…":"聊天记录"}</small></header>
-   <section ref={scrollRef} style={{flex:"1 1 auto",minHeight:0,overflowY:"auto",overscrollBehavior:"contain"}}>{messages.map((m,i)=><div key={i}>{m.time&&<time>{m.time}</time>}<article className={m.who==="沈妍"?"mine":""}><i>{m.who==="沈妍"?"妍":contact.name[0]}</i><p>{m.material?<><b style={{display:"block",fontSize:12,marginBottom:4}}>{m.material.kind}</b>{m.material.title}<small style={{display:"block",marginTop:5,opacity:.65}}>{m.material.url}</small></>:m.text}</p></article></div>)}</section>
+   <header style={{flex:"0 0 auto"}}><b>{contact.name}</b><small>{typing[id]?"正在输入…":contact.note}</small></header>
+   <section ref={scrollRef} style={{flex:"1 1 auto",minHeight:0,overflowY:"auto",overscrollBehavior:"contain"}}>{messages.map((m,i)=><div key={i}>{m.time&&<time>{m.time}</time>}<article className={m.who==="沈妍"?"mine":""}><i>{m.who==="沈妍"?"妍":contact.name[0]}</i>{m.material?<button type="button" onClick={()=>openMaterial(m.material!)} style={{maxWidth:360,padding:"11px 12px",border:"1px solid #d7d7d7",borderRadius:8,background:"#fff",textAlign:"left",cursor:m.material.kind==="论坛帖子"?"pointer":"default"}}><small style={{display:"block",color:"#888",marginBottom:5}}>{m.material.kind}</small><b style={{display:"block",fontSize:13,fontWeight:600,lineHeight:1.45}}>{m.material.title}</b><small style={{display:"block",marginTop:7,color:"#999",wordBreak:"break-all"}}>{m.material.url}</small>{m.material.kind==="论坛帖子"&&<small style={{display:"block",marginTop:7,color:"#3b7a57"}}>打开帖子</small>}</button>:<p>{m.text}</p>}</article></div>)}</section>
 
    {picker&&<div style={{position:"absolute",left:12,right:12,bottom:76,zIndex:8,maxHeight:"42%",overflowY:"auto",padding:8,border:"1px solid #cfcfcf",borderRadius:9,background:"#fff",boxShadow:"0 10px 35px #0003"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 6px 8px"}}><b style={{fontSize:13}}>发送文件</b><button onClick={()=>setPicker(false)} style={{width:28,height:28,border:0,borderRadius:6,background:"#f2f2f2",display:"grid",placeItems:"center"}}><X size={14}/></button></div>
