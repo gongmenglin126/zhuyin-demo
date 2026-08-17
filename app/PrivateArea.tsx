@@ -41,7 +41,7 @@ export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial,ha
     <h2 style={s.gateTitle}>私密主题</h2>
     <p style={s.gateCopy}>这个区域设置了独立访问口令。</p>
     <form onSubmit={submit} style={s.gateForm}>
-     <label style={s.label}>访问口令</label>
+     <label style={s.label}>访问口令 <span style={s.labelHint}>2 个汉字</span></label>
      <input
       autoFocus
       autoComplete="off"
