@@ -1,9 +1,9 @@
-# v8.9.14 investigation flow playtest
+# v8.9.16 investigation flow playtest
 
 - 林楠 discovery still follows the natural chain: red tin box → 一格胶片 → 岚棉三厂 → 寻人启事 → 报刊索引 → old report. Browser history no longer leaks the 三厂 photo thread or the later “被找回来之前的家” anomaly thread.
 - Player-facing author/tutorial voice was audited across the desktop, forum, local records, private area and archive surfaces. The opening no longer tells the player what 徐宁 thinks; the profile no longer instructs the player to inspect browser history; zero-result search no longer suggests puzzle-specific query strategies.
 - The deprecated `0407` / edition-number Notes implementation and the unused static WeChat implementation were removed from `app/page.tsx` so old puzzle logic cannot resurface accidentally.
-- Password UI no longer announces answer lengths such as “2 个汉字” or “4 个汉字”. Diegetic clues remain in the material itself.
+- Password UI keeps lightweight format hints (`2 个汉字`, `4 个汉字`) without revealing where the answer comes from or what the answer is.
 - The early dream-thread replies were rewritten to sound like ordinary forum conversation instead of a cluster of investigation tutorials such as “先画结构 / 不要补名字 / 从某类关键词入手”.
 - 林楠、沈妍旧报 replies no longer carry the deprecated edition-number puzzle or methodological directions aimed at the player.
 - #14692 and #17428 now keep only plausible lived-experience discussion plus the repeated 照骨 questionnaire pattern. Repetition can be noticed by the player without a narrator announcing it.
@@ -13,3 +13,10 @@
 - WeChat material replies remain one-shot and contact-state-aware. A contact may compare two reports only after that same contact has actually received both. The early “楠楠” private note is still not sendable to 梁茵.
 - NPC-returned forum cards require a textual association in material the NPC actually received; they are not used merely to ferry the player to the next plot node.
 - Switching between WeChat and Browser/Files preserves sent messages, delayed replies, introductions and one-shot material state.
+- Selected material conversations now continue through one-shot quick follow-up bubbles. The bubble appears only after the contact finishes replying, and clicking it sends an actual 徐宁 message before the next response.
+- 《三门疏》 can be followed up with 周川 about “舍 / 客” and then “二客 / 两门”; 梁茵 instead connects “名可夺，忆可乱” to her own childhood experience. Neither contact automatically states “换魂”.
+- Sharing the existing station notice #31002 with 周川 after relevant case material can surface #27614, an archived discussion about whether `旧档员-03` is a person or a shared duty account.
+- Forum chrome now includes `登录其他账号`. Merely opening it does not destroy 沈妍's saved session. Entering `旧档员-03` reveals the legacy-account verification route.
+- Legacy verification contains the playable `两门演算`: the player must physically swap two “客” between two “舍”, keep the names with the bodies, and accept memory misalignment before receiving a temporary admin code.
+- Successful legacy authentication switches the browser to the `旧档员-03` admin view. From that point the saved 沈妍 forum session is no longer available in this play session.
+- The admin view looks like ordinary forum moderation tooling. Searching `候鸟第七年` or `沈妍` reveals her private-topic index, internal observation marks, operation history, a recycle-bin draft, and the late status change `站内观察 → 线下跟进`.
