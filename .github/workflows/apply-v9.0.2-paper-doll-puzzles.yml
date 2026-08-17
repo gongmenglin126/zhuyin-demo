@@ -26,3 +26,5 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "Replace admin quiz with paper doll puzzles"
           git push origin HEAD:agent/v8-forum-gameplay-rework
+
+# trigger: v9.0.2
