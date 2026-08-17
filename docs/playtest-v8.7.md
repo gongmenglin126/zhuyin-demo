@@ -13,6 +13,7 @@
 - WeChat material replies now depend on what that specific contact has actually received. 周川 only compares the 林楠 and 沈妍 childhood reports after both have been sent to him; the comparison works regardless of which one is sent first.
 - NPCs may only react to information contained in the material they actually received or earlier material that the same player has already sent them. They no longer know unseen reports or later names by convenience.
 - NPC-returned forum posts require an explicit bridge in the received text: private-p3's “另一个家” can remind 梁茵 of #14692, while its ordinary taste-change example can remind 周川 of #17428.
+- The verse-to-forum bridge now points to a real hidden forum thread, #11208, which explicitly compares the black/red cached page with a separate white-paper 《三门疏》 set. Returned post cards are checked against actual forum data instead of using invented IDs.
 - 《三门疏》 responses are context-sensitive: without case context, contacts mostly say they do not understand it; only after the player has already supplied relevant paired-case/anomaly material do they cautiously connect wording across sources.
 - The private anomaly note is now titled “9月11日，几条旧帖” and reads like a working note rather than a player instruction sheet.
 - Tutorial-like forum chrome was reduced: the search box uses a normal site placeholder and the sidebar shows archive-migration information instead of telling the player how to investigate.
