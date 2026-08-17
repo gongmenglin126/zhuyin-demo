@@ -17,6 +17,7 @@ const investigationPrivateEntries=privateEntries;
 const SHAREABLE_POST_IDS=new Set(["33897","09114","09831","10731","14692","17428","11208","23109","27614"]);
 const HOME_POST_IDS=["34091","34086","34080","34064","34055","34049","20847","34043","33992","33981"];
 let persistedForumIdentity:"shenyan"|"admin"="shenyan";
+let persistedForumRead:string[]=[];
 
 export default function Page(){
  const [stage,setStage]=useState<"title"|"login"|"desktop">("title");
@@ -40,10 +41,10 @@ function Icon({label,tone,icon,badge,onClick}:{label:string;tone:string;icon:Rea
 function Window({title,max,allowMax,close,toggle,children}:{title:string;max:boolean;allowMax:boolean;close:()=>void;toggle:()=>void;children:ReactNode}){return <section className={"window "+(max?"max":"float")}><header><div><button className="red" onClick={close}><X/></button><button className="yellow" onClick={close}><Minimize2/></button>{allowMax&&<button className="green-dot" onClick={toggle}><Maximize2/></button>}</div><b>{title}</b><span/></header>{children}</section>}
 
 function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial,hasMaterial,verseSeen,initialPostId,onInitialPostConsumed}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void;onCopyMaterial:(m:SharedMaterial)=>void;hasMaterial:(id:string)=>boolean;verseSeen:boolean;initialPostId:string|null;onInitialPostConsumed:()=>void}){
- const [route,setRoute]=useState<Route>(initialPostId?{kind:"post",id:initialPostId}:{kind:"home"}),[stack,setStack]=useState<Route[]>([]),[q,setQ]=useState(""),[read,setRead]=useState<string[]>(initialPostId?[initialPostId]:[]);
+ const [route,setRoute]=useState<Route>(initialPostId?{kind:"post",id:initialPostId}:{kind:"home"}),[stack,setStack]=useState<Route[]>([]),[q,setQ]=useState(""),[read,setRead]=useState<string[]>(()=>[...new Set([...persistedForumRead,...(initialPostId?[initialPostId]:[])])]);
  const [forumIdentity,setForumIdentity]=useState<"shenyan"|"admin">(()=>persistedForumIdentity);
  useEffect(()=>{if(initialPostId)onInitialPostConsumed()},[]);
- const go=(next:Route)=>{setStack([...stack,route]);setRoute(next);if(next.kind==="post")setRead([...new Set([...read,next.id])])};
+ const go=(next:Route)=>{setStack([...stack,route]);setRoute(next);if(next.kind==="post"){const nextRead=[...new Set([...read,next.id])];persistedForumRead=nextRead;setRead(nextRead)}};
  const back=()=>{if(forumIdentity==="admin"||!stack.length)return;setRoute(stack[stack.length-1]);setStack(stack.slice(0,-1))};
  const search=(value=q)=>{if(value.trim()){setQ(value);go({kind:"search",q:value.trim()})}};
  const openUser=(name:string)=>name==="候鸟第七年"?go({kind:"profile"}):go({kind:"user",name});
