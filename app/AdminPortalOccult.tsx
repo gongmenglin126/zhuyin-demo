@@ -64,8 +64,7 @@ function LegacyVerify({onBack,onVerified}:{onBack:()=>void;onVerified:()=>void})
  const [wrongHome,setWrongHome]=useState<Home|null>(null);
  const [dragItem,setDragItem]=useState<Item|null>(null);
  const [items,setItems]=useState<Partial<Record<Item,Child|"center">>>({});
- const [moods,setMoods]=useState<Record<Child,"neutral"|"frown">>({lin:"neutral",shen:"neutral"});
- const [bothReach,setBothReach]=useState(false);
+ const [moods,setMoods]=useState<Record<Child,"neutral"|"frown"|"smile">>({lin:"neutral",shen:"neutral"});
 
  const childInfo:Record<Child,{stamp:string}>={lin:{stamp:"07·18"},shen:{stamp:"07·17"}};
  const homeAnswer:Record<Home,Child>={factory:"lin",qingwu:"shen"};
@@ -92,9 +91,13 @@ function LegacyVerify({onBack,onVerified}:{onBack:()=>void;onVerified:()=>void})
   if(id==="box"){
    if(target==="center"){
     const next={...items,box:"center" as const};
-    setItems(next);setBothReach(true);setDragItem(null);completeTable(next);return;
+    setItems(next);setMoods({lin:"neutral",shen:"neutral"});setDragItem(null);completeTable(next);return;
    }
-   setBothReach(true);setDragItem(null);window.setTimeout(()=>{if(items.box!=="center")setBothReach(false)},850);return;
+   const other:Child=target==="lin"?"shen":"lin";
+   setMoods(m=>({...m,[target]:"neutral",[other]:"smile"}));
+   setDragItem(null);
+   window.setTimeout(()=>setMoods(m=>({...m,[other]:"neutral"})),850);
+   return;
   }
   if(target==="center"){setDragItem(null);return;}
   if(itemAnswer[id]===target){
@@ -132,14 +135,14 @@ function LegacyVerify({onBack,onVerified}:{onBack:()=>void;onVerified:()=>void})
 
    {stage===2&&<div style={v.tableScene}>
     <div style={v.tableSeats}>
-     <TableSeat place="4栋东侧" mood={moods.lin} reach={bothReach||items.box==="center"} side="left" onDrop={()=>giveItem("lin")} items={ordinaryItems.filter(id=>items[id]==="lin")}/>
+     <TableSeat place="4栋东侧" mood={moods.lin} side="left" onDrop={()=>giveItem("lin")} items={ordinaryItems.filter(id=>items[id]==="lin")}/>
      <div style={v.centerTable} onDragOver={e=>e.preventDefault()} onDrop={()=>giveItem("center")}>
       <div style={v.tableTop}>
        {(["plum","marble","milk","clip","box"] as Item[]).filter(id=>!items[id]).map(id=><ObjectToken key={id} id={id} draggable onDragStart={()=>setDragItem(id)}/>) }
-       {items.box==="center"&&<ObjectToken id="box"/>}
+       {items.box==="center"&&<ObjectToken id="box" opened/>}
       </div>
      </div>
-     <TableSeat place="青梧旧楼" mood={moods.shen} reach={bothReach||items.box==="center"} side="right" onDrop={()=>giveItem("shen")} items={ordinaryItems.filter(id=>items[id]==="shen")}/>
+     <TableSeat place="青梧旧楼" mood={moods.shen} side="right" onDrop={()=>giveItem("shen")} items={ordinaryItems.filter(id=>items[id]==="shen")}/>
     </div>
    </div>}
 
@@ -174,21 +177,20 @@ function HomeRoom({kind,wrong,onDrop,children}:{kind:"factory"|"qingwu";wrong:bo
  </section>
 }
 
-function TableSeat({place,mood,reach,side,onDrop,items}:{place:string;mood:"neutral"|"frown";reach:boolean;side:"left"|"right";onDrop:()=>void;items:string[]}){
+function TableSeat({place,mood,side,onDrop,items}:{place:string;mood:"neutral"|"frown"|"smile";side:"left"|"right";onDrop:()=>void;items:string[]}){
  return <section onDragOver={e=>e.preventDefault()} onDrop={onDrop} style={v.seat}>
   <small style={v.roomStamp}>{place}</small>
   <div style={v.seatedPerson}>
    <PaperPerson stamp={side==="left"?"07·18":"07·17"} mood={mood}/>
-   {reach&&<span style={{...v.arm, ...(side==="left"?{right:-52,transform:"rotate(-8deg)"}:{left:-52,transform:"rotate(8deg)"})}}/>}
   </div>
   <div style={v.kept}>{items.map(id=><ObjectToken key={id} id={id}/>)}</div>
  </section>
 }
 
-function ObjectToken({id,draggable,onDragStart}:{id:string;draggable?:boolean;onDragStart?:()=>void}){
+function ObjectToken({id,draggable,onDragStart,opened}:{id:string;draggable?:boolean;onDragStart?:()=>void;opened?:boolean}){
  const labels:Record<string,string>={plum:"话梅糖",marble:"蓝玻璃弹珠",milk:"奶糖",clip:"红色发卡",box:"红铁皮盒"};
  return <div draggable={draggable} onDragStart={e=>{e.dataTransfer.effectAllowed="move";onDragStart?.()}} style={{...v.object,cursor:draggable?"grab":"default"}}>
-  <i style={{...v.objectIcon,...(id==="plum"?v.plum:id==="marble"?v.marble:id==="milk"?v.milk:id==="clip"?v.clip:v.box)}}/>
+  <i style={{...v.objectIcon,position:"relative",...(id==="plum"?v.plum:id==="marble"?v.marble:id==="milk"?v.milk:id==="clip"?v.clip:v.box)}}>{id==="box"&&opened&&<span style={{position:"absolute",left:1,right:1,top:-7,height:7,border:"1px solid #704236",borderBottom:0,background:"#7d2b23",transform:"rotate(-7deg)",transformOrigin:"left bottom",boxShadow:"0 -2px 8px #0008"}}/>}</i>
   <small>{labels[id]}</small>
  </div>
 }
@@ -197,9 +199,9 @@ const v:Record<string,React.CSSProperties>={
  puzzle:{padding:"34px 44px 40px",minHeight:510,background:"radial-gradient(circle at 50% 28%,#301614 0,#171414 42%,#0b0b0b 100%)"},
  dollShelf:{height:150,display:"flex",justifyContent:"center",alignItems:"flex-end",gap:52},
  person:{position:"relative",width:88,height:128,userSelect:"none",filter:"drop-shadow(0 8px 9px #0009)"},
- personHead:{position:"absolute",left:20,top:0,width:48,height:48,borderRadius:"50% 50% 44% 44%",background:"#d8c9a9",border:"1px solid #8d745c"},
- eye:{position:"absolute",top:16,width:5,height:6,borderRadius:"50%",background:"#1b1714"},
- smile:{position:"absolute",left:12,top:25,width:24,height:11,borderBottom:"3px solid #4b1714",borderRadius:"0 0 18px 18px"},
+ personHead:{position:"absolute",left:18,top:0,width:52,height:49,clipPath:"polygon(11% 4%,88% 0,97% 24%,91% 78%,68% 100%,25% 95%,4% 72%,0 23%)",background:"linear-gradient(100deg,#c8b890,#e0d0a8 51%,#b7a27f)",border:"1px solid #745d4a",boxShadow:"inset 8px 0 15px #5b342515"},
+ eye:{position:"absolute",top:17,width:7,height:3,borderRadius:"45%",background:"#17120f",boxShadow:"0 0 3px #52120f"},
+ smile:{position:"absolute",left:10,top:24,width:31,height:13,borderBottom:"3px solid #521411",borderRadius:"0 0 22px 22px",transform:"rotate(1deg)",boxShadow:"0 2px 2px #5b0f0d33"},
  frown:{position:"absolute",left:12,top:30,width:24,height:10,borderTop:"3px solid #4b1714",borderRadius:"18px 18px 0 0"},
  flatMouth:{position:"absolute",left:15,top:31,width:18,height:2,background:"#4b302a"},
  personBody:{position:"absolute",left:4,top:39,width:80,height:88,display:"grid",placeItems:"center",clipPath:"polygon(34% 0,66% 0,72% 14%,100% 34%,82% 47%,75% 100%,25% 100%,18% 47%,0 34%,28% 14%)",background:"linear-gradient(90deg,#c8b894,#e1d3b3 48%,#bba987)",border:"1px solid #8a7358",color:"#5e4a3c",fontStyle:"normal"},
@@ -258,8 +260,8 @@ function UserRecord(){return <article style={s.userRecord}>
  <section style={s.adminPanel}><h4>私密主题镜像</h4><Record date="2026-06-19 03:12" title="昨晚又梦到了" meta="仅自己可见" text="红铁皮盒、蓝窗帘，还有那个听不清的称呼。"/><Record date="2026-09-11 02:08" title="9月11日，几条旧帖" meta="仅自己可见" text="名字不对、另一个家、回来以后不会以前会的东西。"/></section>
  </article>}
 function Operations(){return <><h2>操作记录</h2><div style={s.adminPanel}><Record date="2026-10-16 21:06" title="祭品状态变更：候鸟第七年" meta="旧档员-03" text="待接触 → 已收容"/><Record date="2026-10-16 20:52" title="血样登记" meta="内部任务" text="引契血：已取"/><Record date="2026-10-16 19:49" title="线下转接" meta="旧档员-03" text="已执行"/><Record date="2026-08-22 04:12" title="添加归门标记" meta="照骨" text="对契异常：是；旧客回响：高"/></div></>}
-function Recycle(){return <><h2>回收记录</h2><div style={s.adminPanel}><Record date="2026-10-16 18:31" title="未发布草稿" meta="候鸟第七年 · 已删除" text="照骨问的问题不是随机的。旧档员-03也反复碰过这些帖。"/><Record date="2026-10-16 20:47" title="IMG_1016_2047.jpg" meta="旧档员-03 · 原始来源字段缺失" text="标签：祭坛 / 黄符 / 纸偶 / 引契血。仅恢复缩略图。"/><RitualPhoto/><Record date="2013-07-09 03:14" title="旧教页缓存" meta="旧档恢复 · 已删除" text="黑底朱字页面，页脚重复：舍身无量。"/><figure style={s.scripture}><img src="assets/occult/huanzhen-scripture.webp" alt="无相还真会黑底朱字旧教页"/></figure></div></>}
-function RitualPhoto(){return <figure style={s.photo}><div style={s.photoRoom}><span style={{...s.photoCandle,left:"16%"}}/><span style={{...s.photoCandle,right:"16%"}}/><i style={{...s.photoDoll,left:"23%"}}/><i style={{...s.photoDoll,right:"23%"}}/><b style={s.photoGate}>門</b><em style={s.photoThread}/><strong style={s.photoBowl}/><u style={{...s.photoPaper,left:"8%"}}/><u style={{...s.photoPaper,right:"8%"}}/></div><figcaption style={s.photoCaption}>IMG_1016_2047.jpg　恢复 14%</figcaption></figure>}
+function Recycle(){return <><h2>回收记录</h2><div style={s.adminPanel}><Record date="2026-10-16 18:31" title="未发布草稿" meta="候鸟第七年 · 已删除" text="照骨问的问题不是随机的。旧档员-03也反复碰过这些帖。"/><Record date="2026-10-16 20:47" title="IMG_1016_2047.jpg" meta="旧档员-03 · 原始来源字段缺失" text="标签：祭坛 / 黄符 / 纸偶 / 引契血。仅恢复缩略图。"/><RitualPhoto/><Record date="2013-07-09 03:14" title="旧教页缓存" meta="旧档恢复 · 已删除" text="黑底朱字页面，页脚重复：舍身无量。"/><figure style={s.scripture}><img src="assets/occult/huanzhen-scripture-v904.webp" alt="无相还真会黑底朱字旧教页"/></figure></div></>}
+function RitualPhoto(){return <figure style={s.photo}><img src="assets/occult/recovered-redbox-v904.webp" alt="恢复出的红铁皮盒与纸偶旧照片" style={{display:"block",width:"100%",border:"1px solid #372824",background:"#0b0908"}}/><figcaption style={s.photoCaption}>IMG_1016_2047.jpg　恢复 14%</figcaption></figure>}
 function Record({date,title,meta,text}:{date:string;title:string;meta:string;text:string}){return <div style={s.record}><time>{date}</time><span><b>{title}</b><small>{meta}</small><p>{text}</p></span></div>}
 
 const s:Record<string,React.CSSProperties>={
