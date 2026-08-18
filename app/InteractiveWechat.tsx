@@ -2,6 +2,7 @@
 // v9.2.1 interaction pass
 // v9.2.1b reasoning recovery
 // v9.2.2 controlled WeChat
+// v9.2.2b WeChat hard lock
 
 import {FormEvent,useEffect,useMemo,useRef,useState} from "react";
 import {advanceGameClock} from "./gameClock";
@@ -283,7 +284,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  const hasQuick=(quick[id]||[]).length>0;
  const canFreeText=id!=="x"&&!!introduced[id]&&!!freeText[id]&&!actionLocked&&!hasQuick;
  const canPickMaterial=id!=="x"&&!!introduced[id]&&!actionLocked&&!hasQuick&&!freeText[id];
- const sendable=useMemo(()=>id==="x"||!introduced[id]?[]:materials.filter(m=>Object.prototype.hasOwnProperty.call(materialRules[m.id]||{},id)&&!sent[`${id}:${m.id}`]),[materials,id,sent,introduced]);
+ const sendable=useMemo(()=>id==="x"||!introduced[id]?[]:materials.filter(m=>{const rules=materialRules[m.id];return !!rules&&Object.prototype.hasOwnProperty.call(rules,id)&&rules[id]!==null&&!sent[`${id}:${m.id}`]}),[materials,id,sent,introduced]);
  const appendFor=(contactId:string,items:Msg[])=>{
   wechatSession.extra={...wechatSession.extra,[contactId]:[...(wechatSession.extra[contactId]||[]),...items]};
   const incoming=[...items].reverse().find(x=>x.who==="对方"&&!!x.text);
@@ -352,11 +353,11 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
   const el=scrollRef.current;
   if(el)el.scrollTop=el.scrollHeight;
  },[id,messages.length,typing[id]]);
- useEffect(()=>setPicker(false),[id]);
+ useEffect(()=>{setPicker(false);setDraft("")},[id]);
 
  const sendText=(e:FormEvent)=>{
   e.preventDefault();
-  const text=draft.trim(); if(!text||!canFreeText)return;
+  const text=draft.trim(); if(!text||!canFreeText||wechatSession.locked[id]||!wechatSession.freeText[id])return;
   const returnQuick=wechatSession.freeReturn[id]||[];
   setLockedFor(id,true);
   setFreeTextFor(id,false,[]);
@@ -365,7 +366,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
   delayedParts(id,textReply(id,text)??fallbackReply(id),returnQuick);
  };
  const sendMaterial=(material:SharedMaterial)=>{
-  if(!canPickMaterial)return;
+  if(!canPickMaterial||wechatSession.locked[id])return;
   const rules=materialRules[material.id];
   if(!rules||!Object.prototype.hasOwnProperty.call(rules,id))return;
   setLockedFor(id,true);
@@ -377,7 +378,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
   delayedParts(id,reply,quickAfterMaterial(id,material.id));
  };
  const sendQuick=(item:QuickReply)=>{
-  if(id==="x"||actionLocked)return;
+  if(id==="x"||actionLocked||wechatSession.locked[id])return;
   setQuickFor(id,[]);
   if(item.freeText){setFreeTextFor(id,true,item.next||[]);return;}
   setLockedFor(id,true);
