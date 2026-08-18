@@ -1,5 +1,6 @@
 "use client";
 // v9.2.1 interaction pass
+// v9.2.1b reasoning recovery
 
 import {FormEvent,useEffect,useMemo,useRef,useState} from "react";
 import {advanceGameClock} from "./gameClock";
@@ -30,7 +31,7 @@ const wechatSession={
   firstContact:{} as Record<string,string>,
   zhouEvidenceSeen:false,
   zhouConfronted:false,
-  activeId:"x",
+  activeId:"yq",
   searchQuery:"",
   draft:"",
 };
@@ -118,6 +119,29 @@ const materialReply=(contactId:string,materialId:string):ReplyPart[]|null=>{
  return materialRules[materialId]?.[contactId]??null;
 };
 
+const syncReasoningChoices=():QuickReply[]=>{
+ const correct:QuickReply={id:"ly-sync-right",text:"林楠第二次易舍，把2004年的另一端也重新影响了？",reply:[{text:"我也是这么对上的。"},{text:"沈妍不是第二次试验的目标，她是旧对契重新有反应以后被控制的。"},{text:"现在得找她被转到哪。"}]};
+ const wrongAgain:QuickReply={id:"ly-sync-wrong-again",text:"所以他们也准备再给沈妍换一次？",reply:[{text:"可沈妍那份写的是‘控制旧对契另一端’，不是再舍对象。"}]};
+ const wrongForum:QuickReply={id:"ly-sync-forum",text:"还是因为沈妍查论坛查得太深？",reply:[{text:"他们当然一直监控她。"},{text:"但这份处置理由写的是同步异常，不是论坛行为。"}]};
+ wrongAgain.next=[correct,wrongForum];wrongForum.next=[wrongAgain,correct];
+ return [wrongAgain,correct,wrongForum];
+};
+const reswapReasoningChoices=(includeSync:boolean):QuickReply[]=>{
+ const correct:QuickReply={id:"ly-reswap-test",text:"他们在测试同一个魂能不能连续换身体？",reply:[{text:"对。"},{text:"稳定22年、再次易舍、主体稳定——这几个字段放一起就是这个意思。"}],next:includeSync?syncReasoningChoices():[]};
+ const wrongShen:QuickReply={id:"ly-reswap-shen",text:"他们是想接着给沈妍也换一次？",reply:[{text:"但这份执行对象写的是B侧和19-07。"},{text:"沈妍不在这次执行名单里。"}]};
+ const wrongRepeat:QuickReply={id:"ly-reswap-repeat",text:"只是把2004年的仪式重新做一遍？",reply:[{text:"不太像。"},{text:"这次特意写‘长期样本’和‘第二次更换舍’，目的变了。"}]};
+ wrongShen.next=[correct,wrongRepeat];wrongRepeat.next=[wrongShen,correct];
+ return [wrongShen,correct,wrongRepeat];
+};
+const pairReasoningChoices=():QuickReply[]=>{
+ const nextAfterCorrect:QuickReply[]=received("ly","admin-reswap-2026")?reswapReasoningChoices(received("ly","admin-sync-shen")):[{id:"ly-pair-why",text:"那既然换过了，为什么现在又抓沈妍？",reply:[{text:"对。这个才是现在的问题。"},{text:"2004那份解释不了2026。得看林楠后来又发生了什么。"}]}];
+ const correct:QuickReply={id:"ly-pair-swap",text:"舍是身体，客是魂……所以她们互换了？",reply:[{text:"……我也是这么看的。"},{text:"那‘易舍’就是换魂。"}],next:nextAfterCorrect};
+ const wrongLink:QuickReply={id:"ly-pair-link",text:"只是两个人的档案互相挂靠？",reply:[{text:"可A、B两边都写了‘易舍完成’。"},{text:"只做档案关联没必要写客源。"}]};
+ const wrongHeld:QuickReply={id:"ly-pair-held",text:"也可能只是两个人一起被关过？",reply:[{text:"可能，但还是解释不了为什么‘客源’互相写对方。"},{text:"我会先把‘舍’和‘客’的意思对上。"}]};
+ wrongLink.next=[correct,wrongHeld];wrongHeld.next=[wrongLink,correct];
+ return [wrongLink,correct,wrongHeld];
+};
+
 const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
  if(contactId==="zc"&&materialId==="sanmen"){
   const hasPair=received("zc","10731")||(received("zc","09114")&&received("zc","09831"));
@@ -128,35 +152,19 @@ const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
  if(contactId==="zc"&&materialId==="23109")return [{id:"zc-ritual-fragment",text:"“赤烛引客，黄符镇舍”像什么？",reply:[{text:"不知道。"},{text:"但这句不像网友临时编的，跟图里的摆法是一起的。"},{text:"“镇舍”听着像他们自己固定用的词。"}]}];
  if(contactId==="zc"&&materialId==="27614"){
   const hasBothReports=received("zc","09114")&&received("zc","09831");
-  return [{id:"zc-admin-repeat",text:"但我刚才查的几篇里都有这个号。",reply:hasBothReports?[{text:"等等。"},{text:"你前面发我的那两条旧报，也是它恢复的？"},{text:"……这么放一起确实挺巧。"}]:[{text:"哪几篇？"},{text:"你把链接留着，我也翻翻。"}]}];
+  return [{id:"zc-admin-repeat",text:"但我刚才查的几篇里都有这个号。",reply:hasBothReports?[{text:"等等。"},{text:"你前面发我的那两条旧报，也是它恢复的？"},{text:"……这么放一起确实挺巧。"}]:[{text:"哪几篇？"},{text:"你发我看看。"}]}];
  }
- if(contactId==="ly"&&materialId==="admin-pair-2004")return [
-  {id:"ly-pair-link",text:"只是两个人的档案互相挂靠？",reply:[{text:"可A、B两边都写了‘易舍完成’。"},{text:"只做档案关联没必要写客源。"}]},
-  {id:"ly-pair-swap",text:"舍是身体，客是魂……所以她们互换了？",reply:[{text:"……我也是这么看的。"},{text:"那‘易舍’就是换魂。"}],next:[{id:"ly-pair-why",text:"那既然换过了，为什么现在又抓沈妍？",reply:[{text:"对。这个才是现在的问题。"},{text:"2004那份解释不了2026。得看林楠后来又发生了什么。"}]}]},
-  {id:"ly-pair-held",text:"也可能只是两个人一起被关过？",reply:[{text:"可能，但还是解释不了为什么‘客源’互相写对方。"},{text:"我会先把‘舍’和‘客’的意思对上。"}]}
- ];
+ if(contactId==="ly"&&materialId==="admin-pair-2004")return pairReasoningChoices();
  if(contactId==="ly"&&materialId==="admin-reswap-2026"){
   if(!received("ly","admin-pair-2004"))return [];
-  const syncNext:QuickReply[]=received("ly","admin-sync-shen")?[
-   {id:"ly-sync-wrong-again",text:"所以他们也准备再给沈妍换一次？",reply:[{text:"可沈妍那份写的是‘控制旧对契另一端’，不是再舍对象。"}]},
-   {id:"ly-sync-right",text:"林楠第二次易舍，把2004年的另一端也重新影响了？",reply:[{text:"我也是这么对上的。"},{text:"沈妍不是第二次试验的目标，她是旧对契重新有反应以后被控制的。"},{text:"现在得找她被转到哪。"}]},
-   {id:"ly-sync-forum",text:"还是因为沈妍查论坛查得太深？",reply:[{text:"他们当然一直监控她。"},{text:"但这份处置理由写的是同步异常，不是论坛行为。"}]}
-  ]:[];
-  return [
-   {id:"ly-reswap-shen",text:"他们是想接着给沈妍也换一次？",reply:[{text:"但这份执行对象写的是B侧和19-07。"},{text:"沈妍不在这次执行名单里。"}]},
-   {id:"ly-reswap-test",text:"他们在测试同一个魂能不能连续换身体？",reply:[{text:"对。"},{text:"稳定22年、再次易舍、主体稳定——这几个字段放一起就是这个意思。"}],next:syncNext},
-   {id:"ly-reswap-repeat",text:"只是把2004年的仪式重新做一遍？",reply:[{text:"不太像。"},{text:"这次特意写‘长期样本’和‘第二次更换舍’，目的变了。"}]}
-  ];
+  return reswapReasoningChoices(received("ly","admin-sync-shen"));
  }
  if(contactId==="ly"&&materialId==="admin-sync-shen"){
-  if(!received("ly","admin-reswap-2026"))return [];
-  return [
-   {id:"ly-sync-wrong-again",text:"所以他们也准备再给沈妍换一次？",reply:[{text:"可沈妍那份写的是‘控制旧对契另一端’，不是再舍对象。"}]},
-   {id:"ly-sync-right",text:"林楠第二次易舍，把2004年的另一端也重新影响了？",reply:[{text:"我也是这么对上的。"},{text:"沈妍不是第二次试验的目标，她是旧对契重新有反应以后被控制的。"},{text:"现在得找她被转到哪。"}]},
-   {id:"ly-sync-forum",text:"还是因为沈妍查论坛查得太深？",reply:[{text:"他们当然一直监控她。"},{text:"但这份处置理由写的是同步异常，不是论坛行为。"}]}
-  ];
+  if(!received("ly","admin-reswap-2026")||!received("ly","admin-pair-2004"))return [];
+  return syncReasoningChoices();
  }
  if(contactId==="ly"&&materialId==="admin-third-1907")return [{id:"ly-third-identity",text:"她还要求联系徐宁。",reply:[{text:"……"},{text:"那就不能只当身份混乱看了。"},{text:"真找到地点，这个人也得告诉警方。"}]}];
+
  if(contactId==="ly"&&materialId==="admin-liang-record")return [
   {id:"ly-admin-2017",text:"最早是2017年。",reply:[{text:"2017？"},{text:"我那年才刚开始在论坛里写小时候那些事。"},{text:"所以不是我后来跟沈妍聊上以后，他们才盯我的。"}],next:[
    {id:"ly-admin-2021",text:"2021年三月还有一次“线下接触”。",reply:[{text:"等一下。"},{text:"那年三月我确实见过一个论坛里认识的女的。"},{text:"就吃了顿饭，她一直问我小时候走失那阵的事。"},{text:"我当时真以为就是网友聊天。"}],next:[
@@ -175,7 +183,7 @@ const textReply=(contact:string,text:string):ReplyPart[]|null=>{
  if(contact==="yq"){
   if(/有消息|找到|找到了/.test(t))return [{text:"还没有吗？"},{text:"她昨晚走的时候真的没说别的。"}];
   if(/几点|分开|什么时候走/.test(t))return [{text:"我九点左右先走的。"},{text:"21:03那句‘到家说一声’就是我离开以后发的。"}];
-  if(/后来|别人|谁来|还有人|介绍/.test(t))return [{text:"……后来确实有人过来了一下。"},{text:"是之前跟她聊过旧事的一个女的。"},{text:"我跟那个人也不熟，就是以前介绍她们认识。"}];
+  if(/后来|别人|谁来|还有人|介绍|交给|转交/.test(t))return [{text:"……后来确实有人过来了一下。"},{text:"是之前跟她聊过旧事的一个女的。"},{text:"我跟那个人也不熟，就是以前介绍她们认识。"}];
   if(/昨晚|见面|去哪|在哪/.test(t))return [{text:"昨晚是见到了。"},{text:"她说胃不舒服，我九点左右先走。"},{text:"她没跟我说后面去哪。"}];
   if(/林楠/.test(t))return [{text:"真没听过这个名字。"}];
  }
