@@ -1,0 +1,11 @@
+v9.1.0 admin + NPC scene patch applied
+npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+
+added 516 packages in 18s
+
+> zhuyin-demo@0.1.0 build
+> bash scripts/build-verified.sh
+
+scripts/build-verified.sh: line 7: /home/runner/work/zhuyin-demo/zhuyin-demo/scripts/sites-env.sh: Permission denied
+patch_status=0 build_status=126
