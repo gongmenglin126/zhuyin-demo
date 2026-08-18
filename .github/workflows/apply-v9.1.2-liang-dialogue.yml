@@ -6,6 +6,7 @@ on:
       - agent/v8-forum-gameplay-rework
     paths:
       - '.github/scripts/apply_v912_liang_dialogue.py'
+      - '.github/workflows/apply-v9.1.2-liang-dialogue.yml'
 
 permissions:
   contents: write
