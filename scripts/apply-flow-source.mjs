@@ -12,4 +12,3 @@ if(marker.test(source)){
 
 await writeFile(path,source);
 console.log("Applied knowledge-driven forum flow layer to v8 page.");
-// v9.2 admin storyflow trigger
