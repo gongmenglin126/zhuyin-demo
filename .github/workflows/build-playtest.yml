@@ -20,6 +20,8 @@ jobs:
           fetch-depth: 0
       - name: Apply v9.2.2 controlled WeChat
         run: python .github/scripts/apply_v922_controlled_wechat.py
+      - name: Apply v9.2.2 hard lock
+        run: python .github/scripts/apply_v922b_wechat_hardlock.py
       - name: Commit generated source
         run: |
           if git diff --quiet -- app/InteractiveWechat.tsx; then
@@ -28,7 +30,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add app/InteractiveWechat.tsx
-            git commit -m "Control WeChat message pacing"
+            git commit -m "Harden WeChat action locks"
             git push origin HEAD:agent/v8-forum-gameplay-rework
           fi
       - name: Setup Node
