@@ -1,6 +1,7 @@
 "use client";
 // v9.2.1 interaction pass
 // v9.2.1b reasoning recovery
+// v9.2.2 controlled WeChat
 
 import {FormEvent,useEffect,useMemo,useRef,useState} from "react";
 import {advanceGameClock} from "./gameClock";
@@ -11,7 +12,7 @@ export type WechatNotice={contactId:string;name:string;text:string};
 type Msg={time?:string;who:"沈妍"|"对方";text:string;material?:SharedMaterial};
 type Contact={id:string;name:string;note:string;preview:string;signature?:string;messages:Msg[]};
 type ReplyPart={text?:string;material?:SharedMaterial};
-type QuickReply={id:string;text:string;sendText?:string;emphasis?:boolean;reply:ReplyPart[];next?:QuickReply[]};
+type QuickReply={id:string;text:string;sendText?:string;emphasis?:boolean;freeText?:boolean;reply:ReplyPart[];next?:QuickReply[]};
 type MaterialRule=Record<string,ReplyPart[]|null>;
 
 const forumPost=(id:string,title:string):SharedMaterial=>({id,title,kind:"论坛帖子",url:`https://www.zhuyinwen.cn/thread/${id}`});
@@ -29,6 +30,9 @@ const wechatSession={
   quick:{} as Record<string,QuickReply[]>,
   adminBeats:{} as Record<string,boolean>,
   firstContact:{} as Record<string,string>,
+  locked:{} as Record<string,boolean>,
+  freeText:{} as Record<string,boolean>,
+  freeReturn:{} as Record<string,QuickReply[]>,
   zhouEvidenceSeen:false,
   zhouConfronted:false,
   activeId:"yq",
@@ -62,6 +66,8 @@ export const revealZhouConfrontation=()=>{
  const stamp=wechatSession.firstContact.zc;
  if(!stamp||wechatSession.zhouConfronted)return false;
  wechatSession.zhouEvidenceSeen=true;
+ wechatSession.freeText={...wechatSession.freeText,zc:false};
+ wechatSession.freeReturn={...wechatSession.freeReturn,zc:[]};
  wechatSession.quick={...wechatSession.quick,zc:[{id:"zc-zheliu",text:"你是折柳？",emphasis:true,reply:[{text:"你在哪看到这个号的？"}],next:[{id:"zc-zheliu-admin",text:"后台。",reply:[{text:"……"},{text:"你现在还在沈妍家？"}],next:[{id:"zc-zheliu-answer",text:"你还没回答我。",reply:[{text:"是。"}],next:[{id:"zc-zheliu-time",text:`我${stamp}才第一次联系你。后台同一分钟就有折柳的记录。`,reply:[{text:"……"},{text:"你先从她家出来。"}],next:[{id:"zc-zheliu-why",text:"为什么？",reply:[{text:"现在别问这个。"},{text:"先出去。"}]}]}]}]}]}]};
  notifyWechat();
  return true;
@@ -210,6 +216,13 @@ const textReply=(contact:string,text:string):ReplyPart[]|null=>{
  return null;
 };
 
+const fallbackReply=(contact:string):ReplyPart[]=>{
+ if(contact==="yq")return [{text:"这个我真不知道。"},{text:"你如果是问昨晚的事，可以直接问我。"}];
+ if(contact==="zc")return [{text:"这我没法接。"},{text:"你是查到什么了？"}];
+ if(contact==="ly")return [{text:"等下，我有点没跟上。"},{text:"你说具体一点，是沈妍还是论坛里的事？"}];
+ return [{text:"我不知道。"}];
+};
+
 const introText=(contactId:string)=>{
  if(contactId==="yq")return "你好，我是徐宁，沈妍朋友。她今天一直联系不上，我现在在她家。你们昨晚是不是见过？她走的时候有说去哪吗？";
  if(contactId==="zc")return "你好，我是徐宁，沈妍朋友。她今天一直联系不上。我现在在她家，她电脑微信还登着。看到你们最近有聊天，方便问你两句吗？";
@@ -218,9 +231,22 @@ const introText=(contactId:string)=>{
 };
 
 const introReply=(contactId:string):{parts:ReplyPart[];next:QuickReply[]}=>{
- if(contactId==="yq")return {parts:[{text:"你是徐宁？沈妍提过你。"},{text:"她今天还没回你？昨晚我们确实见过。"}],next:[{id:"yq-left-when",text:"你们昨晚几点分开的？",reply:[{text:"我九点左右先走的。"},{text:"21:03那句‘到家说一声’就是我走以后发的。"}],next:[{id:"yq-after-person",text:"她后来还见了别人吗？",reply:[{text:"……后来确实有人过来了一下。"},{text:"是之前跟她聊过旧事的一个女的。"},{text:"我跟那个人也不熟，就是以前介绍她们认识。"}]}]}]};
- if(contactId==="zc")return {parts:[{text:"徐宁？她提过你。"},{text:"她今天一直没回？电话也不通？"}],next:[]};
- if(contactId==="ly")return {parts:[{text:"徐宁？我知道你，沈妍提过。"},{text:"她怎么了？"}],next:[]};
+ if(contactId==="yq"){
+  const after:QuickReply={id:"yq-after-person",text:"她后来还见了别人吗？",reply:[{text:"……后来确实有人过来了一下。"},{text:"是之前跟她聊过旧事的一个女的。"},{text:"我跟那个人也不熟，就是以前介绍她们认识。"}]};
+  const when:QuickReply={id:"yq-left-when",text:"你们昨晚几点分开的？",reply:[{text:"我九点左右先走的。"},{text:"21:03那句‘到家说一声’就是我走以后发的。"}],next:[after]};
+  const free:QuickReply={id:"yq-free-intro",text:"自己问一句…",freeText:true,reply:[],next:[when]};
+  return {parts:[{text:"你是徐宁？沈妍提过你。"},{text:"她今天还没回你？昨晚我们确实见过。"}],next:[when,free]};
+ }
+ if(contactId==="zc"){
+  const recent:QuickReply={id:"zc-recent",text:"她最近跟你说过什么？",reply:[{text:"还是那个梦。"},{text:"她前几天开始觉得里面有人叫‘楠楠’。"},{text:"我让她别半夜一直翻旧帖。"}]};
+  const free:QuickReply={id:"zc-free-intro",text:"自己问一句…",freeText:true,reply:[],next:[recent]};
+  return {parts:[{text:"徐宁？她提过你。"},{text:"她今天一直没回？电话也不通？"}],next:[recent,free]};
+ }
+ if(contactId==="ly"){
+  const know:QuickReply={id:"ly-how-know",text:"你和沈妍怎么认识的？",reply:[{text:"论坛。"},{text:"我以前发过小时候走失以后的一些事，她私信过我。"},{text:"后来才慢慢聊熟。"}]};
+  const free:QuickReply={id:"ly-free-intro",text:"自己问一句…",freeText:true,reply:[],next:[know]};
+  return {parts:[{text:"徐宁？我知道你，沈妍提过。"},{text:"她怎么了？"}],next:[know,free]};
+ }
  return {parts:[],next:[]};
 };
 
@@ -246,11 +272,17 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  const [typing,setTyping]=useState<Record<string,boolean>>({});
  const [sent,setSent]=useState<Record<string,boolean>>(()=>({...wechatSession.sent}));
  const [quick,setQuick]=useState<Record<string,QuickReply[]>>(()=>({...wechatSession.quick}));
+ const [locked,setLocked]=useState<Record<string,boolean>>(()=>({...wechatSession.locked}));
+ const [freeText,setFreeText]=useState<Record<string,boolean>>(()=>({...wechatSession.freeText}));
  const scrollRef=useRef<HTMLElement|null>(null);
  const contact=contacts.find(x=>x.id===id)!;
  const visible=contacts.filter(x=>(x.name+x.note+x.preview).includes(q));
  const messages=useMemo(()=>[...contact.messages,...(extra[id]||[])],[contact,extra,id]);
  const previewFor=(c:Contact)=>{const added=extra[c.id]||[];return added.length?added[added.length-1].text:c.preview};
+ const actionLocked=!!locked[id]||!!typing[id];
+ const hasQuick=(quick[id]||[]).length>0;
+ const canFreeText=id!=="x"&&!!introduced[id]&&!!freeText[id]&&!actionLocked&&!hasQuick;
+ const canPickMaterial=id!=="x"&&!!introduced[id]&&!actionLocked&&!hasQuick&&!freeText[id];
  const sendable=useMemo(()=>id==="x"||!introduced[id]?[]:materials.filter(m=>Object.prototype.hasOwnProperty.call(materialRules[m.id]||{},id)&&!sent[`${id}:${m.id}`]),[materials,id,sent,introduced]);
  const appendFor=(contactId:string,items:Msg[])=>{
   wechatSession.extra={...wechatSession.extra,[contactId]:[...(wechatSession.extra[contactId]||[]),...items]};
@@ -267,7 +299,8 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
   return [{time:`今天 ${stamp}`,who:"沈妍",text:introText(contactId)}];
  };
  const sendIntroduction=(contactId:string)=>{
-  if(contactId==="x"||wechatSession.introduced[contactId])return;
+  if(contactId==="x"||wechatSession.introduced[contactId]||wechatSession.locked[contactId])return;
+  setLockedFor(contactId,true);
   const intro=ensureIntro(contactId);
   appendFor(contactId,intro);
   const start=introReply(contactId);
@@ -277,8 +310,17 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
   wechatSession.quick={...wechatSession.quick,[contactId]:items};
   notifyWechat();
  };
+ const setLockedFor=(contactId:string,value:boolean)=>{
+  wechatSession.locked={...wechatSession.locked,[contactId]:value};
+  notifyWechat();
+ };
+ const setFreeTextFor=(contactId:string,value:boolean,returnQuick:QuickReply[]=[])=>{
+  wechatSession.freeText={...wechatSession.freeText,[contactId]:value};
+  wechatSession.freeReturn={...wechatSession.freeReturn,[contactId]:returnQuick};
+  notifyWechat();
+ };
  const delayedParts=(contactId:string,parts:ReplyPart[]|null,nextQuick:QuickReply[]=[] )=>{
-  if(!parts?.length){setQuickFor(contactId,nextQuick);return;}
+  if(!parts?.length){setLockedFor(contactId,false);setQuickFor(contactId,nextQuick);return;}
   let elapsed=1000+Math.floor(Math.random()*900);
   setTyping(prev=>({...prev,[contactId]:true}));
   parts.forEach((part,index)=>{
@@ -287,7 +329,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
    window.setTimeout(()=>{
     if(part.material)appendFor(contactId,[{who:"对方",text:`[链接] ${part.material.title}`,material:part.material}]);
     else if(part.text)appendFor(contactId,[{who:"对方",text:part.text}]);
-    if(index===parts.length-1){setTyping(prev=>({...prev,[contactId]:false}));setQuickFor(contactId,nextQuick)}
+    if(index===parts.length-1){setTyping(prev=>({...prev,[contactId]:false}));setLockedFor(contactId,false);setQuickFor(contactId,nextQuick)}
    },elapsed);
   });
  };
@@ -298,6 +340,8 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
    setIntroduced({...wechatSession.introduced});
    setSent({...wechatSession.sent});
    setQuick({...wechatSession.quick});
+   setLocked({...wechatSession.locked});
+   setFreeText({...wechatSession.freeText});
   };
   wechatSubscribers.add(sync);
   sync();
@@ -312,27 +356,31 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
 
  const sendText=(e:FormEvent)=>{
   e.preventDefault();
-  const text=draft.trim(); if(!text||id==="x")return;
-  const intro=ensureIntro(id);
-  appendFor(id,[...intro,{who:"沈妍",text}]);
-  setQuickFor(id,[]);
+  const text=draft.trim(); if(!text||!canFreeText)return;
+  const returnQuick=wechatSession.freeReturn[id]||[];
+  setLockedFor(id,true);
+  setFreeTextFor(id,false,[]);
+  appendFor(id,[{who:"沈妍",text}]);
   setDraft("");
-  delayedParts(id,textReply(id,text));
+  delayedParts(id,textReply(id,text)??fallbackReply(id),returnQuick);
  };
  const sendMaterial=(material:SharedMaterial)=>{
+  if(!canPickMaterial)return;
   const rules=materialRules[material.id];
   if(!rules||!Object.prototype.hasOwnProperty.call(rules,id))return;
+  setLockedFor(id,true);
   const reply=materialReply(id,material.id);
-  const intro=ensureIntro(id);
-  appendFor(id,[...intro,{who:"沈妍",text:`[分享] ${material.title}`,material}]);
+  appendFor(id,[{who:"沈妍",text:`[分享] ${material.title}`,material}]);
   wechatSession.sent={...wechatSession.sent,[`${id}:${material.id}`]:true};
   notifyWechat();
   setPicker(false);
   delayedParts(id,reply,quickAfterMaterial(id,material.id));
  };
  const sendQuick=(item:QuickReply)=>{
-  if(id==="x")return;
+  if(id==="x"||actionLocked)return;
   setQuickFor(id,[]);
+  if(item.freeText){setFreeTextFor(id,true,item.next||[]);return;}
+  setLockedFor(id,true);
   appendFor(id,[{who:"沈妍",text:item.sendText||item.text}]);
   if(item.id==="zc-zheliu")wechatSession.zhouConfronted=true;
   delayedParts(id,item.reply,item.next||[]);
@@ -344,23 +392,23 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  return <div className="wechat" style={{height:"calc(100% - 39px)",minHeight:0,overflow:"hidden"}}>
   <aside style={{height:"100%",minHeight:0,overflowY:"auto"}}><header><i>妍</i><span><b>沈妍</b><small>微信已登录</small></span></header><label><Search/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索联系人和消息"/></label>{visible.map(x=><button className={x.id===id?"active":""} onClick={()=>setId(x.id)} key={x.id}><i>{x.name[0]}</i><span style={{minWidth:0}}><b>{x.name}</b><small style={{display:"block",marginTop:2,color:"#7f8783",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{x.note}</small><small style={{display:"block",marginTop:3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{previewFor(x)}</small></span></button>)}</aside>
   <main style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}}>
-   <header style={{flex:"0 0 auto"}}><b>{contact.name}</b><small>{typing[id]?"正在输入…":contact.note}</small>{contact.signature&&<small style={{display:"block",marginTop:3,color:"#929892",fontSize:10}}>个性签名：{contact.signature}</small>}</header>
+   <header style={{flex:"0 0 auto"}}><b>{contact.name}</b><small>{actionLocked?"正在回复…":contact.note}</small>{contact.signature&&<small style={{display:"block",marginTop:3,color:"#929892",fontSize:10}}>个性签名：{contact.signature}</small>}</header>
    <section ref={scrollRef} style={{flex:"1 1 auto",minHeight:0,overflowY:"auto",overscrollBehavior:"contain"}}>{messages.map((m,i)=><div key={i}>{m.time&&<time>{m.time}</time>}<article className={m.who==="沈妍"?"mine":""}><i>{m.who==="沈妍"?"妍":contact.name[0]}</i>{m.material?<button type="button" onClick={()=>openMaterial(m.material!)} style={{maxWidth:360,padding:"11px 12px",border:"1px solid #d7d7d7",borderRadius:8,background:"#fff",textAlign:"left",cursor:m.material.kind==="论坛帖子"?"pointer":"default"}}><small style={{display:"block",color:"#888",marginBottom:5}}>{m.material.kind}</small><b style={{display:"block",fontSize:13,fontWeight:600,lineHeight:1.45}}>{m.material.title}</b><small style={{display:"block",marginTop:7,color:"#999",wordBreak:"break-all"}}>{m.material.url}</small>{m.material.kind==="论坛帖子"&&<small style={{display:"block",marginTop:7,color:"#3b7a57"}}>打开帖子</small>}</button>:<p>{m.text}</p>}</article></div>)}</section>
 
-   {picker&&<div style={{position:"absolute",left:12,right:12,bottom:76,zIndex:8,maxHeight:"42%",overflowY:"auto",padding:8,border:"1px solid #cfcfcf",borderRadius:9,background:"#fff",boxShadow:"0 10px 35px #0003"}}>
+   {picker&&canPickMaterial&&<div style={{position:"absolute",left:12,right:12,bottom:76,zIndex:8,maxHeight:"42%",overflowY:"auto",padding:8,border:"1px solid #cfcfcf",borderRadius:9,background:"#fff",boxShadow:"0 10px 35px #0003"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 6px 8px"}}><b style={{fontSize:13}}>发送文件</b><button onClick={()=>setPicker(false)} style={{width:28,height:28,border:0,borderRadius:6,background:"#f2f2f2",display:"grid",placeItems:"center"}}><X size={14}/></button></div>
     {sendable.length?sendable.map(m=><button key={m.id} onClick={()=>sendMaterial(m)} style={{width:"100%",display:"block",padding:"10px",border:0,borderTop:"1px solid #eee",background:"#fff",textAlign:"left"}}><small style={{display:"block",color:"#999",marginBottom:3}}>{m.kind}</small><b style={{fontSize:13,fontWeight:500}}>{m.title}</b></button>):<p style={{margin:0,padding:"18px 10px",borderTop:"1px solid #eee",color:"#999",fontSize:12,textAlign:"center"}}>暂无可发送文件</p>}
    </div>}
 
-   {!typing[id]&&id!=="x"&&!introduced[id]&&<div style={{flex:"0 0 auto",padding:"10px 14px 0",background:"#f7f7f7"}}><button onClick={()=>sendIntroduction(id)} style={{padding:"8px 13px",border:"1px solid #b9d6c3",borderRadius:16,background:"#fff",color:"#267747",fontSize:12,fontWeight:700}}>先自我介绍</button></div>}
+   {!actionLocked&&id!=="x"&&!introduced[id]&&<div style={{flex:"0 0 auto",padding:"10px 14px 0",background:"#f7f7f7"}}><button onClick={()=>sendIntroduction(id)} style={{padding:"8px 13px",border:"1px solid #b9d6c3",borderRadius:16,background:"#fff",color:"#267747",fontSize:12,fontWeight:700}}>先自我介绍</button></div>}
 
-   {!typing[id]&&(quick[id]||[]).length>0&&<div style={{flex:"0 0 auto",display:"flex",gap:8,flexWrap:"wrap",padding:"9px 14px 0",background:"#f7f7f7"}}>{(quick[id]||[]).map(item=><button key={item.id} onClick={()=>sendQuick(item)} style={{maxWidth:"100%",padding:item.emphasis?"9px 14px":"7px 11px",border:item.emphasis?"2px solid #9f3f36":"1px solid #cfd8d2",borderRadius:15,background:item.emphasis?"#fff8f6":"#fff",color:item.emphasis?"#8c3029":"#3c6250",fontSize:12,fontWeight:item.emphasis?800:400,textAlign:"left"}}>{item.text}</button>)}</div>}
+   {!actionLocked&&(quick[id]||[]).length>0&&<div style={{flex:"0 0 auto",display:"flex",gap:8,flexWrap:"wrap",padding:"9px 14px 0",background:"#f7f7f7"}}>{(quick[id]||[]).map(item=><button key={item.id} onClick={()=>sendQuick(item)} style={{maxWidth:"100%",padding:item.emphasis?"9px 14px":"7px 11px",border:item.emphasis?"2px solid #9f3f36":"1px solid #cfd8d2",borderRadius:15,background:item.emphasis?"#fff8f6":"#fff",color:item.emphasis?"#8c3029":"#3c6250",fontSize:12,fontWeight:item.emphasis?800:400,textAlign:"left"}}>{item.text}</button>)}</div>}
 
    <footer style={{flex:"0 0 auto",padding:"12px 14px",background:"#f7f7f7",borderTop:"1px solid #ddd"}}>
     <form onSubmit={sendText} style={{display:"grid",gridTemplateColumns:"1fr 44px 48px",gap:8,alignItems:"center"}}>
-     <input disabled={id==="x"} value={draft} onChange={e=>setDraft(e.target.value)} placeholder={id==="x"?"":"输入消息"} style={{height:48,border:"1px solid #d0d0d0",borderRadius:8,padding:"0 14px",minWidth:0,fontSize:14}}/>
-     <button type="button" onClick={()=>setPicker(v=>!v)} disabled={id==="x"} title="文件" aria-label="文件" style={{position:"relative",height:44,width:44,border:"1px solid #d0d0d0",borderRadius:6,background:"#fff",display:"grid",placeItems:"center",color:"#555",opacity:id==="x"?.45:1}}><Plus size={19}/>{sendable.length>0&&<small style={{position:"absolute",right:-4,top:-5,minWidth:16,height:16,padding:"0 4px",borderRadius:8,background:"#39a65a",color:"#fff",fontSize:9,lineHeight:"16px"}}>{sendable.length}</small>}</button>
-     <button type="submit" disabled={id==="x"||!draft.trim()} style={{height:44,width:48,border:0,borderRadius:6,background:"#39a65a",color:"#fff",display:"grid",placeItems:"center",opacity:id!=="x"&&draft.trim()?1:.45}}><Send size={16}/></button>
+     <input disabled={!canFreeText} value={draft} onChange={e=>setDraft(e.target.value)} placeholder={canFreeText?"这一轮可以自己问一句":"输入消息"} style={{height:48,border:"1px solid #d0d0d0",borderRadius:8,padding:"0 14px",minWidth:0,fontSize:14,background:canFreeText?"#fff":"#efefef",color:canFreeText?"#222":"#999"}}/>
+     <button type="button" onClick={()=>canPickMaterial&&setPicker(v=>!v)} disabled={!canPickMaterial} title="文件" aria-label="文件" style={{position:"relative",height:44,width:44,border:"1px solid #d0d0d0",borderRadius:6,background:"#fff",display:"grid",placeItems:"center",color:"#555",opacity:canPickMaterial?1:.35}}><Plus size={19}/>{sendable.length>0&&<small style={{position:"absolute",right:-4,top:-5,minWidth:16,height:16,padding:"0 4px",borderRadius:8,background:"#39a65a",color:"#fff",fontSize:9,lineHeight:"16px"}}>{sendable.length}</small>}</button>
+     <button type="submit" disabled={!canFreeText||!draft.trim()} style={{height:44,width:48,border:0,borderRadius:6,background:"#39a65a",color:"#fff",display:"grid",placeItems:"center",opacity:canFreeText&&draft.trim()?1:.35}}><Send size={16}/></button>
     </form>
    </footer>
   </main>
