@@ -4,6 +4,7 @@ import {FormEvent,useEffect,useMemo,useRef,useState} from "react";
 import {Plus,Search,Send,X} from "lucide-react";
 
 export type SharedMaterial={id:string;title:string;kind:string;url:string};
+export type WechatNotice={contactId:string;name:string;text:string};
 type Msg={time?:string;who:"沈妍"|"对方";text:string;material?:SharedMaterial};
 type Contact={id:string;name:string;note:string;preview:string;messages:Msg[]};
 type ReplyPart={text?:string;material?:SharedMaterial};
@@ -24,6 +25,9 @@ const wechatSession={
   sent:{} as Record<string,boolean>,
   quick:{} as Record<string,QuickReply[]>,
   adminBeats:{} as Record<string,boolean>,
+  activeId:"x",
+  searchQuery:"",
+  draft:"",
 };
 const wechatSubscribers=new Set<()=>void>();
 const notifyWechat=()=>wechatSubscribers.forEach(fn=>fn());
@@ -43,6 +47,11 @@ const contacts:Contact[]=[
  ]},
 ];
 
+const wechatNoticeSubscribers=new Set<(notice:WechatNotice)=>void>();
+export const subscribeWechatNotices=(fn:(notice:WechatNotice)=>void)=>{wechatNoticeSubscribers.add(fn);return ()=>wechatNoticeSubscribers.delete(fn)};
+const emitWechatNotice=(contactId:string,text:string)=>{const c=contacts.find(x=>x.id===contactId);if(c)wechatNoticeSubscribers.forEach(fn=>fn({contactId,name:c.name,text}))};
+export const focusWechatContact=(contactId:string)=>{if(contacts.some(x=>x.id===contactId))wechatSession.activeId=contactId};
+
 const materialRules:Record<string,MaterialRule>={
  "33897":{yq:[{text:"这是哪儿？"},{text:"没去过。昨晚她也没跟我说这个。"}],zc:[{text:"这个我看过。"},{text:"她当时还在下面问那扇门怎么开的。"},{text:"照片跟她画的确实有点像。"}]},
  "09114":{yq:[{text:"林楠？"},{text:"没听她提过。"}],zc:[],ly:[{text:"林楠？"},{text:"不认识。"},{text:"沈妍怎么会查到她的？"}]},
@@ -56,6 +65,9 @@ const materialRules:Record<string,MaterialRule>={
  sanmen:{zc:[],ly:[]},
  "23109":{zc:[{text:"……这张图挺邪的。"},{text:"你从哪翻出来的？"}],ly:[{text:"这个黄纸我小时候见过差不多的。"},{text:"贴在门框边上。我一直以为就是家里辟邪。"}]},
  "27614":{zc:[{text:"这篇我有印象。"},{text:"站务后来不是说多人轮用吗。"}],ly:[{text:"我以前没点进去看过。"}]},
+ "admin-watchlist":{ly:[{text:"这么多人？"},{text:"……迟迟也在里面？"}],zc:[{text:"先留着。"},{text:"这至少能证明不是只围着沈妍一个人建的后台。"}]},
+ "admin-shen-record":{ly:[{text:"这些时间都记得这么细？"},{text:"10月16号那几条……你先留好。"}],zc:[{text:"把19:49、20:52、21:06这三条单独记下来。"},{text:"转交、样本、状态变更是连续的。"}]},
+ "admin-liang-record":{ly:[{text:"操。"},{text:"真的是我。"},{text:"你先别往下猜，最早那条是什么时候？"}],zc:[{text:"这是梁茵那份？"},{text:"今天18:42还在自动刷新，说明这系统现在还在跑。"}]},
 };
 
 const received=(contactId:string,materialId:string)=>!!wechatSession.sent[`${contactId}:${materialId}`];
@@ -142,15 +154,19 @@ export const triggerAdminWechatBeat=(beat:"shen-record")=>{
  if(wechatSession.adminBeats[beat])return false;
  wechatSession.adminBeats={...wechatSession.adminBeats,[beat]:true};
  const push=(contactId:string,items:Msg[])=>{wechatSession.extra={...wechatSession.extra,[contactId]:[...(wechatSession.extra[contactId]||[]),...items]}};
- push("ly",[{who:"对方",text:"你还在查吗？"},{who:"对方",text:"有找到新的东西吗？"}]);
- push("zc",wechatSession.introduced.zc?[{who:"对方",text:"她还是没消息？"}]:[{who:"对方",text:"你昨天不是还在查旧档吗？今天怎么没动静。"}]);
- push("yq",wechatSession.introduced.yq?[{who:"对方",text:"有消息了吗？"}]:[{who:"对方",text:"你今天好点没？"},{who:"对方",text:"怎么一直没回我。"}]);
+ const lyItems=[{who:"对方" as const,text:"你还在查吗？"},{who:"对方" as const,text:"有找到新的东西吗？"}];
+ const zcItems=wechatSession.introduced.zc?[{who:"对方" as const,text:"她还是没消息？"}]:[{who:"对方" as const,text:"你昨天不是还在查旧档吗？今天怎么没动静。"}];
+ const yqItems=wechatSession.introduced.yq?[{who:"对方" as const,text:"有消息了吗？"}]:[{who:"对方" as const,text:"你今天好点没？"},{who:"对方" as const,text:"怎么一直没回我。"}];
+ push("ly",lyItems);push("zc",zcItems);push("yq",yqItems);
+ emitWechatNotice("ly",lyItems[lyItems.length-1].text);
+ emitWechatNotice("zc",zcItems[zcItems.length-1].text);
+ emitWechatNotice("yq",yqItems[yqItems.length-1].text);
  notifyWechat();
  return true;
 };
 
 export default function InteractiveWechat({materials,onOpenPost}:{materials:SharedMaterial[];onOpenPost?:(id:string)=>void}){
- const [id,setId]=useState("x"),[q,setQ]=useState(""),[draft,setDraft]=useState(""),[picker,setPicker]=useState(false);
+ const [id,setId]=useState(()=>wechatSession.activeId),[q,setQ]=useState(()=>wechatSession.searchQuery),[draft,setDraft]=useState(()=>wechatSession.draft),[picker,setPicker]=useState(false);
  const [extra,setExtra]=useState<Record<string,Msg[]>>(()=>({...wechatSession.extra}));
  const [introduced,setIntroduced]=useState<Record<string,boolean>>(()=>({...wechatSession.introduced}));
  const [typing,setTyping]=useState<Record<string,boolean>>({});
@@ -164,6 +180,8 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  const sendable=useMemo(()=>materials.filter(m=>Object.prototype.hasOwnProperty.call(materialRules[m.id]||{},id)&&!sent[`${id}:${m.id}`]),[materials,id,sent]);
  const appendFor=(contactId:string,items:Msg[])=>{
   wechatSession.extra={...wechatSession.extra,[contactId]:[...(wechatSession.extra[contactId]||[]),...items]};
+  const incoming=[...items].reverse().find(x=>x.who==="对方"&&!!x.text);
+  if(incoming?.text)emitWechatNotice(contactId,incoming.text);
   notifyWechat();
  };
  const ensureIntro=(contactId:string):Msg[]=>{
@@ -202,6 +220,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
   sync();
   return ()=>{wechatSubscribers.delete(sync)};
  },[]);
+ useEffect(()=>{wechatSession.activeId=id;wechatSession.searchQuery=q;wechatSession.draft=draft},[id,q,draft]);
  useEffect(()=>{
   const el=scrollRef.current;
   if(el)el.scrollTop=el.scrollHeight;

@@ -1,18 +1,18 @@
 "use client";
 
-import {FormEvent,useMemo,useState} from "react";
+import {FormEvent,useEffect,useMemo,useState} from "react";
 import {ArrowLeft,ChevronRight,LockKeyhole,Search,ShieldCheck} from "lucide-react";
-import {triggerAdminWechatBeat} from "./InteractiveWechat";
+import {SharedMaterial,triggerAdminWechatBeat} from "./InteractiveWechat";
 
 export const ADMIN_USER="旧档员-03";
 export const ADMIN_TEMP_CODE="gumen-0712";
 const OLD_OATH="身非我身名非我名";
 
-type Props={loggedIn:boolean;onAdminLogin:()=>void;onCancel:()=>void;canUseLegacy:boolean;onWechatIncoming?:()=>void};
+type Props={loggedIn:boolean;onAdminLogin:()=>void;onCancel:()=>void;canUseLegacy:boolean;onWechatIncoming?:()=>void;onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean};
 
 const normalize=(v:string)=>v.replace(/[，。、“”‘’\s]/g,"");
 
-export default function AdminPortalOccult({loggedIn,onAdminLogin,onCancel,canUseLegacy,onWechatIncoming}:Props){
+export default function AdminPortalOccult({loggedIn,onAdminLogin,onCancel,canUseLegacy,onWechatIncoming,onCopyMaterial,hasMaterial}:Props){
  const [mode,setMode]=useState<"login"|"verify">("login");
  const [user,setUser]=useState("");
  const [pwd,setPwd]=useState("");
@@ -20,7 +20,7 @@ export default function AdminPortalOccult({loggedIn,onAdminLogin,onCancel,canUse
  const [attemptedAdmin,setAttemptedAdmin]=useState(false);
  const [filled,setFilled]=useState(false);
 
- if(loggedIn)return <AdminDesk onWechatIncoming={onWechatIncoming}/>;
+ if(loggedIn)return <AdminDesk onWechatIncoming={onWechatIncoming} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>;
 
  const submit=(e:FormEvent)=>{
   e.preventDefault();
@@ -240,11 +240,20 @@ const v:Record<string,React.CSSProperties>={
  box:{width:42,height:30,border:"2px solid #5a1714",borderRadius:4,background:"#913028",boxShadow:"inset 0 7px 0 #b24b3f"},
 };
 
-function AdminDesk({onWechatIncoming}:{onWechatIncoming?:()=>void}){
- const [tab,setTab]=useState<"watch"|"users"|"ops"|"recycle">("watch");
- const [q,setQ]=useState("");
- const [searched,setSearched]=useState(false);
+const adminDeskSession:{tab:"watch"|"users"|"ops"|"recycle";q:string;searched:boolean}={tab:"watch",q:"",searched:false};
+const adminWatchMaterial:SharedMaterial={id:"admin-watchlist",title:"旧档管理 · 观察名单",kind:"后台记录",url:"https://www.zhuyinwen.cn/admin/watch"};
+const adminShenMaterial:SharedMaterial={id:"admin-shen-record",title:"候鸟第七年 · 后台记录",kind:"后台记录",url:"https://www.zhuyinwen.cn/admin/users/0712-4471"};
+const adminLiangMaterial:SharedMaterial={id:"admin-liang-record",title:"迟迟 · 后台记录",kind:"后台记录",url:"https://www.zhuyinwen.cn/admin/users/0419-2286"};
+
+function AddMaterialButton({material,onCopyMaterial,hasMaterial}:{material:SharedMaterial;onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean}){if(!onCopyMaterial)return null;const added=!!hasMaterial?.(material.id);return <button disabled={added} onClick={()=>onCopyMaterial(material)} style={{margin:"0 0 12px",padding:"7px 10px",border:"1px solid #b9c3bd",borderRadius:6,background:added?"#eef1ef":"#fff",color:"#40564c",fontSize:12,cursor:added?"default":"pointer",opacity:added?.6:1}}>{added?"已添加到材料":"添加到材料"}</button>}
+
+function AdminDesk({onWechatIncoming,onCopyMaterial,hasMaterial}:{onWechatIncoming?:()=>void;onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean}){
+ const [tab,setTab]=useState<"watch"|"users"|"ops"|"recycle">(()=>adminDeskSession.tab);
+ const [q,setQ]=useState(()=>adminDeskSession.q);
+ const [searched,setSearched]=useState(()=>adminDeskSession.searched);
  const result=useMemo<"shen"|"liang"|null>(()=>{if(!searched)return null;const t=q.trim();if(/候鸟第七年|沈妍|0712-4471/.test(t))return "shen";if(/迟迟|梁茵|0419-2286/.test(t))return "liang";return null},[searched,q]);
+ useEffect(()=>{adminDeskSession.tab=tab;adminDeskSession.q=q;adminDeskSession.searched=searched},[tab,q,searched]);
+ useEffect(()=>{const timer=window.setTimeout(()=>{if(triggerAdminWechatBeat("shen-record"))onWechatIncoming?.()},900);return ()=>window.clearTimeout(timer)},[]);
  const fireShenBeat=()=>{if(triggerAdminWechatBeat("shen-record"))onWechatIncoming?.()};
  const doSearch=(e?:FormEvent)=>{e?.preventDefault();setSearched(true);if(/候鸟第七年|沈妍|0712-4471/.test(q.trim()))fireShenBeat()};
  const openKnown=(name:string)=>{setQ(name);setSearched(true);setTab("users");if(/候鸟第七年|沈妍/.test(name))fireShenBeat()};
@@ -253,8 +262,8 @@ function AdminDesk({onWechatIncoming}:{onWechatIncoming?:()=>void}){
   <div style={s.adminLayout}>
    <aside style={s.adminSide}><button className={tab==="watch"?"active":""} onClick={()=>setTab("watch")}>观察名单</button><button className={tab==="users"?"active":""} onClick={()=>setTab("users")}>用户查询</button><button className={tab==="ops"?"active":""} onClick={()=>setTab("ops")}>操作记录</button><button className={tab==="recycle"?"active":""} onClick={()=>setTab("recycle")}>删除记录</button></aside>
    <section style={s.adminBody}>
-    {tab==="watch"&&<WatchList openKnown={openKnown}/>} 
-    {tab==="users"&&<><h2>用户查询</h2><form onSubmit={doSearch} style={s.adminSearch}><Search size={16}/><input value={q} onChange={e=>{setQ(e.target.value);setSearched(false)}} placeholder="用户名 / UID / 关联姓名"/><button>查询</button></form>{searched&&!result&&<p style={s.adminEmpty}>没有匹配用户。</p>}{result==="shen"&&<ShenRecord/>}{result==="liang"&&<LiangRecord/>}</>}
+    {tab==="watch"&&<WatchList openKnown={openKnown} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} 
+    {tab==="users"&&<><h2>用户查询</h2><form onSubmit={doSearch} style={s.adminSearch}><Search size={16}/><input value={q} onChange={e=>{setQ(e.target.value);setSearched(false)}} placeholder="用户名 / UID / 关联姓名"/><button>查询</button></form>{searched&&!result&&<p style={s.adminEmpty}>没有匹配用户。</p>}{result==="shen"&&<ShenRecord onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} {result==="liang"&&<LiangRecord onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>}</>}
     {tab==="ops"&&<Operations/>}
     {tab==="recycle"&&<Recycle/>}
    </section>
@@ -279,10 +288,11 @@ const watchRows=[
  ["2031-9916","南站末班车","赵某","待复核","10-12 19:37"],
  ["7350-1102","台阶第七级","—","观察 II","10-12 03:26"],
 ];
-function WatchList({openKnown}:{openKnown:(name:string)=>void}){return <><h2>观察名单</h2><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,margin:"0 0 14px"}}>{[["活跃观察","83"],["待复核","17"],["本月线下接触","6"],["样本待登记","2"]].map(([k,v])=><span key={k} style={{padding:"10px 12px",border:"1px solid #d5d9d6",background:"#fff"}}><small style={{display:"block",color:"#8a918d"}}>{k}</small><b style={{fontSize:20}}>{v}</b></span>)}</div><div style={{border:"1px solid #d5d9d6",background:"#fff",fontSize:12}}><div style={{display:"grid",gridTemplateColumns:"110px 1.2fr 1fr 1fr 110px",gap:8,padding:"8px 10px",background:"#eef1ef",color:"#6c746f",fontWeight:700}}><span>UID</span><span>论坛账号</span><span>关联姓名</span><span>状态</span><span>最后更新</span></div>{watchRows.map((r,i)=>{const known=r[1]==="候鸟第七年"||r[1]==="迟迟";return <button key={r[0]} onClick={()=>known&&openKnown(r[1])} style={{width:"100%",display:"grid",gridTemplateColumns:"110px 1.2fr 1fr 1fr 110px",gap:8,padding:"9px 10px",border:0,borderTop:"1px solid #edf0ee",background:i%2?"#fbfcfb":"#fff",textAlign:"left",fontSize:12,cursor:known?"pointer":"default"}}><code>{r[0]}</code><b style={{fontWeight:known?700:500}}>{r[1]}</b><span>{r[2]}</span><span>{r[3]}</span><time>{r[4]}</time></button>})}</div></>}
+function WatchList({openKnown,onCopyMaterial,hasMaterial}:{openKnown:(name:string)=>void;onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean}){return <><h2>观察名单</h2><AddMaterialButton material={adminWatchMaterial} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,margin:"0 0 14px"}}>{[["活跃观察","83"],["待复核","17"],["本月线下接触","6"],["样本待登记","2"]].map(([k,v])=><span key={k} style={{padding:"10px 12px",border:"1px solid #d5d9d6",background:"#fff"}}><small style={{display:"block",color:"#8a918d"}}>{k}</small><b style={{fontSize:20}}>{v}</b></span>)}</div><div style={{border:"1px solid #d5d9d6",background:"#fff",fontSize:12}}><div style={{display:"grid",gridTemplateColumns:"110px 1.2fr 1fr 1fr 110px",gap:8,padding:"8px 10px",background:"#eef1ef",color:"#6c746f",fontWeight:700}}><span>UID</span><span>论坛账号</span><span>关联姓名</span><span>状态</span><span>最后更新</span></div>{watchRows.map((r,i)=>{const known=r[1]==="候鸟第七年"||r[1]==="迟迟";return <button key={r[0]} onClick={()=>known&&openKnown(r[1])} style={{width:"100%",display:"grid",gridTemplateColumns:"110px 1.2fr 1fr 1fr 110px",gap:8,padding:"9px 10px",border:0,borderTop:"1px solid #edf0ee",background:i%2?"#fbfcfb":"#fff",textAlign:"left",fontSize:12,cursor:known?"pointer":"default"}}><code>{r[0]}</code><b style={{fontWeight:known?700:500}}>{r[1]}</b><span>{r[2]}</span><span>{r[3]}</span><time>{r[4]}</time></button>})}</div></>}
 
-function ShenRecord(){return <article style={s.userRecord}>
+function ShenRecord({onCopyMaterial,hasMaterial}:{onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean}){return <article style={s.userRecord}>
  <header style={s.userHead}><i>候</i><span><h3>候鸟第七年</h3><small>实名关联：沈妍 · UID 0712-4471 · 最后活动 2026-10-16 19:48</small></span><em>已控制</em></header>
+ <AddMaterialButton material={adminShenMaterial} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>
  <div style={s.statusGrid}><span><small>对契匹配</small><b>92%</b></span><span><small>血样</small><b>已采集</b></span><span><small>当前状态</small><b>已转移</b></span><span><small>下一步</small><b>等待执行</b></span></div>
  <section style={s.adminPanel}><h4>关联信息</h4><Record date="旧案" title="2004-07-17" meta="年龄 9 · 失踪 13 天" text="关联旧案：LN-2004-0718；关联对象：林楠。"/><Record date="首次录入" title="2021-06-14" meta="自动索引匹配" text="论坛实名映射完成；进入长期观察。"/></section>
  <section style={s.adminPanel}><h4>观察记录</h4><Record date="2021-06-14 02:31" title="加入观察名单" meta="自动任务" text="旧案年龄、找回时长与历史样本重合。观察等级 I。"/><Record date="2022-11-03 01:17" title="站内搜索记录" meta="候鸟第七年" text="查询：小时候走失 / 记不得 / 回来以后。"/><Record date="2023-04-19 03:08" title="草稿删除" meta="镜像保留" text="内容涉及“另一个家”；未公开发布。"/><Record date="2024-09-07 00:46" title="旧厂区内容访问" meta="行为记录" text="连续查看岚棉三厂旧址照片 37 分钟。"/><Record date="2025-12-18 02:54" title="附件上传" meta="私密主题" text="室内布局草图与 LN-2004 居住地址局部结构相符。"/><Record date="2026-06-19 03:12" title="内容命中" meta="梦境帖" text="红铁皮盒、蓝窗帘、厨房位置重复出现。"/><Record date="2026-08-22 04:12" title="观察等级调整" meta="操作人：照骨" text="II → III；对契匹配 92%；恢复旧案关联观察。"/><Record date="2026-10-12 22:41" title="公开区接触" meta="监控记录" text="与站内账号发生旧案资料交流。继续观察。"/><Record date="2026-10-16 19:49" title="线下转交" meta="执行：旧档员-03" text="完成。停止公开区接触。"/><Record date="2026-10-16 20:52" title="样本登记" meta="内部任务" text="血样 2 管；保存状态：有效。"/><Record date="2026-10-16 21:06" title="人员状态变更" meta="旧档员-03" text="观察中 → 已控制。"/></section>
@@ -290,8 +300,9 @@ function ShenRecord(){return <article style={s.userRecord}>
  <section style={s.adminPanel}><h4>私密内容镜像</h4><Record date="2026-06-19 03:12" title="昨晚又梦到了" meta="仅自己可见 · 自动镜像" text="红铁皮盒、蓝窗帘，还有那个听不清的称呼。"/><Record date="2026-09-11 02:08" title="9月11日，几条旧帖" meta="仅自己可见 · 自动镜像" text="另一个家、回来以后不会以前会的东西。"/></section>
  </article>}
 
-function LiangRecord(){return <article style={s.userRecord}>
+function LiangRecord({onCopyMaterial,hasMaterial}:{onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean}){return <article style={s.userRecord}>
  <header style={s.userHead}><i>迟</i><span><h3>迟迟</h3><small>实名关联：梁茵 · UID 0419-2286 · 关联设备仍在线</small></span><em>持续观察</em></header>
+ <AddMaterialButton material={adminLiangMaterial} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>
  <div style={s.statusGrid}><span><small>对契匹配</small><b>74%</b></span><span><small>旧案记录</small><b>匹配</b></span><span><small>线下接触</small><b>2 次</b></span><span><small>最后更新</small><b>今天 18:42</b></span></div>
  <section style={s.adminPanel}><h4>观察记录</h4><Record date="2017-07-22 23:18" title="加入观察名单" meta="账号：迟迟" text="旧案检索命中；实名映射后持续观察。"/><Record date="2018-01-03 02:11" title="站内搜索记录" meta="行为记录" text="查询：回来以后 / 不认识自己家 / 小时候走失。"/><Record date="2019-04-17 01:26" title="草稿删除" meta="镜像保留" text="未发布内容涉及“另一个家”。"/><Record date="2020-11-06 18:31" title="身份资料补全" meta="后台人工" text="实名、旧案、常用设备关联完成。"/><Record date="2021-03-12 19:08" title="线下接触 1" meta="批次 QW-21-03" text="完成基础问询；对象未意识到测试性质。"/><Record date="2022-08-29 20:14" title="物件反应记录" meta="接触后补录" text="固定物件识别无明显结果；保留观察。"/><Record date="2024-01-08 18:52" title="线下接触 2" meta="批次 QW-24-01" text="原计划进入下一地点；对象提前离开。"/><Record date="2024-01-08 19:07" title="终止转交" meta="现场记录" text="陪同人员提前出现；对象离开。未继续。"/><Record date="2025-06-19 03:29" title="建立关联观察" meta="关联 UID 0712-4471" text="与候鸟第七年公开互动频率上升。"/><Record date="2026-08-22 04:18" title="恢复高频观察" meta="自动任务" text="因 UID 0712-4471 匹配值升高，重新启用关联记录。"/><Record date="2026-10-17 18:42" title="设备记录刷新" meta="自动写入" text="关联设备 P-4477；位置采样：河临北区。"/></section>
  <section style={s.adminPanel}><h4>备注</h4><Record date="当前" title="对象未确认被观察" meta="内部备注" text="不主动接触；保留设备与公开区记录。"/></section>

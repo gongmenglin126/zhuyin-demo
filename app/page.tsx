@@ -4,7 +4,7 @@ import {ReactNode,useEffect,useMemo,useState} from "react";
 import {ArrowLeft,ChevronRight,Clock3,Globe2,History as HistoryIcon,Home,LockKeyhole,Maximize2,MessageCircle,Minimize2,NotebookPen,RefreshCw,Search,Wifi,X} from "lucide-react";
 import {history,Post,posts,privateEntries,profile} from "../content/gameDataFlowV2";
 import LocalVault from "./LocalVault";
-import InteractiveWechat,{SharedMaterial} from "./InteractiveWechat";
+import InteractiveWechat,{SharedMaterial,WechatNotice,focusWechatContact,subscribeWechatNotices} from "./InteractiveWechat";
 import PrivateArea from "./PrivateArea";
 import AdminPortalOccult from "./AdminPortalOccult";
 
@@ -18,6 +18,9 @@ const SHAREABLE_POST_IDS=new Set(["33897","09114","09831","10731","14692","17428
 const HOME_POST_IDS=["34091","34086","34080","34064","34055","34049","20847","34043","33992","33981"];
 let persistedForumIdentity:"shenyan"|"admin"="shenyan";
 let persistedForumRead:string[]=[];
+let persistedForumRoute:Route={kind:"home"};
+let persistedForumStack:Route[]=[];
+let persistedForumQ="";
 
 export default function Page(){
  const [stage,setStage]=useState<"title"|"login"|"desktop">("title");
@@ -25,7 +28,15 @@ export default function Page(){
  const [materials,setMaterials]=useState<SharedMaterial[]>([]);
  const [verseSeen,setVerseSeen]=useState(false);
  const [wxPost,setWxPost]=useState<string|null>(null);
+ const [wxNotices,setWxNotices]=useState<(WechatNotice&{id:number})[]>([]);
  const rememberMaterial=(m:SharedMaterial)=>setMaterials(prev=>prev.some(x=>x.id===m.id)?prev:[...prev,m]);
+ useEffect(()=>subscribeWechatNotices(notice=>{
+  if(app==="wechat")return;
+  const item={...notice,id:Date.now()+Math.floor(Math.random()*1000)};
+  setWxRead(false);
+  setWxNotices(prev=>[...prev.filter(x=>x.contactId!==notice.contactId),item].slice(-3));
+  window.setTimeout(()=>setWxNotices(prev=>prev.filter(x=>x.id!==item.id)),6500);
+ }),[app]);
  if(stage==="title")return <main className="title"><section><small>河临 · 2026年10月17日</small><h1>烛阴旧闻</h1><p>沈妍没有赴约。<br/>电话关机，消息也没有回复。</p><button onClick={()=>setStage("login")}>进入公寓 <ChevronRight/></button></section></main>;
  if(stage==="login")return <main className="login"><div className="clock"><b>19:06</b><span>10月17日　星期六</span></div><section><div className="avatar">妍</div><h2>沈妍</h2><button className="password" onClick={()=>setStage("desktop")}><span>••••••••</span><ChevronRight/></button><p>你和沈妍从小学低年级就认识。你们互为紧急联系人，也一直留着彼此的备用门锁密码。</p></section></main>;
  const open=(x:App)=>{setApp(x);setMax(x==="browser"||x==="verse");if(x==="wechat")setWxRead(true)};
@@ -34,6 +45,7 @@ export default function Page(){
   <div className="shortcuts"><Icon label="浏览器" tone="blue" icon={<Globe2/>} onClick={()=>open("browser")}/><Icon label="微信" tone="green" icon={<MessageCircle/>} badge={!wxRead} onClick={()=>open("wechat")}/><Icon label="本地资料" tone="amber" icon={<NotebookPen/>} onClick={()=>open("notes")}/></div>
   {intro&&<div className="overlay"><section className="intro"><small><Clock3/> 2026年10月17日　19:06</small><h2>沈妍没有来。</h2><p>你们约好今天中午见面。她没有出现，电话关机，微信也没有回复。</p><p>傍晚，你用她留给你的备用门锁密码进了公寓。屋里没人，电脑没有关机，微信和浏览器仍保持登录。</p><blockquote><b>徐宁　18:37</b>我去你家看看。看到回我。</blockquote><em>屋里很安静，电脑屏幕还亮着。</em><button onClick={()=>setIntro(false)}>查看电脑</button></section></div>}
   {app&&<Window title={appTitle} max={max} allowMax={app==="browser"||app==="verse"} close={()=>setApp(null)} toggle={()=>setMax(!max)}>{app==="browser"?<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked} onCopyMaterial={rememberMaterial} hasMaterial={id=>materials.some(m=>m.id===id)} verseSeen={verseSeen} initialPostId={wxPost} onInitialPostConsumed={()=>setWxPost(null)}/>:app==="wechat"?<InteractiveWechat materials={materials} onOpenPost={id=>{setWxPost(id);setApp("browser");setMax(true)}}/>:app==="notes"?<LocalVault unlocked={noteUnlocked} onUnlock={()=>setNoteUnlocked(true)} openLink={()=>{setVerseSeen(true);open("verse")}}/>:<VersePage onCopyMaterial={rememberMaterial} hasMaterial={id=>materials.some(m=>m.id===id)}/>}</Window>}
+  {!!wxNotices.length&&<div style={{position:"fixed",right:18,top:38,zIndex:80,width:310,display:"grid",gap:8}}>{wxNotices.map(n=><button key={n.id} onClick={()=>{focusWechatContact(n.contactId);setWxNotices(prev=>prev.filter(x=>x.contactId!==n.contactId));open("wechat")}} style={{display:"grid",gridTemplateColumns:"38px 1fr",gap:10,alignItems:"center",padding:"11px 12px",border:"1px solid #d7ddd9",borderRadius:10,background:"#fff",boxShadow:"0 10px 30px #0003",textAlign:"left",cursor:"pointer"}}><i style={{width:36,height:36,display:"grid",placeItems:"center",borderRadius:9,background:"#2bbd60",color:"#fff",fontStyle:"normal"}}><MessageCircle size={19}/></i><span style={{minWidth:0}}><b style={{display:"block",fontSize:12}}>微信 · {n.name}</b><small style={{display:"block",marginTop:3,color:"#666",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{n.text}</small></span></button>)}</div>}
   <nav className="dock"><button onClick={()=>open("browser")}><i className="blue"><Globe2/></i></button><button onClick={()=>open("wechat")}><i className="green"><MessageCircle/>{!wxRead&&<b>1</b>}</i></button><button onClick={()=>open("notes")}><i className="amber"><NotebookPen/></i></button></nav>
  </main>
 }
@@ -41,16 +53,17 @@ function Icon({label,tone,icon,badge,onClick}:{label:string;tone:string;icon:Rea
 function Window({title,max,allowMax,close,toggle,children}:{title:string;max:boolean;allowMax:boolean;close:()=>void;toggle:()=>void;children:ReactNode}){return <section className={"window "+(max?"max":"float")}><header><div><button className="red" onClick={close}><X/></button><button className="yellow" onClick={close}><Minimize2/></button>{allowMax&&<button className="green-dot" onClick={toggle}><Maximize2/></button>}</div><b>{title}</b><span/></header>{children}</section>}
 
 function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial,hasMaterial,verseSeen,initialPostId,onInitialPostConsumed}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void;onCopyMaterial:(m:SharedMaterial)=>void;hasMaterial:(id:string)=>boolean;verseSeen:boolean;initialPostId:string|null;onInitialPostConsumed:()=>void}){
- const [route,setRoute]=useState<Route>(initialPostId?{kind:"post",id:initialPostId}:{kind:"home"}),[stack,setStack]=useState<Route[]>([]),[q,setQ]=useState(""),[read,setRead]=useState<string[]>(()=>[...new Set([...persistedForumRead,...(initialPostId?[initialPostId]:[])])]);
+ const [route,setRoute]=useState<Route>(()=>initialPostId?{kind:"post",id:initialPostId}:persistedForumRoute),[stack,setStack]=useState<Route[]>(()=>initialPostId?[...persistedForumStack,persistedForumRoute]:persistedForumStack),[q,setQ]=useState(()=>persistedForumQ),[read,setRead]=useState<string[]>(()=>[...new Set([...persistedForumRead,...(initialPostId?[initialPostId]:[])])]);
  const [forumIdentity,setForumIdentity]=useState<"shenyan"|"admin">(()=>persistedForumIdentity);
  useEffect(()=>{if(initialPostId)onInitialPostConsumed()},[]);
+ useEffect(()=>{persistedForumRoute=route;persistedForumStack=stack;persistedForumQ=q},[route,stack,q]);
  const go=(next:Route)=>{setStack([...stack,route]);setRoute(next);if(next.kind==="post"){const nextRead=[...new Set([...read,next.id])];persistedForumRead=nextRead;setRead(nextRead)}};
  const back=()=>{if(forumIdentity==="admin"||!stack.length)return;setRoute(stack[stack.length-1]);setStack(stack.slice(0,-1))};
  const search=(value=q)=>{if(value.trim()){setQ(value);go({kind:"search",q:value.trim()})}};
  const openUser=(name:string)=>name==="候鸟第七年"?go({kind:"profile"}):go({kind:"user",name});
  return <div className="browser"><div className="tabs"><span>烛</span><b>烛阴旧闻</b></div><div className="bar"><button onClick={back}><ArrowLeft/></button><button onClick={()=>setRoute({...route})}><RefreshCw/></button><div><LockKeyhole/>www.zhuyinwen.cn / {forumIdentity==="admin"?"admin":route.kind}</div><button onClick={()=>forumIdentity==="shenyan"&&go({kind:"history"})}><HistoryIcon/></button></div>
   <div className="site">
-   {forumIdentity==="admin"?<AdminPortalOccult loggedIn={true} canUseLegacy={true} onAdminLogin={()=>{}} onCancel={()=>{}} onWechatIncoming={()=>setWxRead(false)}/>:route.kind==="account"?<AdminPortalOccult loggedIn={false} canUseLegacy={verseSeen} onCancel={back} onAdminLogin={()=>{persistedForumIdentity="admin";setForumIdentity("admin");setStack([])}} onWechatIncoming={()=>setWxRead(false)}/>:<>
+   {forumIdentity==="admin"?<AdminPortalOccult loggedIn={true} canUseLegacy={true} onAdminLogin={()=>{}} onCancel={()=>{}} onWechatIncoming={()=>setWxRead(false)} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>:route.kind==="account"?<AdminPortalOccult loggedIn={false} canUseLegacy={verseSeen} onCancel={back} onAdminLogin={()=>{persistedForumIdentity="admin";setForumIdentity("admin");setStack([])}} onWechatIncoming={()=>setWxRead(false)} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>:<>
     <ForumHeader q={q} setQ={setQ} search={search} home={()=>go({kind:"home"})} me={()=>go({kind:"profile"})} switchAccount={()=>go({kind:"account"})}/>
     {route.kind==="home"&&<ForumHome read={read} open={id=>go({kind:"post",id})} me={()=>go({kind:"profile"})}/>} 
     {route.kind==="post"&&<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} 
