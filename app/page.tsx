@@ -7,6 +7,7 @@ import LocalVault from "./LocalVault";
 import InteractiveWechat,{SharedMaterial,WechatNotice,focusWechatContact,subscribeWechatNotices} from "./InteractiveWechat";
 import PrivateArea from "./PrivateArea";
 import AdminPortalOccult from "./AdminPortalOccult";
+import {advanceGameClock,getGameClock,subscribeGameClock} from "./gameClock";
 
 type App="browser"|"wechat"|"notes"|"verse";
 type Route={kind:"home"}|{kind:"post",id:string}|{kind:"profile"}|{kind:"user",name:string}|{kind:"private"}|{kind:"history"}|{kind:"search",q:string}|{kind:"account"};
@@ -29,23 +30,24 @@ export default function Page(){
  const [verseSeen,setVerseSeen]=useState(false);
  const [wxPost,setWxPost]=useState<string|null>(null);
  const [wxNotices,setWxNotices]=useState<(WechatNotice&{id:number})[]>([]);
+ const [clock,setClock]=useState(()=>getGameClock());
+ useEffect(()=>subscribeGameClock(setClock),[]);
  const rememberMaterial=(m:SharedMaterial)=>setMaterials(prev=>prev.some(x=>x.id===m.id)?prev:[...prev,m]);
  useEffect(()=>subscribeWechatNotices(notice=>{
-  if(app==="wechat")return;
   const item={...notice,id:Date.now()+Math.floor(Math.random()*1000)};
   setWxRead(false);
   setWxNotices(prev=>[...prev.filter(x=>x.contactId!==notice.contactId),item].slice(-3));
-  window.setTimeout(()=>setWxNotices(prev=>prev.filter(x=>x.id!==item.id)),6500);
+  window.setTimeout(()=>setWxNotices(prev=>prev.filter(x=>x.id!==item.id)),12000);
  }),[app]);
  if(stage==="title")return <main className="title"><section><small>河临 · 2026年10月17日</small><h1>烛阴旧闻</h1><p>沈妍没有赴约。<br/>电话关机，消息也没有回复。</p><button onClick={()=>setStage("login")}>进入公寓 <ChevronRight/></button></section></main>;
  if(stage==="login")return <main className="login"><div className="clock"><b>19:06</b><span>10月17日　星期六</span></div><section><div className="avatar">妍</div><h2>沈妍</h2><button className="password" onClick={()=>setStage("desktop")}><span>••••••••</span><ChevronRight/></button><p>你和沈妍从小学低年级就认识。你们互为紧急联系人，也一直留着彼此的备用门锁密码。</p></section></main>;
- const open=(x:App)=>{setApp(x);setMax(x==="browser"||x==="verse");if(x==="wechat")setWxRead(true)};
+ const open=(x:App)=>{advanceGameClock(1);setApp(x);setMax(x==="browser"||x==="verse");if(x==="wechat")setWxRead(true)};
  const appTitle=app==="browser"?"澄川浏览器":app==="wechat"?"微信":app==="notes"?"本地资料":app==="verse"?"澄川浏览器":"访达";
- return <main className="desktop"><header className="sys"><div><b>●</b><strong>{appTitle}</strong><span>文件</span><span>编辑</span></div><div><Wifi/><span>80%</span><span>10月17日 周六 19:06</span></div></header>
+ return <main className="desktop"><header className="sys"><div><b>●</b><strong>{appTitle}</strong><span>文件</span><span>编辑</span></div><div><Wifi/><span>80%</span><span>10月17日 周六 {clock}</span></div></header>
   <div className="shortcuts"><Icon label="浏览器" tone="blue" icon={<Globe2/>} onClick={()=>open("browser")}/><Icon label="微信" tone="green" icon={<MessageCircle/>} badge={!wxRead} onClick={()=>open("wechat")}/><Icon label="本地资料" tone="amber" icon={<NotebookPen/>} onClick={()=>open("notes")}/></div>
   {intro&&<div className="overlay"><section className="intro"><small><Clock3/> 2026年10月17日　19:06</small><h2>沈妍没有来。</h2><p>你们约好今天中午见面。她没有出现，电话关机，微信也没有回复。</p><p>傍晚，你用她留给你的备用门锁密码进了公寓。屋里没人，电脑没有关机，微信和浏览器仍保持登录。</p><blockquote><b>徐宁　18:37</b>我去你家看看。看到回我。</blockquote><em>屋里很安静，电脑屏幕还亮着。</em><button onClick={()=>setIntro(false)}>查看电脑</button></section></div>}
   {app&&<Window title={appTitle} max={max} allowMax={app==="browser"||app==="verse"} close={()=>setApp(null)} toggle={()=>setMax(!max)}>{app==="browser"?<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked} onCopyMaterial={rememberMaterial} hasMaterial={id=>materials.some(m=>m.id===id)} verseSeen={verseSeen} initialPostId={wxPost} onInitialPostConsumed={()=>setWxPost(null)}/>:app==="wechat"?<InteractiveWechat materials={materials} onOpenPost={id=>{setWxPost(id);setApp("browser");setMax(true)}}/>:app==="notes"?<LocalVault unlocked={noteUnlocked} onUnlock={()=>setNoteUnlocked(true)} openLink={()=>{setVerseSeen(true);open("verse")}}/>:<VersePage onCopyMaterial={rememberMaterial} hasMaterial={id=>materials.some(m=>m.id===id)}/>}</Window>}
-  {!!wxNotices.length&&<div style={{position:"fixed",right:18,top:38,zIndex:80,width:310,display:"grid",gap:8}}>{wxNotices.map(n=><button key={n.id} onClick={()=>{focusWechatContact(n.contactId);setWxNotices(prev=>prev.filter(x=>x.contactId!==n.contactId));open("wechat")}} style={{display:"grid",gridTemplateColumns:"38px 1fr",gap:10,alignItems:"center",padding:"11px 12px",border:"1px solid #d7ddd9",borderRadius:10,background:"#fff",boxShadow:"0 10px 30px #0003",textAlign:"left",cursor:"pointer"}}><i style={{width:36,height:36,display:"grid",placeItems:"center",borderRadius:9,background:"#2bbd60",color:"#fff",fontStyle:"normal"}}><MessageCircle size={19}/></i><span style={{minWidth:0}}><b style={{display:"block",fontSize:12}}>微信 · {n.name}</b><small style={{display:"block",marginTop:3,color:"#666",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{n.text}</small></span></button>)}</div>}
+  {!!wxNotices.length&&<div style={{position:"fixed",right:18,top:38,zIndex:80,width:350,display:"grid",gap:8}}>{wxNotices.map(n=><button key={n.id} onClick={()=>{focusWechatContact(n.contactId);setWxNotices(prev=>prev.filter(x=>x.contactId!==n.contactId));open("wechat")}} style={{display:"grid",gridTemplateColumns:"38px 1fr",gap:10,alignItems:"center",padding:"13px 14px",border:"2px solid #42a967",borderRadius:10,background:"#fff",boxShadow:"0 14px 38px #0005",textAlign:"left",cursor:"pointer"}}><i style={{width:36,height:36,display:"grid",placeItems:"center",borderRadius:9,background:"#2bbd60",color:"#fff",fontStyle:"normal"}}><MessageCircle size={19}/></i><span style={{minWidth:0}}><b style={{display:"block",fontSize:12}}><span style={{marginRight:6,color:"#2a9f55"}}>新消息</span>微信 · {n.name}</b><small style={{display:"block",marginTop:3,color:"#666",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{n.text}</small></span></button>)}</div>}
   <nav className="dock"><button onClick={()=>open("browser")}><i className="blue"><Globe2/></i></button><button onClick={()=>open("wechat")}><i className="green"><MessageCircle/>{!wxRead&&<b>1</b>}</i></button><button onClick={()=>open("notes")}><i className="amber"><NotebookPen/></i></button></nav>
  </main>
 }
@@ -57,7 +59,7 @@ function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial,hasMaterial,
  const [forumIdentity,setForumIdentity]=useState<"shenyan"|"admin">(()=>persistedForumIdentity);
  useEffect(()=>{if(initialPostId)onInitialPostConsumed()},[]);
  useEffect(()=>{persistedForumRoute=route;persistedForumStack=stack;persistedForumQ=q},[route,stack,q]);
- const go=(next:Route)=>{setStack([...stack,route]);setRoute(next);if(next.kind==="post"){const nextRead=[...new Set([...read,next.id])];persistedForumRead=nextRead;setRead(nextRead)}};
+ const go=(next:Route)=>{advanceGameClock(1);setStack([...stack,route]);setRoute(next);if(next.kind==="post"){const nextRead=[...new Set([...read,next.id])];persistedForumRead=nextRead;setRead(nextRead)}};
  const back=()=>{if(forumIdentity==="admin"||!stack.length)return;setRoute(stack[stack.length-1]);setStack(stack.slice(0,-1))};
  const search=(value=q)=>{if(value.trim()){setQ(value);go({kind:"search",q:value.trim()})}};
  const openUser=(name:string)=>name==="候鸟第七年"?go({kind:"profile"}):go({kind:"user",name});

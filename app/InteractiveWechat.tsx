@@ -1,14 +1,16 @@
 "use client";
+// v9.2.1 interaction pass
 
 import {FormEvent,useEffect,useMemo,useRef,useState} from "react";
+import {advanceGameClock} from "./gameClock";
 import {Plus,Search,Send,X} from "lucide-react";
 
 export type SharedMaterial={id:string;title:string;kind:string;url:string};
 export type WechatNotice={contactId:string;name:string;text:string};
 type Msg={time?:string;who:"沈妍"|"对方";text:string;material?:SharedMaterial};
-type Contact={id:string;name:string;note:string;preview:string;messages:Msg[]};
+type Contact={id:string;name:string;note:string;preview:string;signature?:string;messages:Msg[]};
 type ReplyPart={text?:string;material?:SharedMaterial};
-type QuickReply={id:string;text:string;reply:ReplyPart[];next?:QuickReply[]};
+type QuickReply={id:string;text:string;sendText?:string;emphasis?:boolean;reply:ReplyPart[];next?:QuickReply[]};
 type MaterialRule=Record<string,ReplyPart[]|null>;
 
 const forumPost=(id:string,title:string):SharedMaterial=>({id,title,kind:"论坛帖子",url:`https://www.zhuyinwen.cn/thread/${id}`});
@@ -25,6 +27,9 @@ const wechatSession={
   sent:{} as Record<string,boolean>,
   quick:{} as Record<string,QuickReply[]>,
   adminBeats:{} as Record<string,boolean>,
+  firstContact:{} as Record<string,string>,
+  zhouEvidenceSeen:false,
+  zhouConfronted:false,
   activeId:"x",
   searchQuery:"",
   draft:"",
@@ -39,7 +44,7 @@ const contacts:Contact[]=[
  {id:"yq",name:"余晴",note:"余晴｜朋友介绍",preview:"到家说一声",messages:[
   {time:"10月16日 18:52",who:"对方",text:"我先到了"},{who:"沈妍",text:"这么早"},{who:"对方",text:"你不是说七点"},{who:"沈妍",text:"路上，十分钟"},{who:"对方",text:"还是里面那桌"},{who:"沈妍",text:"好"},{time:"10月16日 19:17",who:"对方",text:"看见你了"},{who:"沈妍",text:"别起来，我过去"},{time:"10月16日 20:46",who:"对方",text:"你真不吃了？"},{who:"沈妍",text:"胃不太舒服"},{who:"对方",text:"那我给你打包？"},{who:"沈妍",text:"不用"},{time:"10月16日 21:03",who:"对方",text:"到家说一声"},{who:"沈妍",text:"嗯"},
  ]},
- {id:"zc",name:"周川",note:"周川｜烛阴旧闻",preview:"我回了一条",messages:[
+ {id:"zc",name:"周川",note:"周川｜烛阴旧闻",preview:"我回了一条",signature:"柳枝别折，怪可惜的。",messages:[
   {time:"10月12日 22:08",who:"对方",text:"你那个梦帖我看到了"},{who:"沈妍",text:"你怎么什么都刷得到"},{who:"对方",text:"首页挂着呢"},{who:"沈妍",text:"丢人"},{who:"对方",text:"还行，比你上次凌晨三点那篇短"},{who:"沈妍",text:"……"},{who:"对方",text:"那声称呼还是听不清？"},{who:"沈妍",text:"现在觉得像楠楠"},{who:"对方",text:"你上周不是还说可能是囡囡"},{who:"沈妍",text:"所以才烦"},{who:"对方",text:"今天别想了，越想越像真的"},{who:"沈妍",text:"你怎么跟我妈一个口气"},{who:"对方",text:"你妈说得对"},{time:"10月13日 00:17",who:"对方",text:"我回了一条"},{who:"沈妍",text:"看见了"},{who:"沈妍",text:"你每次回帖都像在改报告"},{who:"对方",text:"那我删"},{who:"沈妍",text:"别，留着吧"},{who:"对方",text:"睡觉"},{who:"沈妍",text:"你先"},
  ]},
  {id:"ly",name:"梁茵",note:"梁茵｜烛阴旧闻",preview:"我把迟迟那个号退了",messages:[
@@ -51,6 +56,15 @@ const wechatNoticeSubscribers=new Set<(notice:WechatNotice)=>void>();
 export const subscribeWechatNotices=(fn:(notice:WechatNotice)=>void)=>{wechatNoticeSubscribers.add(fn);return ()=>{wechatNoticeSubscribers.delete(fn)}};
 const emitWechatNotice=(contactId:string,text:string)=>{const c=contacts.find(x=>x.id===contactId);if(c)wechatNoticeSubscribers.forEach(fn=>fn({contactId,name:c.name,text}))};
 export const focusWechatContact=(contactId:string)=>{if(contacts.some(x=>x.id===contactId))wechatSession.activeId=contactId};
+export const getFirstContactTime=(contactId:string)=>wechatSession.firstContact[contactId]||null;
+export const revealZhouConfrontation=()=>{
+ const stamp=wechatSession.firstContact.zc;
+ if(!stamp||wechatSession.zhouConfronted)return false;
+ wechatSession.zhouEvidenceSeen=true;
+ wechatSession.quick={...wechatSession.quick,zc:[{id:"zc-zheliu",text:"你是折柳？",emphasis:true,reply:[{text:"你在哪看到这个号的？"}],next:[{id:"zc-zheliu-admin",text:"后台。",reply:[{text:"……"},{text:"你现在还在沈妍家？"}],next:[{id:"zc-zheliu-answer",text:"你还没回答我。",reply:[{text:"是。"}],next:[{id:"zc-zheliu-time",text:`我${stamp}才第一次联系你。后台同一分钟就有折柳的记录。`,reply:[{text:"……"},{text:"你先从她家出来。"}],next:[{id:"zc-zheliu-why",text:"为什么？",reply:[{text:"现在别问这个。"},{text:"先出去。"}]}]}]}]}]}]};
+ notifyWechat();
+ return true;
+};
 
 const materialRules:Record<string,MaterialRule>={
  "33897":{yq:[{text:"这是哪儿？"},{text:"没去过。昨晚她也没跟我说这个。"}],zc:[{text:"这个我看过。"},{text:"她当时还在下面问那扇门怎么开的。"},{text:"照片跟她画的确实有点像。"}]},
@@ -65,13 +79,13 @@ const materialRules:Record<string,MaterialRule>={
  sanmen:{zc:[],ly:[]},
  "23109":{zc:[{text:"……这张图挺邪的。"},{text:"你从哪翻出来的？"}],ly:[{text:"这个黄纸我小时候见过差不多的。"},{text:"贴在门框边上。我一直以为就是家里辟邪。"}]},
  "27614":{zc:[{text:"这篇我有印象。"},{text:"站务后来不是说多人轮用吗。"}],ly:[{text:"我以前没点进去看过。"}]},
- "admin-watchlist":{ly:[{text:"这么多人？"},{text:"……迟迟也在里面？"}],zc:[{text:"先留着。"},{text:"这至少能证明不是只围着沈妍一个人建的后台。"}]},
- "admin-shen-record":{ly:[{text:"这些时间都记得这么细？"},{text:"10月16号那几条……你先留好。"}],zc:[{text:"把19:49、20:52、21:06这三条单独记下来。"},{text:"转交、样本、状态变更是连续的。"}]},
+ "admin-watchlist":{ly:[{text:"这么多人？"},{text:"……迟迟也在里面？"}],zc:[{text:"这么多人？"},{text:"这后台不像临时搭的。"}]},
+ "admin-shen-record":{ly:[{text:"这些时间都记得这么细？"},{text:"10月16号那几条……截图。"}],zc:[{text:"19:49转交，20:52采血，21:06控制。"},{text:"三个时间是连着的。"}]},
  "admin-liang-record":{ly:[{text:"操。"},{text:"真的是我。"},{text:"这东西从什么时候开始记我的？"}],zc:[{text:"这是梁茵那份？"},{text:"今天18:42还在自动刷新，说明这系统现在还在跑。"}]},
- "admin-pair-2004":{ly:[{text:"等一下。"},{text:"‘舍’是身体，‘客’是魂，对吧？"},{text:"那这不就是……把她俩的魂换了吗？"}],zc:[{text:"这份比经文有用。"},{text:"至少它明确写了两边互换，而且执行完成。"}]},
- "admin-reswap-2026":{ly:[{text:"原来第二次根本不是冲沈妍来的。"},{text:"他们是在拿林楠那一侧做第二次换身体的试验。"},{text:"因为那边那个‘客’已经稳定活了二十多年，他们想看同一个人还能不能再换一次。"}],zc:[{text:"把试验目的和执行时间留着。"},{text:"这能解释他们为什么选一个旧案幸存者。"}]},
- "admin-sync-shen":{ly:[{text:"所以对上了。"},{text:"林楠那边第二次一换，沈妍这边才开始梦到那些不属于她的童年。"},{text:"他们抓沈妍，不是要再换她一次，是因为旧的那条联系重新有反应。"}],zc:[{text:"这条已经是他们自己的因果判断。"},{text:"先别管玄学真假，‘控制’和执行批次都留着。"}]},
- "admin-third-1907":{ly:[{text:"她一直说自己叫沈妍？"},{text:"……那2004年被换进林楠身体里的那个，到底是谁。"}],zc:[{text:"这人的身份陈述值得单独留。"},{text:"如果报警，别只报沈妍一个。"}]},
+ "admin-pair-2004":{ly:[{text:"A、B两边的‘客源’为什么正好写的是对方？"},{text:"这两个字段得跟前面那几句经文一起看。"}],zc:[{text:"这份比经文直接。"},{text:"A、B两边都写了易舍完成。"}]},
+ "admin-reswap-2026":{ly:[{text:"这里写的是‘再次易舍’，而且特意标了稳定期22年。"},{text:"试验目的那句你怎么看？"}],zc:[{text:"稳定22年以后又做一次。"},{text:"这不像临时决定的。"}]},
+ "admin-sync-shen":{ly:[{text:"时间真的挨得很近。"},{text:"10月12号那边执行完，沈妍这一侧就开始升高。"}],zc:[{text:"他们自己把这条标成了关联异常。"},{text:"‘控制’和执行批次比解释更重要。"}]},
+ "admin-third-1907":{ly:[{text:"她一直说自己叫沈妍？"},{text:"还主动要求联系徐宁……这句挺吓人的。"}],zc:[{text:"她连续四次都这么说？"},{text:"那不像一次口误。"}]},
 };
 
 const received=(contactId:string,materialId:string)=>!!wechatSession.sent[`${contactId}:${materialId}`];
@@ -98,6 +112,9 @@ const materialReply=(contactId:string,materialId:string):ReplyPart[]|null=>{
   if(hasAnomaly)return [{text:"我看不懂。"},{text:"但“忆可乱”这几个字看着很不舒服。"},{text:"跟我小时候那些事放一起更不舒服。"}];
   return [{text:"看不懂。"},{text:"你从哪找到的？"}];
  }
+
+ if(contactId==="ly"&&materialId==="admin-reswap-2026"&&!received("ly","admin-pair-2004"))return [{text:"这里写的是‘再次易舍’。"},{text:"但第一次是哪次？你手里是不是还有2004年的旧案？"}];
+ if(contactId==="ly"&&materialId==="admin-sync-shen"&&!received("ly","admin-reswap-2026"))return [{text:"这条只有结果，没有前因。"},{text:"10月12号那边到底做了什么，得先对上。"}];
  return materialRules[materialId]?.[contactId]??null;
 };
 
@@ -113,10 +130,33 @@ const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
   const hasBothReports=received("zc","09114")&&received("zc","09831");
   return [{id:"zc-admin-repeat",text:"但我刚才查的几篇里都有这个号。",reply:hasBothReports?[{text:"等等。"},{text:"你前面发我的那两条旧报，也是它恢复的？"},{text:"……这么放一起确实挺巧。"}]:[{text:"哪几篇？"},{text:"你把链接留着，我也翻翻。"}]}];
  }
- if(contactId==="ly"&&materialId==="admin-pair-2004")return [{id:"ly-pair-question",text:"我也是这么想的。",reply:[{text:"可是不对。"},{text:"如果她们小时候已经换完一次了——"},{text:"他们现在为什么又要抓沈妍？"}]}];
- if(contactId==="ly"&&materialId==="admin-reswap-2026")return [{id:"ly-reswap-next",text:"那沈妍为什么也会有反应？",reply:[{text:"对，我也在想这个。"},{text:"你看它最后那句，‘原对契 0712-4471 出现同步异常’。"},{text:"后台应该还有沈妍这一侧的关联记录。"}]}];
- if(contactId==="ly"&&materialId==="admin-sync-shen")return [{id:"ly-sync-now",text:"所以她是被抓回来控制这个异常？",reply:[{text:"我看就是。"},{text:"第二次试验是林楠那边。"},{text:"沈妍是那次试验把二十年前那条旧联系重新扯醒以后，才被他们抓回去的。"},{text:"现在最要紧的是她在哪。"}]}];
- if(contactId==="ly"&&materialId==="admin-third-1907")return [{id:"ly-third-identity",text:"她还要求联系徐宁。",reply:[{text:"……"},{text:"这就更不像随口胡说了。"},{text:"先把这份也留好。真找到地方的话，这个人也得一起报。"}]}];
+ if(contactId==="ly"&&materialId==="admin-pair-2004")return [
+  {id:"ly-pair-link",text:"只是两个人的档案互相挂靠？",reply:[{text:"可A、B两边都写了‘易舍完成’。"},{text:"只做档案关联没必要写客源。"}]},
+  {id:"ly-pair-swap",text:"舍是身体，客是魂……所以她们互换了？",reply:[{text:"……我也是这么看的。"},{text:"那‘易舍’就是换魂。"}],next:[{id:"ly-pair-why",text:"那既然换过了，为什么现在又抓沈妍？",reply:[{text:"对。这个才是现在的问题。"},{text:"2004那份解释不了2026。得看林楠后来又发生了什么。"}]}]},
+  {id:"ly-pair-held",text:"也可能只是两个人一起被关过？",reply:[{text:"可能，但还是解释不了为什么‘客源’互相写对方。"},{text:"我会先把‘舍’和‘客’的意思对上。"}]}
+ ];
+ if(contactId==="ly"&&materialId==="admin-reswap-2026"){
+  if(!received("ly","admin-pair-2004"))return [];
+  const syncNext:QuickReply[]=received("ly","admin-sync-shen")?[
+   {id:"ly-sync-wrong-again",text:"所以他们也准备再给沈妍换一次？",reply:[{text:"可沈妍那份写的是‘控制旧对契另一端’，不是再舍对象。"}]},
+   {id:"ly-sync-right",text:"林楠第二次易舍，把2004年的另一端也重新影响了？",reply:[{text:"我也是这么对上的。"},{text:"沈妍不是第二次试验的目标，她是旧对契重新有反应以后被控制的。"},{text:"现在得找她被转到哪。"}]},
+   {id:"ly-sync-forum",text:"还是因为沈妍查论坛查得太深？",reply:[{text:"他们当然一直监控她。"},{text:"但这份处置理由写的是同步异常，不是论坛行为。"}]}
+  ]:[];
+  return [
+   {id:"ly-reswap-shen",text:"他们是想接着给沈妍也换一次？",reply:[{text:"但这份执行对象写的是B侧和19-07。"},{text:"沈妍不在这次执行名单里。"}]},
+   {id:"ly-reswap-test",text:"他们在测试同一个魂能不能连续换身体？",reply:[{text:"对。"},{text:"稳定22年、再次易舍、主体稳定——这几个字段放一起就是这个意思。"}],next:syncNext},
+   {id:"ly-reswap-repeat",text:"只是把2004年的仪式重新做一遍？",reply:[{text:"不太像。"},{text:"这次特意写‘长期样本’和‘第二次更换舍’，目的变了。"}]}
+  ];
+ }
+ if(contactId==="ly"&&materialId==="admin-sync-shen"){
+  if(!received("ly","admin-reswap-2026"))return [];
+  return [
+   {id:"ly-sync-wrong-again",text:"所以他们也准备再给沈妍换一次？",reply:[{text:"可沈妍那份写的是‘控制旧对契另一端’，不是再舍对象。"}]},
+   {id:"ly-sync-right",text:"林楠第二次易舍，把2004年的另一端也重新影响了？",reply:[{text:"我也是这么对上的。"},{text:"沈妍不是第二次试验的目标，她是旧对契重新有反应以后被控制的。"},{text:"现在得找她被转到哪。"}]},
+   {id:"ly-sync-forum",text:"还是因为沈妍查论坛查得太深？",reply:[{text:"他们当然一直监控她。"},{text:"但这份处置理由写的是同步异常，不是论坛行为。"}]}
+  ];
+ }
+ if(contactId==="ly"&&materialId==="admin-third-1907")return [{id:"ly-third-identity",text:"她还要求联系徐宁。",reply:[{text:"……"},{text:"那就不能只当身份混乱看了。"},{text:"真找到地点，这个人也得告诉警方。"}]}];
  if(contactId==="ly"&&materialId==="admin-liang-record")return [
   {id:"ly-admin-2017",text:"最早是2017年。",reply:[{text:"2017？"},{text:"我那年才刚开始在论坛里写小时候那些事。"},{text:"所以不是我后来跟沈妍聊上以后，他们才盯我的。"}],next:[
    {id:"ly-admin-2021",text:"2021年三月还有一次“线下接触”。",reply:[{text:"等一下。"},{text:"那年三月我确实见过一个论坛里认识的女的。"},{text:"就吃了顿饭，她一直问我小时候走失那阵的事。"},{text:"我当时真以为就是网友聊天。"}],next:[
@@ -134,12 +174,14 @@ const textReply=(contact:string,text:string):ReplyPart[]|null=>{
  const t=text.replace(/\s/g,"");
  if(contact==="yq"){
   if(/有消息|找到|找到了/.test(t))return [{text:"还没有吗？"},{text:"她昨晚走的时候真的没说别的。"}];
-  if(/昨晚|见面|去哪|在哪/.test(t))return [{text:"昨晚是见到了。"},{text:"后来她说胃不舒服，我就先走了。"},{text:"她没跟我说后面去哪。"}];
+  if(/几点|分开|什么时候走/.test(t))return [{text:"我九点左右先走的。"},{text:"21:03那句‘到家说一声’就是我离开以后发的。"}];
+  if(/后来|别人|谁来|还有人|介绍/.test(t))return [{text:"……后来确实有人过来了一下。"},{text:"是之前跟她聊过旧事的一个女的。"},{text:"我跟那个人也不熟，就是以前介绍她们认识。"}];
+  if(/昨晚|见面|去哪|在哪/.test(t))return [{text:"昨晚是见到了。"},{text:"她说胃不舒服，我九点左右先走。"},{text:"她没跟我说后面去哪。"}];
   if(/林楠/.test(t))return [{text:"真没听过这个名字。"}];
  }
  if(contact==="zc"){
-  if(/后台|管理系统|管理后台/.test(t))return [{text:"什么后台？"},{text:"先把时间、操作人和原始字段留着。"},{text:"状态词先别急着按字面信。"}];
-  if(/已控制|转交|血样/.test(t))return [{text:"先看时间。"},{text:"能不能跟她昨晚的行程对上？"}];
+  if(/后台|管理系统|管理后台/.test(t))return [{text:"什么后台？"},{text:"你截图了吗？尤其时间和操作人。"}];
+  if(/已控制|转交|血样/.test(t))return [{text:"转交、采血、控制是连着的吗？"},{text:"这就不像普通账号记录了。"}];
   if(/林楠/.test(t))return [{text:"她没跟我说过这个名字。"},{text:"你从哪翻到的？"}];
   if(/失踪|不见了|联系不上/.test(t))return [{text:"她现在还是完全联系不上？"},{text:"电话也不通？"}];
   if(/换魂|灵魂|交换/.test(t))return [{text:"你是说真的把两个人换了？"},{text:"我不知道。光这些我不敢这么说。"}];
@@ -165,6 +207,13 @@ const introText=(contactId:string)=>{
  if(contactId==="zc")return "你好，我是徐宁，沈妍朋友。她今天一直联系不上。我现在在她家，她电脑微信还登着。看到你们最近有聊天，方便问你两句吗？";
  if(contactId==="ly")return "你好，我是徐宁，沈妍朋友。她今天一直联系不上。我现在在她家，她电脑微信还登着。看到你们最近有聊天，方便问你两句吗？";
  return "你好，我是徐宁，沈妍朋友。她今天一直联系不上，我现在在她家。";
+};
+
+const introReply=(contactId:string):{parts:ReplyPart[];next:QuickReply[]}=>{
+ if(contactId==="yq")return {parts:[{text:"你是徐宁？沈妍提过你。"},{text:"她今天还没回你？昨晚我们确实见过。"}],next:[{id:"yq-left-when",text:"你们昨晚几点分开的？",reply:[{text:"我九点左右先走的。"},{text:"21:03那句‘到家说一声’就是我走以后发的。"}],next:[{id:"yq-after-person",text:"她后来还见了别人吗？",reply:[{text:"……后来确实有人过来了一下。"},{text:"是之前跟她聊过旧事的一个女的。"},{text:"我跟那个人也不熟，就是以前介绍她们认识。"}]}]}]};
+ if(contactId==="zc")return {parts:[{text:"徐宁？她提过你。"},{text:"她今天一直没回？电话也不通？"}],next:[]};
+ if(contactId==="ly")return {parts:[{text:"徐宁？我知道你，沈妍提过。"},{text:"她怎么了？"}],next:[]};
+ return {parts:[],next:[]};
 };
 
 export const triggerAdminWechatBeat=(beat:"shen-record")=>{
@@ -194,7 +243,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  const visible=contacts.filter(x=>(x.name+x.note+x.preview).includes(q));
  const messages=useMemo(()=>[...contact.messages,...(extra[id]||[])],[contact,extra,id]);
  const previewFor=(c:Contact)=>{const added=extra[c.id]||[];return added.length?added[added.length-1].text:c.preview};
- const sendable=useMemo(()=>materials.filter(m=>Object.prototype.hasOwnProperty.call(materialRules[m.id]||{},id)&&!sent[`${id}:${m.id}`]),[materials,id,sent]);
+ const sendable=useMemo(()=>id==="x"||!introduced[id]?[]:materials.filter(m=>Object.prototype.hasOwnProperty.call(materialRules[m.id]||{},id)&&!sent[`${id}:${m.id}`]),[materials,id,sent,introduced]);
  const appendFor=(contactId:string,items:Msg[])=>{
   wechatSession.extra={...wechatSession.extra,[contactId]:[...(wechatSession.extra[contactId]||[]),...items]};
   const incoming=[...items].reverse().find(x=>x.who==="对方"&&!!x.text);
@@ -203,9 +252,18 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  };
  const ensureIntro=(contactId:string):Msg[]=>{
   if(contactId==="x"||wechatSession.introduced[contactId])return [];
+  const stamp=advanceGameClock(1);
   wechatSession.introduced={...wechatSession.introduced,[contactId]:true};
+  wechatSession.firstContact={...wechatSession.firstContact,[contactId]:stamp};
   notifyWechat();
-  return [{who:"沈妍",text:introText(contactId)}];
+  return [{time:`今天 ${stamp}`,who:"沈妍",text:introText(contactId)}];
+ };
+ const sendIntroduction=(contactId:string)=>{
+  if(contactId==="x"||wechatSession.introduced[contactId])return;
+  const intro=ensureIntro(contactId);
+  appendFor(contactId,intro);
+  const start=introReply(contactId);
+  delayedParts(contactId,start.parts,start.next);
  };
  const setQuickFor=(contactId:string,items:QuickReply[])=>{
   wechatSession.quick={...wechatSession.quick,[contactId]:items};
@@ -267,7 +325,8 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  const sendQuick=(item:QuickReply)=>{
   if(id==="x")return;
   setQuickFor(id,[]);
-  appendFor(id,[{who:"沈妍",text:item.text}]);
+  appendFor(id,[{who:"沈妍",text:item.sendText||item.text}]);
+  if(item.id==="zc-zheliu")wechatSession.zhouConfronted=true;
   delayedParts(id,item.reply,item.next||[]);
  };
  const openMaterial=(material:SharedMaterial)=>{
@@ -277,7 +336,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  return <div className="wechat" style={{height:"calc(100% - 39px)",minHeight:0,overflow:"hidden"}}>
   <aside style={{height:"100%",minHeight:0,overflowY:"auto"}}><header><i>妍</i><span><b>沈妍</b><small>微信已登录</small></span></header><label><Search/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索联系人和消息"/></label>{visible.map(x=><button className={x.id===id?"active":""} onClick={()=>setId(x.id)} key={x.id}><i>{x.name[0]}</i><span style={{minWidth:0}}><b>{x.name}</b><small style={{display:"block",marginTop:2,color:"#7f8783",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{x.note}</small><small style={{display:"block",marginTop:3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{previewFor(x)}</small></span></button>)}</aside>
   <main style={{height:"100%",minHeight:0,display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}}>
-   <header style={{flex:"0 0 auto"}}><b>{contact.name}</b><small>{typing[id]?"正在输入…":contact.note}</small></header>
+   <header style={{flex:"0 0 auto"}}><b>{contact.name}</b><small>{typing[id]?"正在输入…":contact.note}</small>{contact.signature&&<small style={{display:"block",marginTop:3,color:"#929892",fontSize:10}}>个性签名：{contact.signature}</small>}</header>
    <section ref={scrollRef} style={{flex:"1 1 auto",minHeight:0,overflowY:"auto",overscrollBehavior:"contain"}}>{messages.map((m,i)=><div key={i}>{m.time&&<time>{m.time}</time>}<article className={m.who==="沈妍"?"mine":""}><i>{m.who==="沈妍"?"妍":contact.name[0]}</i>{m.material?<button type="button" onClick={()=>openMaterial(m.material!)} style={{maxWidth:360,padding:"11px 12px",border:"1px solid #d7d7d7",borderRadius:8,background:"#fff",textAlign:"left",cursor:m.material.kind==="论坛帖子"?"pointer":"default"}}><small style={{display:"block",color:"#888",marginBottom:5}}>{m.material.kind}</small><b style={{display:"block",fontSize:13,fontWeight:600,lineHeight:1.45}}>{m.material.title}</b><small style={{display:"block",marginTop:7,color:"#999",wordBreak:"break-all"}}>{m.material.url}</small>{m.material.kind==="论坛帖子"&&<small style={{display:"block",marginTop:7,color:"#3b7a57"}}>打开帖子</small>}</button>:<p>{m.text}</p>}</article></div>)}</section>
 
    {picker&&<div style={{position:"absolute",left:12,right:12,bottom:76,zIndex:8,maxHeight:"42%",overflowY:"auto",padding:8,border:"1px solid #cfcfcf",borderRadius:9,background:"#fff",boxShadow:"0 10px 35px #0003"}}>
@@ -285,7 +344,9 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
     {sendable.length?sendable.map(m=><button key={m.id} onClick={()=>sendMaterial(m)} style={{width:"100%",display:"block",padding:"10px",border:0,borderTop:"1px solid #eee",background:"#fff",textAlign:"left"}}><small style={{display:"block",color:"#999",marginBottom:3}}>{m.kind}</small><b style={{fontSize:13,fontWeight:500}}>{m.title}</b></button>):<p style={{margin:0,padding:"18px 10px",borderTop:"1px solid #eee",color:"#999",fontSize:12,textAlign:"center"}}>暂无可发送文件</p>}
    </div>}
 
-   {!typing[id]&&(quick[id]||[]).length>0&&<div style={{flex:"0 0 auto",display:"flex",gap:8,flexWrap:"wrap",padding:"9px 14px 0",background:"#f7f7f7"}}>{(quick[id]||[]).map(item=><button key={item.id} onClick={()=>sendQuick(item)} style={{maxWidth:"100%",padding:"7px 11px",border:"1px solid #cfd8d2",borderRadius:15,background:"#fff",color:"#3c6250",fontSize:12,textAlign:"left"}}>{item.text}</button>)}</div>}
+   {!typing[id]&&id!=="x"&&!introduced[id]&&<div style={{flex:"0 0 auto",padding:"10px 14px 0",background:"#f7f7f7"}}><button onClick={()=>sendIntroduction(id)} style={{padding:"8px 13px",border:"1px solid #b9d6c3",borderRadius:16,background:"#fff",color:"#267747",fontSize:12,fontWeight:700}}>先自我介绍</button></div>}
+
+   {!typing[id]&&(quick[id]||[]).length>0&&<div style={{flex:"0 0 auto",display:"flex",gap:8,flexWrap:"wrap",padding:"9px 14px 0",background:"#f7f7f7"}}>{(quick[id]||[]).map(item=><button key={item.id} onClick={()=>sendQuick(item)} style={{maxWidth:"100%",padding:item.emphasis?"9px 14px":"7px 11px",border:item.emphasis?"2px solid #9f3f36":"1px solid #cfd8d2",borderRadius:15,background:item.emphasis?"#fff8f6":"#fff",color:item.emphasis?"#8c3029":"#3c6250",fontSize:12,fontWeight:item.emphasis?800:400,textAlign:"left"}}>{item.text}</button>)}</div>}
 
    <footer style={{flex:"0 0 auto",padding:"12px 14px",background:"#f7f7f7",borderTop:"1px solid #ddd"}}>
     <form onSubmit={sendText} style={{display:"grid",gridTemplateColumns:"1fr 44px 48px",gap:8,alignItems:"center"}}>
