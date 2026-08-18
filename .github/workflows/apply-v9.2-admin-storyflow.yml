@@ -28,3 +28,4 @@ jobs:
           git add app/AdminPortalOccult.tsx app/InteractiveWechat.tsx
           git diff --cached --quiet || git commit -m 'Build admin soul-swap investigation flow'
           git push origin HEAD:agent/v8-forum-gameplay-rework
+# trigger after workflow creation
