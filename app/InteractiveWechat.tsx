@@ -48,7 +48,7 @@ const contacts:Contact[]=[
 ];
 
 const wechatNoticeSubscribers=new Set<(notice:WechatNotice)=>void>();
-export const subscribeWechatNotices=(fn:(notice:WechatNotice)=>void)=>{wechatNoticeSubscribers.add(fn);return ()=>wechatNoticeSubscribers.delete(fn)};
+export const subscribeWechatNotices=(fn:(notice:WechatNotice)=>void)=>{wechatNoticeSubscribers.add(fn);return ()=>{wechatNoticeSubscribers.delete(fn)}};
 const emitWechatNotice=(contactId:string,text:string)=>{const c=contacts.find(x=>x.id===contactId);if(c)wechatNoticeSubscribers.forEach(fn=>fn({contactId,name:c.name,text}))};
 export const focusWechatContact=(contactId:string)=>{if(contacts.some(x=>x.id===contactId))wechatSession.activeId=contactId};
 
