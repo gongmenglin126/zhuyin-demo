@@ -50,7 +50,7 @@ function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial,hasMaterial,
  const openUser=(name:string)=>name==="候鸟第七年"?go({kind:"profile"}):go({kind:"user",name});
  return <div className="browser"><div className="tabs"><span>烛</span><b>烛阴旧闻</b></div><div className="bar"><button onClick={back}><ArrowLeft/></button><button onClick={()=>setRoute({...route})}><RefreshCw/></button><div><LockKeyhole/>www.zhuyinwen.cn / {forumIdentity==="admin"?"admin":route.kind}</div><button onClick={()=>forumIdentity==="shenyan"&&go({kind:"history"})}><HistoryIcon/></button></div>
   <div className="site">
-   {forumIdentity==="admin"?<AdminPortalOccult loggedIn={true} canUseLegacy={true} onAdminLogin={()=>{}} onCancel={()=>{}}/>:route.kind==="account"?<AdminPortalOccult loggedIn={false} canUseLegacy={verseSeen} onCancel={back} onAdminLogin={()=>{persistedForumIdentity="admin";setForumIdentity("admin");setStack([])}}/>:<>
+   {forumIdentity==="admin"?<AdminPortalOccult loggedIn={true} canUseLegacy={true} onAdminLogin={()=>{}} onCancel={()=>{}} onWechatIncoming={()=>setWxRead(false)}/>:route.kind==="account"?<AdminPortalOccult loggedIn={false} canUseLegacy={verseSeen} onCancel={back} onAdminLogin={()=>{persistedForumIdentity="admin";setForumIdentity("admin");setStack([])}} onWechatIncoming={()=>setWxRead(false)}/>:<>
     <ForumHeader q={q} setQ={setQ} search={search} home={()=>go({kind:"home"})} me={()=>go({kind:"profile"})} switchAccount={()=>go({kind:"account"})}/>
     {route.kind==="home"&&<ForumHome read={read} open={id=>go({kind:"post",id})} me={()=>go({kind:"profile"})}/>} 
     {route.kind==="post"&&<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} 
