@@ -24,7 +24,11 @@ export default function AdminPortalOccult({loggedIn,onAdminLogin,onCancel,canUse
  const submit=(e:FormEvent)=>{
   e.preventDefault();
   if(user.trim()===ADMIN_USER&&pwd===ADMIN_TEMP_CODE){onAdminLogin();setError("");return;}
-  if(user.trim()===ADMIN_USER){setAttemptedAdmin(true);setError("账号或密码错误。");return;}
+  if(user.trim()===ADMIN_USER){
+   setAttemptedAdmin(true);
+   if(canUseLegacy){setMode("verify");setError("");return;}
+   setError("账号或密码错误。");return;
+  }
   setAttemptedAdmin(false);
   setError(user.trim()?"账号或密码错误。":"请输入账号。");
  };
