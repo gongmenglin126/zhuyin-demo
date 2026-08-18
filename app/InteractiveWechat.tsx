@@ -68,6 +68,10 @@ const materialRules:Record<string,MaterialRule>={
  "admin-watchlist":{ly:[{text:"这么多人？"},{text:"……迟迟也在里面？"}],zc:[{text:"先留着。"},{text:"这至少能证明不是只围着沈妍一个人建的后台。"}]},
  "admin-shen-record":{ly:[{text:"这些时间都记得这么细？"},{text:"10月16号那几条……你先留好。"}],zc:[{text:"把19:49、20:52、21:06这三条单独记下来。"},{text:"转交、样本、状态变更是连续的。"}]},
  "admin-liang-record":{ly:[{text:"操。"},{text:"真的是我。"},{text:"这东西从什么时候开始记我的？"}],zc:[{text:"这是梁茵那份？"},{text:"今天18:42还在自动刷新，说明这系统现在还在跑。"}]},
+ "admin-pair-2004":{ly:[{text:"等一下。"},{text:"‘舍’是身体，‘客’是魂，对吧？"},{text:"那这不就是……把她俩的魂换了吗？"}],zc:[{text:"这份比经文有用。"},{text:"至少它明确写了两边互换，而且执行完成。"}]},
+ "admin-reswap-2026":{ly:[{text:"原来第二次根本不是冲沈妍来的。"},{text:"他们是在拿林楠那一侧做第二次换身体的试验。"},{text:"因为那边那个‘客’已经稳定活了二十多年，他们想看同一个人还能不能再换一次。"}],zc:[{text:"把试验目的和执行时间留着。"},{text:"这能解释他们为什么选一个旧案幸存者。"}]},
+ "admin-sync-shen":{ly:[{text:"所以对上了。"},{text:"林楠那边第二次一换，沈妍这边才开始梦到那些不属于她的童年。"},{text:"他们抓沈妍，不是要再换她一次，是因为旧的那条联系重新有反应。"}],zc:[{text:"这条已经是他们自己的因果判断。"},{text:"先别管玄学真假，‘控制’和执行批次都留着。"}]},
+ "admin-third-1907":{ly:[{text:"她一直说自己叫沈妍？"},{text:"……那2004年被换进林楠身体里的那个，到底是谁。"}],zc:[{text:"这人的身份陈述值得单独留。"},{text:"如果报警，别只报沈妍一个。"}]},
 };
 
 const received=(contactId:string,materialId:string)=>!!wechatSession.sent[`${contactId}:${materialId}`];
@@ -97,7 +101,6 @@ const materialReply=(contactId:string,materialId:string):ReplyPart[]|null=>{
  return materialRules[materialId]?.[contactId]??null;
 };
 
-
 const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
  if(contactId==="zc"&&materialId==="sanmen"){
   const hasPair=received("zc","10731")||(received("zc","09114")&&received("zc","09831"));
@@ -110,6 +113,10 @@ const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
   const hasBothReports=received("zc","09114")&&received("zc","09831");
   return [{id:"zc-admin-repeat",text:"但我刚才查的几篇里都有这个号。",reply:hasBothReports?[{text:"等等。"},{text:"你前面发我的那两条旧报，也是它恢复的？"},{text:"……这么放一起确实挺巧。"}]:[{text:"哪几篇？"},{text:"你把链接留着，我也翻翻。"}]}];
  }
+ if(contactId==="ly"&&materialId==="admin-pair-2004")return [{id:"ly-pair-question",text:"我也是这么想的。",reply:[{text:"可是不对。"},{text:"如果她们小时候已经换完一次了——"},{text:"他们现在为什么又要抓沈妍？"}]}];
+ if(contactId==="ly"&&materialId==="admin-reswap-2026")return [{id:"ly-reswap-next",text:"那沈妍为什么也会有反应？",reply:[{text:"对，我也在想这个。"},{text:"你看它最后那句，‘原对契 0712-4471 出现同步异常’。"},{text:"后台应该还有沈妍这一侧的关联记录。"}]}];
+ if(contactId==="ly"&&materialId==="admin-sync-shen")return [{id:"ly-sync-now",text:"所以她是被抓回来控制这个异常？",reply:[{text:"我看就是。"},{text:"第二次试验是林楠那边。"},{text:"沈妍是那次试验把二十年前那条旧联系重新扯醒以后，才被他们抓回去的。"},{text:"现在最要紧的是她在哪。"}]}];
+ if(contactId==="ly"&&materialId==="admin-third-1907")return [{id:"ly-third-identity",text:"她还要求联系徐宁。",reply:[{text:"……"},{text:"这就更不像随口胡说了。"},{text:"先把这份也留好。真找到地方的话，这个人也得一起报。"}]}];
  if(contactId==="ly"&&materialId==="admin-liang-record")return [
   {id:"ly-admin-2017",text:"最早是2017年。",reply:[{text:"2017？"},{text:"我那年才刚开始在论坛里写小时候那些事。"},{text:"所以不是我后来跟沈妍聊上以后，他们才盯我的。"}],next:[
    {id:"ly-admin-2021",text:"2021年三月还有一次“线下接触”。",reply:[{text:"等一下。"},{text:"那年三月我确实见过一个论坛里认识的女的。"},{text:"就吃了顿饭，她一直问我小时候走失那阵的事。"},{text:"我当时真以为就是网友聊天。"}],next:[
@@ -159,7 +166,6 @@ const introText=(contactId:string)=>{
  if(contactId==="ly")return "你好，我是徐宁，沈妍朋友。她今天一直联系不上。我现在在她家，她电脑微信还登着。看到你们最近有聊天，方便问你两句吗？";
  return "你好，我是徐宁，沈妍朋友。她今天一直联系不上，我现在在她家。";
 };
-
 
 export const triggerAdminWechatBeat=(beat:"shen-record")=>{
  if(wechatSession.adminBeats[beat])return false;
@@ -278,7 +284,6 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 6px 8px"}}><b style={{fontSize:13}}>发送文件</b><button onClick={()=>setPicker(false)} style={{width:28,height:28,border:0,borderRadius:6,background:"#f2f2f2",display:"grid",placeItems:"center"}}><X size={14}/></button></div>
     {sendable.length?sendable.map(m=><button key={m.id} onClick={()=>sendMaterial(m)} style={{width:"100%",display:"block",padding:"10px",border:0,borderTop:"1px solid #eee",background:"#fff",textAlign:"left"}}><small style={{display:"block",color:"#999",marginBottom:3}}>{m.kind}</small><b style={{fontSize:13,fontWeight:500}}>{m.title}</b></button>):<p style={{margin:0,padding:"18px 10px",borderTop:"1px solid #eee",color:"#999",fontSize:12,textAlign:"center"}}>暂无可发送文件</p>}
    </div>}
-
 
    {!typing[id]&&(quick[id]||[]).length>0&&<div style={{flex:"0 0 auto",display:"flex",gap:8,flexWrap:"wrap",padding:"9px 14px 0",background:"#f7f7f7"}}>{(quick[id]||[]).map(item=><button key={item.id} onClick={()=>sendQuick(item)} style={{maxWidth:"100%",padding:"7px 11px",border:"1px solid #cfd8d2",borderRadius:15,background:"#fff",color:"#3c6250",fontSize:12,textAlign:"left"}}>{item.text}</button>)}</div>}
 
