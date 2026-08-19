@@ -418,8 +418,9 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
   if(item.freeText){setFreeTextFor(id,true,item.next||[]);return;}
   setLockedFor(id,true);
   appendFor(id,[{who:"沈妍",text:item.sendText||item.text}]);
-  if(item.id==="zc-zheliu"){wechatSession.zhouConfronted=true;if(wechatSession.locationKnown)window.setTimeout(()=>triggerZhouLocationThreat(),100)}
+  if(item.id==="zc-zheliu")wechatSession.zhouConfronted=true;
   delayedParts(id,item.reply,item.next||[]);
+  if(item.id==="zc-zheliu-how"&&wechatSession.locationKnown)window.setTimeout(()=>triggerZhouLocationThreat(),5200);
   if(item.ending){const kind=item.ending==="double"?"double":received("ly","admin-third-1907")?"true":"home";window.setTimeout(()=>beginEnding(kind),6500)}
  };
  const openMaterial=(material:SharedMaterial)=>{
