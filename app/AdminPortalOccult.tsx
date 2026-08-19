@@ -2,8 +2,8 @@
 // v9.2.3 admin clarity + shake box
 
 import {CSSProperties,FormEvent,PointerEvent as ReactPointerEvent,ReactNode,useEffect,useMemo,useRef,useState} from "react";
-import {ArrowLeft,ChevronRight,LockKeyhole,Search,ShieldCheck} from "lucide-react";
-import {SharedMaterial,getFirstContactTime,triggerAdminWechatBeat} from "./InteractiveWechat";
+import {ArrowLeft,ChevronRight,FilePlus2,LockKeyhole,Search,ShieldCheck} from "lucide-react";
+import {SharedMaterial,getFirstContactTime,triggerAdminWechatBeat,triggerZhouLocationThreat} from "./InteractiveWechat";
 import {adultShen} from "./adminPortraits/adultShen";
 import {adultLin} from "./adminPortraits/adultLin";
 import {adultThird} from "./adminPortraits/adultThird";
@@ -15,8 +15,8 @@ export const ADMIN_TEMP_CODE="gumen-0712";
 const OLD_OATH="身非我身名非我名";
 
 type Props={loggedIn:boolean;onAdminLogin:()=>void;onCancel:()=>void;canUseLegacy:boolean;onWechatIncoming?:()=>void;onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean};
-type AdminTab="watch"|"users"|"ops"|"recycle";
-type AdminDetail="pair2004"|"lin"|"reswap"|"third"|"sync"|"guestA"|"guestB"|"guestG"|null;
+type AdminTab="watch"|"users"|"candidates"|"ops"|"recycle";
+type AdminDetail="pair2004"|"lin"|"reswap"|"third"|"sync"|"guestA"|"guestB"|"guestG"|"batch"|"location"|null;
 type ResultKind="shen"|"liang"|"lin"|"third"|null;
 
 const normalize=(v:string)=>v.replace(/[，。、“”‘’\s]/g,"");
@@ -139,8 +139,13 @@ const adminPair2004Material:SharedMaterial={id:"admin-pair-2004",title:"LN-2004-
 const adminReswapMaterial:SharedMaterial={id:"admin-reswap-2026",title:"2026-10-12 · 再舍验证记录",kind:"后台记录",url:"https://www.zhuyinwen.cn/admin/execution/RS-2026-1012"};
 const adminSyncMaterial:SharedMaterial={id:"admin-sync-shen",title:"0712-4471 · 关联同步异常",kind:"后台记录",url:"https://www.zhuyinwen.cn/admin/links/0712-4471"};
 const adminThirdMaterial:SharedMaterial={id:"admin-third-1907",title:"候舍对象 19-07 · 当前记录",kind:"后台记录",url:"https://www.zhuyinwen.cn/admin/subjects/19-07"};
+const adminLocationMaterial:SharedMaterial={id:"admin-location-hln04",title:"HL-N-04 · 河临北郊第三仓储区4号库",kind:"位置记录",url:"https://www.zhuyinwen.cn/admin/sites/HL-N-04"};
 
-function AddMaterialButton({material,onCopyMaterial,hasMaterial}:{material:SharedMaterial;onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean}){if(!onCopyMaterial)return null;const added=!!hasMaterial?.(material.id);return <button disabled={added} onClick={()=>onCopyMaterial(material)} style={{margin:"0 0 12px",padding:"7px 10px",border:"1px solid #b9c3bd",borderRadius:6,background:added?"#eef1ef":"#fff",color:"#40564c",fontSize:12,cursor:added?"default":"pointer",opacity:added?.6:1}}>{added?"已添加到材料":"添加到材料"}</button>}
+function AddMaterialButton({material,onCopyMaterial,hasMaterial}:{material:SharedMaterial;onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean}){
+ if(!onCopyMaterial)return null;
+ const added=!!hasMaterial?.(material.id);
+ return <button disabled={added} onClick={()=>onCopyMaterial(material)} style={{minWidth:220,height:46,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,margin:"4px 0 16px",padding:"0 16px",border:added?"1px solid #b9c3bd":"2px solid #4b7d67",borderRadius:8,background:added?"#e9eeeb":"#fff",color:added?"#6f7c75":"#2e654d",fontSize:13,fontWeight:800,cursor:added?"default":"pointer",boxShadow:added?"none":"0 5px 14px #284b3b18"}}><FilePlus2 size={20}/>{added?"已加入调查材料":"加入调查材料"}</button>
+}
 
 let adminCaseLevel=0;
 function CaseTrail({level,openShen,openDetail}:{level:number;openShen:()=>void;openDetail:(x:Exclude<AdminDetail,null>)=>void}){
@@ -166,7 +171,7 @@ function AdminDesk({onWechatIncoming,onCopyMaterial,hasMaterial}:{onWechatIncomi
  useEffect(()=>{const timer=window.setTimeout(()=>{if(triggerAdminWechatBeat("shen-record"))onWechatIncoming?.()},900);return ()=>window.clearTimeout(timer)},[]);
  const fireShenBeat=()=>{if(triggerAdminWechatBeat("shen-record"))onWechatIncoming?.()};
  const raise=(n:number)=>setCaseLevel(v=>Math.max(v,n));
- const doSearch=(e?:FormEvent)=>{e?.preventDefault();const raw=q.trim();const t=raw.replace(/客|编号|[-_\s]/g,"");setSearched(true);if(/^LN20040718$/i.test(t)){setDetail("pair2004");raise(2);return}if(/^RS20261012$/i.test(t)){setDetail("reswap");raise(5);return}if(/^AN07121012$/i.test(t)){setDetail("sync");raise(5);return}if(/^1907$/i.test(t)){setDetail("third");raise(5);return}if(t==="α"){setDetail("guestA");raise(5);return}if(t==="β"){setDetail("guestB");raise(5);return}if(t==="γ"){setDetail("guestG");raise(5);return}setDetail(null);if(/候鸟第七年|沈妍|07124471/.test(t)){raise(1);fireShenBeat()}if(/林楠/.test(t))raise(3)};
+ const doSearch=(e?:FormEvent)=>{e?.preventDefault();const raw=q.trim();const t=raw.replace(/客|编号|[-_\s]/g,"");setSearched(true);if(/^LN20040718$/i.test(t)){setDetail("pair2004");raise(2);return}if(/^RS20261012$/i.test(t)){setDetail("reswap");raise(5);return}if(/^AN07121012$/i.test(t)){setDetail("sync");raise(5);return}if(/^1907$/i.test(t)){setDetail("third");raise(5);return}if(/^HN101602$/i.test(t)){setDetail("batch");raise(6);return}if(/^HLN04$/i.test(t)){setDetail("location");raise(7);return}if(t==="α"){setDetail("guestA");raise(5);return}if(t==="β"){setDetail("guestB");raise(5);return}if(t==="γ"){setDetail("guestG");raise(5);return}setDetail(null);if(/候鸟第七年|沈妍|07124471/.test(t)){raise(1);fireShenBeat()}if(/林楠/.test(t))raise(3)};
  const openKnown=(name:string)=>{setQ(name);setSearched(true);setDetail(null);setTab("users");if(/候鸟第七年|沈妍/.test(name)){raise(1);fireShenBeat()}};
  const openShen=()=>{setQ("沈妍");setSearched(true);setDetail(null);setTab("users");raise(1)};
  const openDetail=(next:Exclude<AdminDetail,null>)=>{setDetail(next);setTab("users");raise(next==="pair2004"?2:next==="lin"?3:5)};
@@ -174,15 +179,31 @@ function AdminDesk({onWechatIncoming,onCopyMaterial,hasMaterial}:{onWechatIncomi
  return <main className="admin-clean" style={s.adminPage}><style>{`.admin-clean h2,.admin-clean h3,.admin-clean h4{margin:0;font:700 16px/1.35 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#252925}.admin-clean small{font-size:11px}.admin-clean b,.admin-clean strong{font-family:inherit}.admin-clean p{font-size:12px;line-height:1.6}`}</style>
   <header style={s.adminHead}><strong style={{fontSize:14,fontWeight:700}}>旧档管理</strong><span style={s.adminAccount}>旧档员-03</span></header>
   <div style={s.adminLayout}>
-   <aside style={s.adminSide}><button className={tab==="watch"?"active":""} onClick={()=>{setTab("watch");setDetail(null)}}>观察名单</button><button className={tab==="users"?"active":""} onClick={()=>setTab("users")}>用户查询</button><button className={tab==="ops"?"active":""} onClick={()=>{setTab("ops");setDetail(null)}}>操作记录</button><button className={tab==="recycle"?"active":""} onClick={()=>{setTab("recycle");setDetail(null)}}>删除记录</button></aside>
+   <aside style={s.adminSide}><button className={tab==="watch"?"active":""} onClick={()=>{setTab("watch");setDetail(null)}}>观察名单</button><button className={tab==="users"?"active":""} onClick={()=>setTab("users")}>用户查询</button><button className={tab==="candidates"?"active":""} onClick={()=>{setTab("candidates");setDetail(null)}}>候舍库</button><button className={tab==="ops"?"active":""} onClick={()=>{setTab("ops");setDetail(null)}}>操作记录</button><button className={tab==="recycle"?"active":""} onClick={()=>{setTab("recycle");setDetail(null)}}>删除记录</button></aside>
    <section style={s.adminBody}>
     {tab==="watch"&&<WatchList openKnown={openKnown} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>}
     {tab==="users"&&<><div style={s.sectionTitle}>用户查询</div><form onSubmit={doSearch} style={s.adminSearch}><Search size={16}/><input value={q} onChange={e=>{setQ(e.target.value);setSearched(false)}} placeholder="姓名 / UID / 记录编号 / 客编号"/><button>查询</button></form>{showCase&&<CaseTrail level={caseLevel} openShen={openShen} openDetail={openDetail}/>} {detail?<AdminDetailPage detail={detail} openDetail={openDetail} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>:<>{searched&&!result&&<p style={s.adminEmpty}>没有匹配记录。</p>}{result==="shen"&&<ShenRecord openDetail={openDetail} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} {result==="liang"&&<LiangRecord onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} {result==="lin"&&<LinRecord openDetail={openDetail}/>} {result==="third"&&<ThirdRecord onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>}</>}</>}
+    {tab==="candidates"&&<CandidateLibrary/>}
     {tab==="ops"&&<Operations/>}
     {tab==="recycle"&&<Recycle/>}
    </section>
   </div>
  </main>;
+}
+
+function CandidateLibrary(){
+ const rows=[
+  ["24-11","女 / 26","申请 3 次","选我。现在就可以。我不要这个身体了。别再让我等。"],
+  ["21-16","男 / 42","申请 5 次","我等了六年。下一次必须是我。换进去的是谁都行。执行以后不要把我退回来。"],
+  ["19-03","女 / 28","申请 2 次","不用通知任何人，也不用保留我现在的身份。下一批有空位就把我排进去。"],
+  ["22-08","男 / 35","申请 4 次","如果这具舍不合适就废掉。别取消我的资格。我必须完成一次易舍。"],
+  ["23-14","女 / 31","申请 3 次","把我的姓名删掉。我不想再用它。执行后不要告诉我原来的住址，也不要让我回去。"],
+  ["18-02","男 / 39","申请 6 次","我准备好了。谁来都可以。把这具舍交出去，把我原来的资料清掉。"],
+ ];
+ return <><div style={s.sectionTitle}>候舍库</div><p style={{margin:"0 0 14px",color:"#707872",fontSize:12}}>姓名字段已舍弃。候舍编号为唯一有效身份。</p><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:16}}>{[["在库","164"],["匹配可用","37"],["待执行","12"],["再舍申请","8"]].map(([k,v])=><div key={k} style={{padding:"11px 12px",border:"1px solid #cbd1cd",borderRadius:7,background:"#fff"}}><small style={{display:"block",color:"#7b837e"}}>{k}</small><b style={{display:"block",marginTop:4,fontSize:22}}>{v}</b></div>)}</div>
+ <section style={s.adminPanel}><h4>筛选规范沿革</h4><Record date="2004版" title="低龄强制样本优先" meta="适用：7—11岁" text="名称识别已形成；长期社会身份尚未固化；返家后的记忆、性格异常可归入失踪应激。"/><Record date="2012修订" title="停止低龄优先" meta="成年自愿候舍纳入正式序列" text="长期样本证明年龄不是必要条件。改以对契匹配、去名训练与成年自愿对象为主。"/><Record date="现行" title="候舍来源充足，无需强制补充" meta="旧契样本另行处置" text="常规候舍优先从奉舍申请中匹配。旧契样本不可替代；出现同步、返契异常时优先回收。"/></section>
+ <section style={s.adminPanel}><h4>近期奉舍申请</h4>{rows.map(([id,meta,count,text])=><Record key={id} date={id} title={meta} meta={count} text={`申请原文：${text}`}/>)}</section>
+ </>;
 }
 
 const watchRows=[
@@ -212,6 +233,8 @@ function AdminDetailPage({detail,openDetail,onCopyMaterial,hasMaterial}:{detail:
  if(detail==="guestA")return <GuestRecord id="α"/>;
  if(detail==="guestB")return <GuestRecord id="β"/>;
  if(detail==="guestG")return <GuestRecord id="γ"/>;
+ if(detail==="batch")return <BatchRecord/>;
+ if(detail==="location")return <LocationRecord onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>;
  return <SyncRecord onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>;
 }
 function Pair2004({openDetail,onCopyMaterial,hasMaterial}:{openDetail:(x:AdminDetail)=>void;onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean}){return <article style={s.userRecord}><h2 style={{marginTop:0}}>LN-2004-0718</h2><p style={s.subtle}>2004年旧案 · 双向易舍记录</p><PortraitPair><PortraitCard src={childShen} label="沈妍 · 2004"/><PortraitCard src={childLin} label="林楠 · 2004"/></PortraitPair><AddMaterialButton material={adminPair2004Material} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/><section style={s.adminPanel}><h4>执行记录</h4><Record date="A" title="舍：沈妍" meta="客编号：β" text="易舍完成；返家后持续观察。"/><Record date="B" title="舍：林楠" meta="客编号：α" text="易舍完成；返家后持续观察。"/><Record date="结果" title="双向完成" meta="2004-07" text="两侧生命体征稳定；后续身份适应记录正常。"/></section><Record date="关联对象" title="林楠" meta="B侧" text="实名关联已确认。"/></article>}
@@ -227,6 +250,12 @@ function GuestRecord({id}:{id:"α"|"β"|"γ"}){
   ["2026-09-28","初始登记","19-07"],["2026-10-12","再舍后所在","林楠"],["2026-10-17","当前索引","林楠"],
  ];
  return <article style={s.userRecord}><h2 style={{marginTop:0}}>客编号：{id}</h2><p style={s.subtle}>客档索引 · 仅记录登记与转移位置</p><section style={s.adminPanel}><h4>迁移记录</h4>{rows.map(([date,title,text])=><Record key={date+title} date={date} title={title} meta={`客 ${id}`} text={text}/>)}</section></article>
+}
+
+function BatchRecord(){return <article style={s.userRecord}><h2 style={{marginTop:0}}>HN-1016-02</h2><p style={s.subtle}>返契异常控制批次</p><section style={s.adminPanel}><h4>执行记录</h4><Record date="对象" title="0712-4471 · 沈妍" meta="旧对契异常端" text="10月16日完成线下转交、采样与控制。"/><Record date="处置" title="转入内部场地" meta="场地代码：HL-N-04" text="人员已于21:18转入。外部联络关闭。"/><Record date="状态" title="在场" meta="未转移" text="最新场地回报：10月17日18:55。"/></section></article>}
+function LocationRecord({onCopyMaterial,hasMaterial}:{onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean}){
+ useEffect(()=>{triggerZhouLocationThreat()},[]);
+ return <article style={s.userRecord}><h2 style={{marginTop:0}}>HL-N-04</h2><p style={s.subtle}>内部场地索引</p><AddMaterialButton material={adminLocationMaterial} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/><section style={s.adminPanel}><h4>场地信息</h4><Record date="地址" title="河临北郊第三仓储区 · 4号库" meta="旧冷链仓改造" text="西侧员工通道；内部隔离间 3；当前批次 HN-1016-02。"/><Record date="当前" title="在用" meta="10月17日 18:55" text="0712-4471仍在场。未登记转移。"/></section></article>
 }
 
 function SyncRecord({onCopyMaterial,hasMaterial}:{onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean}){return <article style={s.userRecord}><h2 style={{marginTop:0}}>0712-4471 · 关联同步异常</h2><PortraitPair><PortraitCard src={adultShen} label="关联对象：沈妍"/></PortraitPair><AddMaterialButton material={adminSyncMaterial} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/><section style={s.adminPanel}><h4>异常记录</h4><Record date="起点" title="2026-10-12 23:04" meta="再舍完成后 51 分钟" text="原对契同步值异常升高。"/><Record date="表现" title="记忆回流" meta="0712-4471" text="非本人童年场景描述增加；林楠旧址识别反应；对‘楠楠’称呼持续反应。"/><Record date="处置理由" title="控制旧对契另一端" meta="对象：0712-4471 · 沈妍" text="10月12日再舍完成后，该对象同步反应持续升高，可能影响试验稳定性；10月16日转入控制。"/><Record date="当前" title="已控制" meta="HN-1016-02" text="线下转交完成；样本已登记；等待下一步。"/></section></article>}

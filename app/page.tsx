@@ -9,6 +9,8 @@ import InteractiveWechat,{SharedMaterial,WechatNotice,discoverZhouIdentity,focus
 import PrivateArea from "./PrivateArea";
 import AdminPortalOccult from "./AdminPortalOccult";
 import {advanceGameClock,getGameClock,subscribeGameClock} from "./gameClock";
+import GameEnding from "./GameEnding";
+import {getEnding,subscribeEnding} from "./endingState";
 
 type App="browser"|"wechat"|"notes"|"verse";
 type Route={kind:"home"}|{kind:"post",id:string}|{kind:"profile"}|{kind:"user",name:string}|{kind:"private"}|{kind:"history"}|{kind:"search",q:string}|{kind:"account"};
@@ -32,7 +34,9 @@ export default function Page(){
  const [wxPost,setWxPost]=useState<string|null>(null);
  const [wxNotices,setWxNotices]=useState<(WechatNotice&{id:number})[]>([]);
  const [clock,setClock]=useState(()=>getGameClock());
+ const [ending,setEnding]=useState(()=>getEnding());
  useEffect(()=>subscribeGameClock(setClock),[]);
+ useEffect(()=>subscribeEnding(setEnding),[]);
  const rememberMaterial=(m:SharedMaterial)=>setMaterials(prev=>prev.some(x=>x.id===m.id)?prev:[...prev,m]);
  useEffect(()=>subscribeWechatNotices(notice=>{
   const item={...notice,id:Date.now()+Math.floor(Math.random()*1000)};
@@ -40,6 +44,7 @@ export default function Page(){
   setWxNotices(prev=>[...prev.filter(x=>x.contactId!==notice.contactId),item].slice(-3));
   window.setTimeout(()=>setWxNotices(prev=>prev.filter(x=>x.id!==item.id)),12000);
  }),[app]);
+ if(ending)return <GameEnding kind={ending}/>;
  if(stage==="title")return <main className="title"><section><small>河临 · 2026年10月17日</small><h1>烛阴旧闻</h1><p>沈妍没有赴约。<br/>电话关机，消息也没有回复。</p><button onClick={()=>setStage("login")}>进入公寓 <ChevronRight/></button></section></main>;
  if(stage==="login")return <main className="login"><div className="clock"><b>19:06</b><span>10月17日　星期六</span></div><section><div className="avatar">妍</div><h2>沈妍</h2><button className="password" onClick={()=>setStage("desktop")}><span>••••••••</span><ChevronRight/></button><p>你和沈妍从小学低年级就认识。你们互为紧急联系人，也一直留着彼此的备用门锁密码。</p></section></main>;
  const open=(x:App)=>{advanceGameClock(1);setApp(x);setMax(x==="browser"||x==="verse");if(x==="wechat")setWxRead(true)};

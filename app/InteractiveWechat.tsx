@@ -7,6 +7,7 @@
 
 import {FormEvent,useEffect,useMemo,useRef,useState} from "react";
 import {advanceGameClock} from "./gameClock";
+import {beginEnding} from "./endingState";
 import {Plus,Search,Send,X} from "lucide-react";
 
 export type SharedMaterial={id:string;title:string;kind:string;url:string};
@@ -14,7 +15,7 @@ export type WechatNotice={contactId:string;name:string;text:string};
 type Msg={time?:string;who:"沈妍"|"对方";text:string;material?:SharedMaterial};
 type Contact={id:string;name:string;note:string;preview:string;signature?:string;messages:Msg[]};
 type ReplyPart={text?:string;material?:SharedMaterial};
-type QuickReply={id:string;text:string;sendText?:string;emphasis?:boolean;freeText?:boolean;reply:ReplyPart[];next?:QuickReply[]};
+type QuickReply={id:string;text:string;sendText?:string;emphasis?:boolean;freeText?:boolean;ending?:"report"|"double";reply:ReplyPart[];next?:QuickReply[]};
 type MaterialRule=Record<string,ReplyPart[]|null>;
 
 const forumPost=(id:string,title:string):SharedMaterial=>({id,title,kind:"论坛帖子",url:`https://www.zhuyinwen.cn/thread/${id}`});
@@ -38,6 +39,8 @@ const wechatSession={
   zhouEvidenceSeen:false,
   zhouIdentityKnown:false,
   zhouConfronted:false,
+  locationKnown:false,
+  locationThreatSent:false,
   activeId:"yq",
   searchQuery:"",
   draft:"",
@@ -101,9 +104,26 @@ const materialRules:Record<string,MaterialRule>={
  "admin-reswap-2026":{ly:[{text:"这里写的是‘再次易舍’，而且特意标了稳定期22年。"},{text:"试验目的那句你怎么看？"}],zc:[{text:"稳定22年以后又做一次。"},{text:"这不像临时决定的。"}]},
  "admin-sync-shen":{ly:[{text:"这条才是在解释沈妍为什么被抓。"},{text:"10月12号再舍完成以后，她这边的同步反应一直往上升；10月16号后台才把她转成‘已控制’。"}],zc:[{text:"他们自己把这条标成了关联异常。"},{text:"‘控制’和执行批次比解释更重要。"}]},
  "admin-third-1907":{ly:[{text:"她连自己到底叫沈妍还是林楠都说不稳。"},{text:"但一听到徐宁这个名字就哭……这比直接认出你更吓人。"}],zc:[{text:"姓名陈述来回变？"},{text:"那就不是一句口误能解释的。"}]},
+ "admin-location-hln04":{ly:[{text:"地址有了。"},{text:"别自己去。报警，把后台记录和这个地址一起交出去。"}]},
 };
 
 const received=(contactId:string,materialId:string)=>!!wechatSession.sent[`${contactId}:${materialId}`];
+export const triggerZhouLocationThreat=()=>{
+ wechatSession.locationKnown=true;
+ if(wechatSession.locationThreatSent||!wechatSession.zhouIdentityKnown||!wechatSession.zhouConfronted)return false;
+ wechatSession.locationThreatSent=true;
+ const items:Msg[]=[{who:"对方",text:"别报警。"},{who:"对方",text:"HL-N-04，对吧。"},{who:"对方",text:"沈妍还在我们手里。"}];
+ wechatSession.extra={...wechatSession.extra,zc:[...(wechatSession.extra.zc||[]),...items]};
+ const final:QuickReply[]=[
+  {id:"zc-final-report",text:"我会报警。",emphasis:true,ending:"report",reply:[{text:"那就赌他们比我们快。"}]},
+  {id:"zc-final-go",text:"我一个人去。",ending:"double",reply:[{text:"手机留下。"},{text:"到门口以后再联系我。"}]},
+ ];
+ wechatSession.quick={...wechatSession.quick,zc:[{id:"zc-threat",text:"你在威胁我？",emphasis:true,reply:[{text:"对。"},{text:"我就是在威胁你。"},{text:"一个人来。别报警。"}],next:final}]};
+ emitWechatNotice("zc","沈妍还在我们手里。");
+ notifyWechat();
+ return true;
+};
+
 const materialReply=(contactId:string,materialId:string):ReplyPart[]|null=>{
  if(contactId==="zc"&&materialId==="09114"){
   if(received("zc","09831"))return [{text:"等等。"},{text:"这条也是九岁？"},{text:"也是十三天。"},{text:"日期还挨着……这也太巧了。"}];
@@ -175,7 +195,15 @@ const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
   if(!received("ly","admin-reswap-2026")||!received("ly","admin-pair-2004"))return [];
   return syncReasoningChoices();
  }
- if(contactId==="ly"&&materialId==="admin-third-1907")return [{id:"ly-third-identity",text:"她听到徐宁这个名字为什么会哭？",reply:[{text:"……这才吓人。"},{text:"她连名字都说不稳，但情绪反应还在。"},{text:"真找到地点，这个人也得告诉警方。"}]}];
+ if(contactId==="ly"&&materialId==="admin-third-1907"){
+  const base:QuickReply={id:"ly-third-identity",text:"她听到徐宁这个名字为什么会哭？",reply:[{text:"……这才吓人。"},{text:"她连名字都说不稳，但情绪反应还在。"},{text:"真找到地点，这个人也得告诉警方。"}]};
+  if(received("ly","admin-location-hln04"))base.next=[{id:"ly-report-both",text:"地址也有了。把19-07一起报给警方。",emphasis:true,ending:"report",reply:[{text:"对。两个人都报。别自己过去。"}]}];
+  return [base];
+ }
+ if(contactId==="ly"&&materialId==="admin-location-hln04"){
+  if(received("ly","admin-third-1907"))return [{id:"ly-report-both-now",text:"报警，把沈妍和19-07的记录一起交出去。",emphasis:true,ending:"report",reply:[{text:"对。两个人都报。你别自己去。"}]}];
+  return [{id:"ly-report-shen",text:"报警，先把沈妍的位置交出去。",emphasis:true,ending:"report",reply:[{text:"好。截图别漏，地址和批次都给他们。"}]},{id:"ly-check-third",text:"我再确认一下19-07。",reply:[{text:"行，但快点。地址已经有了。"}]}];
+ }
 
  if(contactId==="ly"&&materialId==="admin-liang-record")return [
   {id:"ly-admin-2017",text:"最早是2017年。",reply:[{text:"2017？"},{text:"我那年才刚开始在论坛里写小时候那些事。"},{text:"所以不是我后来跟沈妍聊上以后，他们才盯我的。"}],next:[
@@ -390,8 +418,9 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
   if(item.freeText){setFreeTextFor(id,true,item.next||[]);return;}
   setLockedFor(id,true);
   appendFor(id,[{who:"沈妍",text:item.sendText||item.text}]);
-  if(item.id==="zc-zheliu")wechatSession.zhouConfronted=true;
+  if(item.id==="zc-zheliu"){wechatSession.zhouConfronted=true;if(wechatSession.locationKnown)window.setTimeout(()=>triggerZhouLocationThreat(),100)}
   delayedParts(id,item.reply,item.next||[]);
+  if(item.ending){const kind=item.ending==="double"?"double":received("ly","admin-third-1907")?"true":"home";window.setTimeout(()=>beginEnding(kind),6500)}
  };
  const openMaterial=(material:SharedMaterial)=>{
   if(material.kind==="论坛帖子"&&/^\d+$/.test(material.id)&&onOpenPost)onOpenPost(material.id);
@@ -413,9 +442,9 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
    {!actionLocked&&(quick[id]||[]).length>0&&<div style={{flex:"0 0 auto",display:"flex",gap:8,flexWrap:"wrap",padding:"9px 14px 0",background:"#f7f7f7"}}>{(quick[id]||[]).map(item=><button key={item.id} onClick={()=>sendQuick(item)} style={{maxWidth:"100%",padding:item.emphasis?"9px 14px":"7px 11px",border:item.emphasis?"2px solid #9f3f36":"1px solid #cfd8d2",borderRadius:15,background:item.emphasis?"#fff8f6":"#fff",color:item.emphasis?"#8c3029":"#3c6250",fontSize:12,fontWeight:item.emphasis?800:400,textAlign:"left"}}>{item.text}</button>)}</div>}
 
    <footer style={{flex:"0 0 auto",padding:"12px 14px",background:"#f7f7f7",borderTop:"1px solid #ddd"}}>
-    <form onSubmit={sendText} style={{display:"grid",gridTemplateColumns:"1fr 44px 48px",gap:8,alignItems:"center"}}>
+    <form onSubmit={sendText} style={{display:"grid",gridTemplateColumns:"1fr 64px 48px",gap:8,alignItems:"center"}}>
      <input disabled={!canFreeText} value={draft} onChange={e=>setDraft(e.target.value)} placeholder={canFreeText?"这一轮可以自己问一句":"输入消息"} style={{height:48,border:"1px solid #d0d0d0",borderRadius:8,padding:"0 14px",minWidth:0,fontSize:14,background:canFreeText?"#fff":"#efefef",color:canFreeText?"#222":"#999"}}/>
-     <button type="button" onClick={()=>canPickMaterial&&setPicker(v=>!v)} disabled={!canPickMaterial} title="文件" aria-label="文件" style={{position:"relative",height:44,width:44,border:"1px solid #d0d0d0",borderRadius:6,background:"#fff",display:"grid",placeItems:"center",color:"#555",opacity:canPickMaterial?1:.35}}><Plus size={19}/>{sendable.length>0&&<small style={{position:"absolute",right:-4,top:-5,minWidth:16,height:16,padding:"0 4px",borderRadius:8,background:"#39a65a",color:"#fff",fontSize:9,lineHeight:"16px"}}>{sendable.length}</small>}</button>
+     <button type="button" onClick={()=>canPickMaterial&&setPicker(v=>!v)} disabled={!canPickMaterial} title="发送资料" aria-label="发送资料" style={{position:"relative",height:48,width:64,border:canPickMaterial?"2px solid #4a8a64":"1px solid #d0d0d0",borderRadius:7,background:"#fff",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:1,color:canPickMaterial?"#2d7550":"#777",opacity:canPickMaterial?1:.35,fontWeight:800}}><Plus size={21}/><span style={{fontSize:10,lineHeight:1}}>资料</span>{sendable.length>0&&<small style={{position:"absolute",right:-4,top:-5,minWidth:16,height:16,padding:"0 4px",borderRadius:8,background:"#39a65a",color:"#fff",fontSize:9,lineHeight:"16px"}}>{sendable.length}</small>}</button>
      <button type="submit" disabled={!canFreeText||!draft.trim()} style={{height:44,width:48,border:0,borderRadius:6,background:"#39a65a",color:"#fff",display:"grid",placeItems:"center",opacity:canFreeText&&draft.trim()?1:.35}}><Send size={16}/></button>
     </form>
    </footer>
