@@ -99,7 +99,7 @@ const materialRules:Record<string,MaterialRule>={
  "admin-liang-record":{ly:[{text:"操。"},{text:"真的是我。"},{text:"这东西从什么时候开始记我的？"}],zc:[{text:"这是梁茵那份？"},{text:"今天18:42还在自动刷新，说明这系统现在还在跑。"}]},
  "admin-pair-2004":{ly:[{text:"A、B两边的‘客源’为什么正好写的是对方？"},{text:"这两个字段得跟前面那几句经文一起看。"}],zc:[{text:"这份比经文直接。"},{text:"A、B两边都写了易舍完成。"}]},
  "admin-reswap-2026":{ly:[{text:"这里写的是‘再次易舍’，而且特意标了稳定期22年。"},{text:"试验目的那句你怎么看？"}],zc:[{text:"稳定22年以后又做一次。"},{text:"这不像临时决定的。"}]},
- "admin-sync-shen":{ly:[{text:"这份写得很清楚：被控制的是沈妍。"},{text:"触发原因是B侧再舍完成后，沈妍这边出现同步异常。别把‘谁做了第二次易舍’和‘谁被抓’混成一个人。"}],zc:[{text:"他们自己把这条标成了关联异常。"},{text:"‘控制’和执行批次比解释更重要。"}]},
+ "admin-sync-shen":{ly:[{text:"这条才是在解释沈妍为什么被抓。"},{text:"10月12号再舍完成以后，她这边的同步反应一直往上升；10月16号后台才把她转成‘已控制’。"}],zc:[{text:"他们自己把这条标成了关联异常。"},{text:"‘控制’和执行批次比解释更重要。"}]},
  "admin-third-1907":{ly:[{text:"她连自己到底叫沈妍还是林楠都说不稳。"},{text:"但一听到徐宁这个名字就哭……这比直接认出你更吓人。"}],zc:[{text:"姓名陈述来回变？"},{text:"那就不是一句口误能解释的。"}]},
 };
 
@@ -135,20 +135,20 @@ const materialReply=(contactId:string,materialId:string):ReplyPart[]|null=>{
 
 const syncReasoningChoices=():QuickReply[]=>{
  const correct:QuickReply={id:"ly-sync-right",text:"所以沈妍被抓，是因为B侧再舍后她这个旧对契另一端出了异常？",reply:[{text:"对。"},{text:"抓的是沈妍；做第二次易舍的是B侧‘林楠’那具登记身体。两件事不是同一个人。"},{text:"沈妍不是第二次试验的目标，她是试验后出现的异常，所以才被控制。"},{text:"现在得找沈妍被转到哪。"}]};
- const wrongAgain:QuickReply={id:"ly-sync-wrong-again",text:"所以他们抓沈妍，是准备再给沈妍换一次？",reply:[{text:"不是。沈妍这份写的是‘控制A侧旧对契另一端’，本次再舍对象在B侧。"}]};
+ const wrongAgain:QuickReply={id:"ly-sync-wrong-again",text:"所以他们抓沈妍，是准备再给她换一次？",reply:[{text:"我觉得不是。"},{text:"沈妍这份写的是‘控制旧对契另一端’，处置理由也是同步异常。"}]};
  const wrongForum:QuickReply={id:"ly-sync-forum",text:"还是因为沈妍查论坛查得太深？",reply:[{text:"他们当然一直监控她。"},{text:"但这份处置理由写的是同步异常，不是论坛行为。"}]};
  wrongAgain.next=[correct,wrongForum];wrongForum.next=[wrongAgain,correct];
  return [wrongAgain,correct,wrongForum];
 };
 const reswapReasoningChoices=(includeSync:boolean):QuickReply[]=>{
- const correct:QuickReply={id:"ly-reswap-test",text:"他们在测试同一个‘客’能不能连续换身体？",reply:[{text:"对。"},{text:"而且这里做第二次易舍的是B侧，也就是‘林楠’这具登记身体，不是沈妍。"},{text:"稳定22年、再次易舍、主体稳定——这几个字段放一起就是这个意思。"}],next:includeSync?syncReasoningChoices():[]};
+ const correct:QuickReply={id:"ly-reswap-test",text:"他们在测试同一个‘客’能不能连续换身体？",reply:[{text:"对。"},{text:"2004林楠那页是客α，2026再舍以后19-07也变成客α。编号没变。"},{text:"稳定22年、再次易舍、主体稳定——这几个字段放一起就是这个意思。"},{text:"但这份还没解释沈妍为什么会被抓。"}],next:includeSync?syncReasoningChoices():[]};
  const wrongShen:QuickReply={id:"ly-reswap-shen",text:"他们是想接着给沈妍也换一次？",reply:[{text:"但这份执行对象写的是B侧和19-07。"},{text:"沈妍不在这次执行名单里。"}]};
  const wrongRepeat:QuickReply={id:"ly-reswap-repeat",text:"只是把2004年的仪式重新做一遍？",reply:[{text:"不太像。"},{text:"这次特意写‘长期样本’和‘第二次更换舍’，目的变了。"}]};
  wrongShen.next=[correct,wrongRepeat];wrongRepeat.next=[wrongShen,correct];
  return [wrongShen,correct,wrongRepeat];
 };
 const pairReasoningChoices=():QuickReply[]=>{
- const nextAfterCorrect:QuickReply[]=received("ly","admin-reswap-2026")?reswapReasoningChoices(received("ly","admin-sync-shen")):[{id:"ly-pair-why",text:"那为什么2026年又把沈妍抓走？",reply:[{text:"对，这才是现在的问题。"},{text:"先分清：沈妍是A侧登记身体，林楠是B侧登记身体。2004只解释她们为什么有关联，还解释不了沈妍这次为什么被控制。"},{text:"要看B侧2026年的执行，再看沈妍自己的同步异常。"}]}];
+ const nextAfterCorrect:QuickReply[]=received("ly","admin-reswap-2026")?reswapReasoningChoices(received("ly","admin-sync-shen")):[{id:"ly-pair-why",text:"那为什么2026年又把沈妍抓走？",reply:[{text:"对，这才是现在的问题。"},{text:"2004这份只能说明她和林楠为什么会被绑在一起，还解释不了这次抓人。"},{text:"后面的再舍记录里客编号会重复出现，把那个编号对上就清楚多了。"}]}];
  const correct:QuickReply={id:"ly-pair-swap",text:"舍是身体，客是魂……所以她们互换了？",reply:[{text:"……我也是这么看的。"},{text:"那‘易舍’就是换魂。"}],next:nextAfterCorrect};
  const wrongLink:QuickReply={id:"ly-pair-link",text:"只是两个人的档案互相挂靠？",reply:[{text:"可A、B两边都写了‘易舍完成’。"},{text:"只做档案关联没必要写客源。"}]};
  const wrongHeld:QuickReply={id:"ly-pair-held",text:"也可能只是两个人一起被关过？",reply:[{text:"可能，但还是解释不了为什么‘客源’互相写对方。"},{text:"我会先把‘舍’和‘客’的意思对上。"}]};
