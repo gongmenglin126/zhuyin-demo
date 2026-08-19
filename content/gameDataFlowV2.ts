@@ -31,13 +31,15 @@ const dreamPost:Post={
  ],
 };
 
+// v9.2.3 discoverable red-box shake hint
 const redBoxBase=flowPosts.find(post=>post.id==="30177")!;
 const redBoxPost:Post={
   ...redBoxBase,
   terms:[...(redBoxBase.terms||[]),"红铁皮盒","一格胶片","旧厂房"],
-  highlights:[...new Set([...(redBoxBase.highlights||[]),"红铁皮盒","打开前会卡一下"])],
+  highlights:[...new Set([...(redBoxBase.highlights||[]),"红铁皮盒"])],
   replies:[
     ...redBoxBase.replies,
+    reply("旧饼干盒","22:57","我家以前这类套盖铁皮盒也会卡。别硬撬，横着左右晃几下，再上下颠两下，盖沿松了就能开。"),
     reply("一格胶片","23:18","这种红色套盖铁皮盒以前太常见了，地方糕点、茶叶、糖果都装，光看颜色认不出牌子。我前阵子拍旧厂房时好像见过一个形制很像的，当时没特意拍。下次再碰到我帮你留意盒盖边缘。"),
     reply("候鸟第七年","23:31","麻烦了。主要想确认这种东西是不是现实里真常见，不急。","楼主"),
   ],

@@ -1,10 +1,11 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+// v9.2.3 Zhou identity discovery
 import {ReactNode,useEffect,useMemo,useState} from "react";
 import {ArrowLeft,ChevronRight,Clock3,Globe2,History as HistoryIcon,Home,LockKeyhole,Maximize2,MessageCircle,Minimize2,NotebookPen,RefreshCw,Search,Wifi,X} from "lucide-react";
 import {history,Post,posts,privateEntries,profile} from "../content/gameDataFlowV2";
 import LocalVault from "./LocalVault";
-import InteractiveWechat,{SharedMaterial,WechatNotice,focusWechatContact,subscribeWechatNotices} from "./InteractiveWechat";
+import InteractiveWechat,{SharedMaterial,WechatNotice,discoverZhouIdentity,focusWechatContact,subscribeWechatNotices} from "./InteractiveWechat";
 import PrivateArea from "./PrivateArea";
 import AdminPortalOccult from "./AdminPortalOccult";
 import {advanceGameClock,getGameClock,subscribeGameClock} from "./gameClock";
@@ -61,7 +62,7 @@ function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial,hasMaterial,
  useEffect(()=>{persistedForumRoute=route;persistedForumStack=stack;persistedForumQ=q},[route,stack,q]);
  const go=(next:Route)=>{advanceGameClock(1);setStack([...stack,route]);setRoute(next);if(next.kind==="post"){const nextRead=[...new Set([...read,next.id])];persistedForumRead=nextRead;setRead(nextRead)}};
  const back=()=>{if(forumIdentity==="admin"||!stack.length)return;setRoute(stack[stack.length-1]);setStack(stack.slice(0,-1))};
- const search=(value=q)=>{if(value.trim()){setQ(value);go({kind:"search",q:value.trim()})}};
+ const search=(value=q)=>{if(value.trim()){const term=value.trim();setQ(value);if(term==="折柳"){go({kind:"user",name:"折柳"});return}go({kind:"search",q:term})}};
  const openUser=(name:string)=>name==="候鸟第七年"?go({kind:"profile"}):go({kind:"user",name});
  return <div className="browser"><div className="tabs"><span>烛</span><b>烛阴旧闻</b></div><div className="bar"><button onClick={back}><ArrowLeft/></button><button onClick={()=>setRoute({...route})}><RefreshCw/></button><div><LockKeyhole/>www.zhuyinwen.cn / {forumIdentity==="admin"?"admin":route.kind}</div><button onClick={()=>forumIdentity==="shenyan"&&go({kind:"history"})}><HistoryIcon/></button></div>
   <div className="site">
@@ -70,13 +71,18 @@ function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial,hasMaterial,
     {route.kind==="home"&&<ForumHome read={read} open={id=>go({kind:"post",id})} me={()=>go({kind:"profile"})}/>} 
     {route.kind==="post"&&<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} 
     {route.kind==="profile"&&<Profile open={id=>go({kind:"post",id})} secret={()=>go({kind:"private"})}/>} 
-    {route.kind==="user"&&<UserProfile name={route.name} open={id=>go({kind:"post",id})}/>} 
+    {route.kind==="user"&&(route.name==="折柳"?<ZheliuProfile open={id=>go({kind:"post",id})}/>:<UserProfile name={route.name} open={id=>go({kind:"post",id})}/>)} 
     {route.kind==="private"&&<PrivateArea entries={investigationPrivateEntries} unlocked={privateUnlocked} onUnlock={()=>setPrivateUnlocked(true)} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} 
     {route.kind==="history"&&<HistoryPage open={id=>go({kind:"post",id})} me={()=>go({kind:"profile"})} search={search}/>} 
     {route.kind==="search"&&<Results q={route.q} read={read} open={id=>go({kind:"post",id})} openUser={openUser}/>} 
    </>}
   </div></div>
 }
+function ZheliuProfile({open}:{open:(id:string)=>void}){
+ useEffect(()=>{discoverZhouIdentity()},[]);
+ return <main className="forum-page"><section style={{maxWidth:760,margin:"0 auto",padding:"22px 24px",border:"1px solid #ddd6ca",borderRadius:8,background:"#fbfaf6"}}><div style={{display:"flex",alignItems:"center",gap:14,paddingBottom:16,borderBottom:"1px solid #e4dfd5"}}><i style={{width:46,height:46,display:"grid",placeItems:"center",borderRadius:"50%",background:"#e8e3d8",fontStyle:"normal",fontWeight:800}}>折</i><span><h2 style={{margin:"0 0 5px",fontSize:20}}>折柳</h2><b style={{display:"block",fontSize:13}}>实名资料：周川</b><small style={{display:"block",marginTop:4,color:"#888"}}>公开资料页 · 烛阴旧闻用户</small></span></div><div style={{padding:"16px 0 4px",fontSize:13,lineHeight:1.8}}><p style={{margin:"0 0 10px"}}>个人资料很少，只保留了实名验证字段和公开回复记录。</p><button onClick={()=>open("20847")} style={{width:"100%",padding:"11px 12px",border:"1px solid #d8d2c7",borderRadius:6,background:"#fff",textAlign:"left",cursor:"pointer"}}><b style={{display:"block"}}>最近公开回复</b><small style={{display:"block",marginTop:4,color:"#777"}}>候鸟第七年的梦帖 · “看完了。红盒子先别管……”</small></button></div></section></main>
+}
+
 function ForumHeader({q,setQ,search,home,me,switchAccount}:{q:string;setQ:(x:string)=>void;search:(x?:string)=>void;home:()=>void;me:()=>void;switchAccount:()=>void}){return <><header className="forum-head"><button onClick={home} className="brand"><i>烛</i><span><b>烛阴旧闻</b><small>民俗 · 旧闻 · 城市记忆</small></span></button><div style={{display:"flex",alignItems:"center",gap:8}}><button onClick={me}><i className="bird">候</i><span><b>候鸟第七年</b><small>当前登录账号</small></span></button><button onClick={switchAccount} style={{height:34,padding:"0 10px",border:"1px solid #d8d3c8",borderRadius:6,background:"#f7f4ee",color:"#6b675f",fontSize:11}}>登录其他账号</button></div></header>
  <nav className="forum-nav"><button onClick={home}><Home/>论坛首页</button><button onClick={me}>我的主页</button></nav>
  <form className="forum-search" onSubmit={e=>{e.preventDefault();search()}}><span><Search/><b>全站搜索</b><small>站内主题与用户</small></span><label><input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索帖子、用户或关键词"/><button>搜索</button></label></form></>}
