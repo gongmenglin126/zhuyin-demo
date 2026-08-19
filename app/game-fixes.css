@@ -13,3 +13,77 @@
   box-sizing: border-box;
   margin-bottom: 34px !important;
 }
+
+/* Playtest UX: investigation material actions must read as primary actions,
+   not tiny utility icons. Keep the information-dense UI, but make the action
+   itself large enough to notice without hunting. */
+.thread-title > button,
+.verse-page article > button {
+  min-height: 46px !important;
+  padding: 0 16px !important;
+  border-width: 2px !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  letter-spacing: .02em;
+  box-shadow: 0 5px 14px rgba(45, 72, 60, .12);
+}
+
+.thread-title > button::before,
+.verse-page article > button::before {
+  content: "+";
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: #41695a;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  vertical-align: -2px;
+}
+
+.thread-title > button:disabled::before,
+.verse-page article > button:disabled::before {
+  content: "✓";
+  background: #7c8983;
+  font-size: 14px;
+}
+
+/* Private-area share button: this page intentionally has no broad layout
+   class, so target its stable crumb + thread structure. */
+.site > main:not([class]) > div:first-child + section > header > button {
+  min-height: 46px !important;
+  padding: 0 16px !important;
+  border-width: 2px !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  box-shadow: 0 5px 14px rgba(45, 72, 60, .12);
+}
+
+.site > main:not([class]) > div:first-child + section > header > button svg {
+  width: 19px !important;
+  height: 19px !important;
+}
+
+/* WeChat material picker: make the action obvious even when the player is
+   focused on the conversation rather than the composer controls. */
+.wechat footer form > button[type="button"] {
+  width: 88px !important;
+  height: 50px !important;
+  border-width: 2px !important;
+  box-shadow: 0 4px 12px rgba(45, 117, 80, .12);
+}
+
+.wechat footer form > button[type="button"] svg {
+  width: 23px !important;
+  height: 23px !important;
+}
+
+.wechat footer form > button[type="button"] span {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
