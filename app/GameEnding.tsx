@@ -18,15 +18,15 @@ export default function GameEnding({kind}:{kind:Exclude<EndingKind,null>}){
 function DesktopShell({children,date="10月20日 周二 22:41"}:{children:ReactNode;date?:string}){
  return <div style={s.desktop}><div style={s.sys}><span><b>●</b> 微信</span><span>Wi‑Fi　80%　{date}</span></div>{children}</div>;
 }
-function WechatFrame({title="徐宁",children,draft,notice}:{title?:string;children:ReactNode;draft?:string;notice?:{name:string;text:string}}){
- return <><div style={s.window}><div style={s.winHead}><span>● ● ●</span><b>微信</b><span/></div><div style={s.wx}><aside style={s.side}><div style={s.me}>妍　沈妍</div><div style={s.contactActive}>{title}</div><div style={s.contact}>梁茵</div><div style={s.contact}>周川</div></aside><main style={s.chat}><header style={s.chatHead}>{title}</header><section style={s.messages}>{children}</section><footer style={s.footer}><div style={s.input}>{draft||""}{draft!==undefined&&<i style={s.cursor}/>}</div></footer></main></div></div>{notice&&<div style={s.notice}><b>微信新消息 · {notice.name}</b><span>{notice.text}</span></div>}</>;
+function WechatFrame({title="徐宁",children,draft,notice,friendRequest}:{title?:string;children:ReactNode;draft?:string;notice?:{name:string;text:string};friendRequest?:{account:string;text:string}}){
+ return <><div style={s.window}><div style={s.winHead}><span>● ● ●</span><b>微信</b><span/></div><div style={s.wx}><aside style={s.side}><div style={s.me}>妍　沈妍</div><div style={s.contactActive}>{title}</div><div style={s.contact}>梁茵</div><div style={s.contact}>周川</div></aside><main style={s.chat}><header style={s.chatHead}>{title}</header><section style={s.messages}>{children}</section><footer style={s.footer}><div style={s.input}>{draft||""}{draft!==undefined&&<i style={s.cursor}/>}</div></footer></main></div></div>{notice&&<div style={s.notice}><b>微信新消息 · {notice.name}</b><span>{notice.text}</span></div>}{friendRequest&&<div style={s.friendRequest}><div style={s.friendAvatar}>?</div><span><small>新的朋友</small><b>{friendRequest.account}</b><em>验证消息：{friendRequest.text}</em></span></div>}</>;
 }
 function Bubble({mine=false,children}:{mine?:boolean;children:ReactNode}){return <div style={{...s.bubble,...(mine?s.mine:{})}}>{children}</div>}
 
 function HomeEnding({step}:{step:number}){
  const draft=step<2?"":step===2?"我到底是谁":step===3?"我对徐宁到底是谁":step===4?"如果她知道了，她会怎么看我":step>=5?"徐宁，如果你知道小时候回来的人已经不是原来的沈妍了，你以后看到我的时候，会觉得我是谁":"";
- const notice=step>=7?{name:"林楠",text:"救救我"}:step>=6?{name:"林楠",text:"怎么办"}:undefined;
- return <DesktopShell>{step===0?<div style={s.blackDate}>2026年10月20日　22:41</div>:<WechatFrame draft={draft} notice={notice}><Bubble>到家了吗？</Bubble><Bubble mine>到了。</Bubble><Bubble>医生说先休息。你别乱想。</Bubble>{step>=5&&<div style={s.unsent}>消息没有发送。</div>}</WechatFrame>}{step>=8&&<EndingTitle title="归家" sub="她回到了自己的电脑前。"/>}</DesktopShell>;
+ const friendRequest=step>=6?{account:"m_0317",text:"救救我。我是沈妍。你是谁？"}:undefined;
+ return <DesktopShell>{step===0?<div style={s.blackDate}>2026年10月20日　22:41</div>:<WechatFrame draft={draft} friendRequest={friendRequest}><Bubble>到家了吗？</Bubble><Bubble mine>到了。</Bubble><Bubble>医生说先休息。你别乱想。</Bubble>{step>=5&&<div style={s.unsent}>消息没有发送。</div>}</WechatFrame>}{step>=8&&<EndingTitle title="归家" sub="她回到了自己的电脑前。"/>}</DesktopShell>;
 }
 
 function TrueEnding({step}:{step:number}){
@@ -58,6 +58,9 @@ const s:Record<string,CSSProperties>={
  bubble:{width:"fit-content",maxWidth:"62%",margin:"0 0 12px",padding:"10px 13px",borderRadius:6,background:"#fff",fontSize:14,lineHeight:1.55,boxShadow:"0 1px 2px #0001"},mine:{marginLeft:"auto",background:"#95ec69"},
  footer:{height:84,padding:12,borderTop:"1px solid #ddd",background:"#fafafa"},input:{minHeight:54,padding:"10px 12px",background:"#fff",border:"1px solid #ddd",borderRadius:6,fontSize:14,lineHeight:1.6},cursor:{display:"inline-block",width:1,height:"1.1em",marginLeft:2,verticalAlign:"-2px",background:"#333"},
  notice:{position:"absolute",right:18,top:48,width:340,padding:"14px 16px",border:"2px solid #49a96b",borderRadius:10,background:"#fff",color:"#222",boxShadow:"0 16px 45px #0007",display:"grid",gap:5},
+ friendRequest:{position:"absolute",right:18,top:48,width:380,display:"grid",gridTemplateColumns:"46px 1fr",gap:12,alignItems:"center",padding:"14px 16px",border:"1px solid #d8d8d8",borderRadius:10,background:"#fff",color:"#222",boxShadow:"0 16px 45px #0007"},
+ friendAvatar:{width:46,height:46,display:"grid",placeItems:"center",borderRadius:7,background:"#dadada",color:"#777",fontSize:23,fontWeight:800},
+ friendRequestSpan:{display:"grid"},
  unsent:{margin:"14px 0",textAlign:"center",fontSize:11,color:"#999"},
  recording:{position:"absolute",left:"12%",right:"12%",top:"14%",bottom:"12%",padding:"28px 32px",border:"1px solid #303030",borderRadius:8,background:"#111",boxShadow:"0 25px 80px #000",color:"#ddd"},file:{fontFamily:"monospace",fontSize:13,color:"#aaa"},wave:{margin:"24px 0",fontSize:34,letterSpacing:3,color:"#a74b45",whiteSpace:"nowrap",overflow:"hidden"},transcript:{minHeight:300,fontSize:17,lineHeight:1.9},
  ending:{position:"absolute",inset:0,display:"grid",placeContent:"center",textAlign:"center",background:"#000e",zIndex:20},
