@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# One-time migration: move editable historical WeChat copy out of the UI/state-machine file.
 p=Path("app/InteractiveWechat.tsx")
 s=p.read_text()
 
