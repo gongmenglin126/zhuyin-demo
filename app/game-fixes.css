@@ -141,3 +141,39 @@ button:has(> svg.lucide-file-plus-2):disabled::after {
   font-size: 12px !important;
   font-weight: 800 !important;
 }
+
+/* Admin navigation must always read as one fixed vertical sidebar. */
+.admin-clean > div > aside {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+  width: 180px !important;
+  box-sizing: border-box !important;
+}
+
+.admin-clean > div > aside > button {
+  display: block !important;
+  width: 100% !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: #445049 !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+
+.admin-clean > div > aside > button:hover {
+  background: rgba(255,255,255,.55) !important;
+}
+
+.admin-clean > div > aside > button.active {
+  background: #32473f !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(36,54,47,.15);
+}
