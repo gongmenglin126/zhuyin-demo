@@ -298,7 +298,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  const contact=contacts.find(x=>x.id===id)!;
  const visible=contacts.filter(x=>(x.name+x.note+x.preview).includes(q));
  const messages=useMemo(()=>[...contact.messages,...(extra[id]||[])],[contact,extra,id]);
- const previewFor=(c:Contact)=>{const added=extra[c.id]||[];return editWechatLive(added.length?added[added.length-1].text:c.preview)};
+ const previewFor=(c:Contact)=>{const added=extra[c.id]||[];const latest=added.length?added[added.length-1]:c.messages[c.messages.length-1];return editWechatLive(latest?.text||c.preview)};
  const actionLocked=!!locked[id]||!!typing[id];
  const hasQuick=(quick[id]||[]).length>0;
  const canFreeText=id!=="x"&&!!introduced[id]&&!!freeText[id]&&!actionLocked&&!hasQuick;
