@@ -268,18 +268,15 @@ const introReply=(contactId:string):{parts:ReplyPart[];next:QuickReply[]}=>{
  if(contactId==="yq"){
   const after:QuickReply={id:"yq-after-person",text:"她后来还见了别人吗？",reply:[{text:"……后来确实有人过来了一下。"},{text:"是之前跟她聊过旧事的一个女的。"},{text:"我跟那个人也不熟，就是以前介绍她们认识。"}]};
   const when:QuickReply={id:"yq-left-when",text:"你们昨晚几点分开的？",reply:[{text:"我九点左右先走的。"},{text:"21:03那句‘到家说一声’就是我走以后发的。"}],next:[after]};
-  const free:QuickReply={id:"yq-free-intro",text:"自己问一句…",freeText:true,reply:[],next:[when]};
-  return {parts:[{text:"你是徐宁？沈妍提过你。"},{text:"她今天还没回你？昨晚我们确实见过。"}],next:[when,free]};
+  return {parts:[{text:"你是徐宁？沈妍提过你。"},{text:"她今天还没回你？昨晚我们确实见过。"}],next:[when]};
  }
  if(contactId==="zc"){
   const recent:QuickReply={id:"zc-recent",text:"她最近跟你说过什么？",reply:[{text:"还是那个梦。"},{text:"她前几天开始觉得里面有人叫‘楠楠’。"},{text:"我让她别半夜一直翻旧帖。"}]};
-  const free:QuickReply={id:"zc-free-intro",text:"自己问一句…",freeText:true,reply:[],next:[recent]};
-  return {parts:[{text:"徐宁？她提过你。"},{text:"她今天一直没回？电话也不通？"}],next:[recent,free]};
+  return {parts:[{text:"徐宁？她提过你。"},{text:"她今天一直没回？电话也不通？"}],next:[recent]};
  }
  if(contactId==="ly"){
   const know:QuickReply={id:"ly-how-know",text:"你和沈妍怎么认识的？",reply:[{text:"论坛。"},{text:"我以前发过小时候走失以后的一些事，她私信过我。"},{text:"后来才慢慢聊熟。"}]};
-  const free:QuickReply={id:"ly-free-intro",text:"自己问一句…",freeText:true,reply:[],next:[know]};
-  return {parts:[{text:"徐宁？我知道你，沈妍提过。"},{text:"她怎么了？"}],next:[know,free]};
+  return {parts:[{text:"徐宁？我知道你，沈妍提过。"},{text:"她怎么了？"}],next:[know]};
  }
  return {parts:[],next:[]};
 };
