@@ -22,14 +22,14 @@ function DesktopShell({children,date="10月20日 周二 22:41"}:{children:ReactN
 }
 
 const endingNews={
- home:{date:"2026年10月18日",headline:"北郊仓储区一处非法拘禁点被查处　一名失联女子获救",lead:"警方根据市民提供的网络记录与场地编号，于17日晚对河临北郊第三仓储区4号库展开处置。",body:"现场救出一名此前失联的成年女性，并查获多台电脑、身份档案、采样器材及大量旧纸质资料。警方称案件仍在调查，暂未公布涉案人员身份及具体案情。获救人员已接受检查，家属已取得联系。"},
- true:{date:"2026年10月18日",headline:"北郊仓储区非法拘禁案：两名被控制人员获救",lead:"警方在4号库及相邻隔离间发现两名成年女性，其中一人的登记身份与现场档案存在异常。",body:"两人均无生命危险。警方同时带走多台终端和纸质档案，并表示将核查更多历史记录。因其中一名获救者目前无法稳定陈述姓名与经历，相关身份信息暂不公开。"},
- double:{date:"2026年10月20日",headline:"两名短暂失联女子已自行返家　警方终止公开寻人",lead:"此前先后失联的两名成年女性于20日返回住处，并分别与亲友取得联系。",body:"两人均表示离开期间未遭限制人身自由，也不愿继续接受媒体采访。警方称现阶段未发现需要继续公开协查的情况。有关网络传言暂无证据支持。"},
+ home:{date:"2026年10月18日",weekday:"星期日",headline:"北郊仓储区一处非法拘禁点被查处　一名失联女子获救",lead:"警方根据市民提供的网络记录与场地编号，于17日晚对河临北郊第三仓储区4号库展开处置。",body:"现场救出一名此前失联的成年女性，并查获多台电脑、身份档案、采样器材及大量旧纸质资料。警方称案件仍在调查，暂未公布涉案人员身份及具体案情。获救人员已接受检查，家属已取得联系。"},
+ true:{date:"2026年10月18日",weekday:"星期日",headline:"北郊仓储区非法拘禁案：两名被控制人员获救",lead:"警方在4号库及相邻隔离间发现两名成年女性，其中一人的登记身份与现场档案存在异常。",body:"两人均无生命危险。警方同时带走多台终端和纸质档案，并表示将核查更多历史记录。因其中一名获救者目前无法稳定陈述姓名与经历，相关身份信息暂不公开。"},
+ double:{date:"2026年10月20日",weekday:"星期二",headline:"两名短暂失联女子已自行返家　警方终止公开寻人",lead:"此前先后失联的两名成年女性于20日返回住处，并分别与亲友取得联系。",body:"两人均表示离开期间未遭限制人身自由，也不愿继续接受媒体采访。警方称现阶段未发现需要继续公开协查的情况。有关网络传言暂无证据支持。"},
 } as const;
 function IncidentNews({kind,onClose}:{kind:Exclude<EndingKind,null>;onClose:()=>void}){
  const item=endingNews[kind];
  return <div style={s.newsStage}><article style={s.newsPaper}>
-  <header style={s.newsTop}><span>{editEndingText(item.date)}　星期日</span><span>河临 · 电子版</span></header>
+  <header style={s.newsTop}><span>{editEndingText(item.date)}　{editEndingText(item.weekday)}</span><span>河临 · 电子版</span></header>
   <div style={s.newsMast}>{editEndingText("河临晚报")}</div>
   <div style={s.newsSection}>{editEndingText("社会 · 本地")}</div>
   <h1 style={s.newsHeadline}>{editEndingText(item.headline)}</h1>
