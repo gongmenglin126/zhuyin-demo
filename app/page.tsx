@@ -19,7 +19,7 @@ const contextPosts:Post[]=[];
 const investigationPosts=posts;
 const investigationPrivateEntries=privateEntries;
 const SHAREABLE_POST_IDS=new Set(["33897","09114","09831","10731","14692","17428","11208","23109","27614"]);
-const HOME_POST_IDS=["34091","34086","34080","34064","34055","34049","20847","34043","33992","33981"];
+const HOME_POST_IDS=["34106","34091","34086","34080","34064","34055","34049","20847","34043","33992","33981"];
 let persistedForumIdentity:"shenyan"|"admin"="shenyan";
 let persistedForumRead:string[]=[];
 let persistedForumRoute:Route={kind:"home"};
@@ -71,7 +71,7 @@ function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial,hasMaterial,
  const openUser=(name:string)=>name==="候鸟第七年"?go({kind:"profile"}):go({kind:"user",name});
  return <div className="browser"><div className="tabs"><span>{forumIdentity==="admin"?"档":"烛"}</span><b>{forumIdentity==="admin"?"内部资料库":"烛阴旧闻"}</b></div><div className="bar"><button onClick={back}><ArrowLeft/></button><button onClick={()=>setRoute({...route})}><RefreshCw/></button><div><LockKeyhole/>www.zhuyinwen.cn / {forumIdentity==="admin"?"admin":route.kind}</div>{forumIdentity==="admin"?<button onClick={()=>{persistedForumIdentity="shenyan";setForumIdentity("shenyan");setRoute({kind:"home"});setStack([])}} style={{width:"auto",padding:"0 10px",fontSize:11}}>返回论坛</button>:<button onClick={()=>go({kind:"history"})}><HistoryIcon/></button>}</div>
   <div className="site">
-   {forumIdentity==="admin"?<AdminPortalOccult loggedIn={true} canUseLegacy={true} onAdminLogin={()=>{}} onCancel={()=>{}} onWechatIncoming={()=>setWxRead(false)} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>:route.kind==="account"?<AdminPortalOccult loggedIn={false} canUseLegacy={verseSeen} onCancel={back} onAdminLogin={()=>{persistedForumIdentity="admin";setForumIdentity("admin");setStack([])}} onWechatIncoming={()=>setWxRead(false)} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>:<>
+   {forumIdentity==="admin"?<AdminPortalOccult loggedIn={true} canUseLegacy={true} onAdminLogin={()=>{}} onCancel={()=>{}} onExitAdmin={()=>{persistedForumIdentity="shenyan";setForumIdentity("shenyan");setRoute({kind:"home"});setStack([])}} onWechatIncoming={()=>setWxRead(false)} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>:route.kind==="account"?<AdminPortalOccult loggedIn={false} canUseLegacy={verseSeen} onCancel={back} onAdminLogin={()=>{persistedForumIdentity="admin";setForumIdentity("admin");setStack([])}} onWechatIncoming={()=>setWxRead(false)} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>:<>
     <ForumHeader q={q} setQ={setQ} search={search} home={()=>go({kind:"home"})} me={()=>go({kind:"profile"})} switchAccount={()=>go({kind:"account"})}/>
     {route.kind==="home"&&<ForumHome read={read} open={id=>go({kind:"post",id})} me={()=>go({kind:"profile"})}/>} 
     {route.kind==="post"&&<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} 

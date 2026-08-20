@@ -13,27 +13,29 @@ import {childLin} from "./adminPortraits/childLin";
 export const ADMIN_USER="旧档员-03";
 export const ADMIN_TEMP_CODE="gumen-0712";
 const OLD_OATH="身非我身名非我名";
+const REMEMBERED_ADMIN_KEY="zhuyin-admin-user";
 
-type Props={loggedIn:boolean;onAdminLogin:()=>void;onCancel:()=>void;canUseLegacy:boolean;onWechatIncoming?:()=>void;onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean};
-type AdminTab="watch"|"users"|"candidates"|"ops"|"recycle";
+type Props={loggedIn:boolean;onAdminLogin:()=>void;onCancel:()=>void;onExitAdmin?:()=>void;canUseLegacy:boolean;onWechatIncoming?:()=>void;onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean};
+type AdminTab="watch"|"users"|"candidates"|"liturgy"|"ops"|"recycle";
 type AdminDetail="pair2004"|"lin"|"reswap"|"third"|"sync"|"guestA"|"guestB"|"guestG"|"batch"|"location"|null;
 type ResultKind="shen"|"liang"|"lin"|"third"|"zheliu"|null;
 
 const normalize=(v:string)=>v.replace(/[，。、“”‘’\s]/g,"");
 
-export default function AdminPortalOccult({loggedIn,onAdminLogin,onCancel,canUseLegacy,onWechatIncoming,onCopyMaterial,hasMaterial}:Props){
+export default function AdminPortalOccult({loggedIn,onAdminLogin,onCancel,onExitAdmin,canUseLegacy,onWechatIncoming,onCopyMaterial,hasMaterial}:Props){
  const [mode,setMode]=useState<"login"|"verify">("login");
  const [user,setUser]=useState("");
  const [pwd,setPwd]=useState("");
  const [error,setError]=useState("");
  const [attemptedAdmin,setAttemptedAdmin]=useState(false);
  const [filled,setFilled]=useState(false);
+ useEffect(()=>{if(loggedIn)return;try{if(window.sessionStorage.getItem(REMEMBERED_ADMIN_KEY)===ADMIN_USER)setUser(ADMIN_USER)}catch{}},[loggedIn]);
 
- if(loggedIn)return <AdminDesk onWechatIncoming={onWechatIncoming} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>;
+ if(loggedIn)return <AdminDesk onExitAdmin={onExitAdmin} onWechatIncoming={onWechatIncoming} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>;
 
  const submit=(e:FormEvent)=>{
   e.preventDefault();
-  if(user.trim()===ADMIN_USER&&pwd===ADMIN_TEMP_CODE){onAdminLogin();setError("");return;}
+  if(user.trim()===ADMIN_USER&&pwd===ADMIN_TEMP_CODE){try{window.sessionStorage.setItem(REMEMBERED_ADMIN_KEY,ADMIN_USER)}catch{};onAdminLogin();setError("");return;}
   if(user.trim()===ADMIN_USER){
    setAttemptedAdmin(true);
    if(canUseLegacy){setMode("verify");setError("");return;}
@@ -50,7 +52,7 @@ export default function AdminPortalOccult({loggedIn,onAdminLogin,onCancel,canUse
    <button onClick={onCancel} style={s.back}><ArrowLeft size={15}/>返回</button>
    <div style={s.logo}>烛</div>
    <h2 style={s.loginTitle}>登录烛阴旧闻</h2>
-   <p style={s.muted}>当前浏览器保存了一个已登录会话。也可以使用其他账号登录。</p>
+   <p style={s.muted}>{user===ADMIN_USER?"已记住旧档账号。再次进入时只需要输入口令；忘记口令可以重新进行旧档验证。":"当前浏览器保存了一个已登录会话。也可以使用其他账号登录。"}</p>
    <form onSubmit={submit} style={s.form}>
     <label style={s.field}><span>账号</span><input value={user} onChange={e=>{setUser(e.target.value);setError("");setAttemptedAdmin(false)}} autoComplete="off" placeholder="用户名"/></label>
     <label style={s.field}><span>密码</span><input type="password" value={pwd} onChange={e=>{setPwd(e.target.value);setError("")}} autoComplete="off" placeholder="密码"/></label>
@@ -58,7 +60,7 @@ export default function AdminPortalOccult({loggedIn,onAdminLogin,onCancel,canUse
     {filled&&<small style={s.codeFilled}>旧档验证生成的临时口令已填入。</small>}
     <button style={s.primary}>登录</button>
    </form>
-   {attemptedAdmin&&user.trim()===ADMIN_USER&&canUseLegacy&&<button onClick={()=>setMode("verify")} style={s.legacy}>
+   {(attemptedAdmin||user.trim()===ADMIN_USER)&&canUseLegacy&&<button onClick={()=>setMode("verify")} style={s.legacy}>
     <LockKeyhole size={15}/><span><b>旧档账号验证</b><small>检测到迁移账号 · 使用兼容认证</small></span><ChevronRight size={15}/>
    </button>}
   </section>
@@ -122,7 +124,7 @@ function LegacyVerify({onBack,onVerified}:{onBack:()=>void;onVerified:()=>void})
   {stage===0&&<div style={s.oathPage}><div style={s.oathSigil}><span>門</span></div><small style={s.redSmall}>迁移账号 · 旧誓核验</small><h2 style={s.oathTitle}>请录入旧誓</h2><form onSubmit={e=>{e.preventDefault();if(normalize(oath)===OLD_OATH){setStage(1);setError("")}else setError(oath.trim()?"旧誓不合。":"请录入旧誓。")}} style={s.oathForm}><input autoFocus value={oath} onChange={e=>{setOath(e.target.value);setError("")}} placeholder="旧誓" autoComplete="off"/><button>确认</button></form>{error&&<p style={s.ritualError}>{error}</p>}</div>}
   {stage===1&&<div style={v.puzzle}><div style={v.dollShelf}>{(["lin","shen"] as Child[]).filter(id=>!Object.values(homes).includes(id)).map(id=><PaperPerson key={id} stamp={childInfo[id].stamp} mood="smile" draggable onDragStart={()=>setDragChild(id)}/>)}</div><div style={v.homeGrid}><HomeRoom kind="factory" wrong={wrongHome==="factory"} onDrop={()=>placeChild("factory")}>{homes.factory&&<PaperPerson stamp={childInfo[homes.factory].stamp} mood="neutral"/>}</HomeRoom><HomeRoom kind="qingwu" wrong={wrongHome==="qingwu"} onDrop={()=>placeChild("qingwu")}>{homes.qingwu&&<PaperPerson stamp={childInfo[homes.qingwu].stamp} mood="neutral"/>}</HomeRoom></div></div>}
   {stage===2&&<div style={v.tableScene}><div style={v.tableSeats}><TableSeat place="4栋东侧" mood={moods.lin} side="left" onDrop={()=>giveItem("lin")} items={ordinaryItems.filter(id=>items[id]==="lin")}/><div style={v.centerTable}><div style={v.tableTop}>{ordinaryItems.filter(id=>!items[id]).map(id=><ObjectToken key={id} id={id} draggable onDragStart={()=>setDragItem(id)}/>)}<div style={v.shakeBoxWrap}><div onPointerDown={beginBoxShake} onPointerMove={moveBoxShake} onPointerUp={endBoxShake} onPointerCancel={endBoxShake} style={{...v.object,...v.shakeObject,cursor:boxOpened?"default":"grab",touchAction:"none"}}><i style={{...v.objectIcon,position:"relative",...v.box}}>{boxOpened&&<span style={{position:"absolute",left:1,right:1,top:-7,height:7,border:"1px solid #704236",borderBottom:0,background:"#7d2b23",transform:"rotate(-8deg)",transformOrigin:"left bottom",boxShadow:"0 -2px 8px #0008"}}/>}</i><small>红铁皮盒</small></div><em style={v.boxNote}>{boxNote}</em></div></div></div><TableSeat place="青梧旧楼" mood={moods.shen} side="right" onDrop={()=>giveItem("shen")} items={ordinaryItems.filter(id=>items[id]==="shen")}/></div></div>}
-  {stage===3&&<div style={s.success}><ShieldCheck size={34}/><small>验证完成</small><h2>旧档账号临时口令</h2><code>{ADMIN_TEMP_CODE}</code><p>临时口令仅用于本次旧档认证。</p><button onClick={onVerified} style={s.verifyButton}>返回登录并填入口令</button></div>}
+  {stage===3&&<div style={s.success}><ShieldCheck size={34}/><small>验证完成</small><h2>旧档账号临时口令</h2><code>{ADMIN_TEMP_CODE}</code><p>记住这个口令。账号会保留；以后只需输入口令。忘了就再做一次旧档验证。</p><button onClick={onVerified} style={s.verifyButton}>返回登录并填入口令</button></div>}
  </section></main>;
 }
 
@@ -160,7 +162,7 @@ function CaseTrail({level,openShen,openDetail}:{level:number;openShen:()=>void;o
  return <section style={s.caseTrail}><b style={s.caseTitle}>已查到的关联记录</b><div style={s.caseGrid}>{items.filter((_,i)=>i<=level).map(x=><button key={x.label} onClick={x.go} style={s.caseButton}><strong>{x.label}</strong><small>{x.sub}</small></button>)}</div></section>
 }
 
-function AdminDesk({onWechatIncoming,onCopyMaterial,hasMaterial}:{onWechatIncoming?:()=>void;onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean}){
+function AdminDesk({onExitAdmin,onWechatIncoming,onCopyMaterial,hasMaterial}:{onExitAdmin?:()=>void;onWechatIncoming?:()=>void;onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean}){
  const [tab,setTab]=useState<AdminTab>(()=>adminDeskSession.tab);
  const [q,setQ]=useState(()=>adminDeskSession.q);
  const [searched,setSearched]=useState(()=>adminDeskSession.searched);
@@ -177,19 +179,22 @@ function AdminDesk({onWechatIncoming,onCopyMaterial,hasMaterial}:{onWechatIncomi
  const openDetail=(next:Exclude<AdminDetail,null>)=>{setDetail(next);setTab("users");raise(next==="pair2004"?2:next==="lin"?3:5)};
  const showCase=caseLevel>0&&(!!detail||result==="shen"||result==="lin"||result==="third");
  return <main className="admin-clean" style={s.adminPage}><style>{`.admin-clean h2,.admin-clean h3,.admin-clean h4{margin:0;font:700 16px/1.35 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#252925}.admin-clean small{font-size:11px}.admin-clean b,.admin-clean strong{font-family:inherit}.admin-clean p{font-size:12px;line-height:1.6}`}</style>
-  <header style={s.adminHead}><strong style={{fontSize:14,fontWeight:700}}>旧档管理</strong><span style={s.adminAccount}>旧档员-03</span></header>
+  <header style={s.adminHead}><strong style={{fontSize:14,fontWeight:700}}>旧档管理</strong><span style={{display:"flex",alignItems:"center",gap:8}}><span style={s.adminAccount}>旧档员-03</span>{onExitAdmin&&<button onClick={onExitAdmin} style={{height:32,padding:"0 11px",border:"1px solid #758981",borderRadius:6,background:"#f5f8f6",color:"#2d493e",fontSize:11,fontWeight:700,cursor:"pointer"}}>返回论坛</button>}</span></header>
   <div style={s.adminLayout}>
-   <aside style={s.adminSide}><button className={tab==="watch"?"active":""} onClick={()=>{setTab("watch");setDetail(null)}}>观察名单</button><button className={tab==="users"?"active":""} onClick={()=>setTab("users")}>用户查询</button><button className={tab==="candidates"?"active":""} onClick={()=>{setTab("candidates");setDetail(null)}}>候舍库</button><button className={tab==="ops"?"active":""} onClick={()=>{setTab("ops");setDetail(null)}}>操作记录</button><button className={tab==="recycle"?"active":""} onClick={()=>{setTab("recycle");setDetail(null)}}>删除记录</button></aside>
+   <aside style={s.adminSide}><button className={tab==="watch"?"active":""} onClick={()=>{setTab("watch");setDetail(null)}}>观察名单</button><button className={tab==="users"?"active":""} onClick={()=>setTab("users")}>用户查询</button><button className={tab==="candidates"?"active":""} onClick={()=>{setTab("candidates");setDetail(null)}}>候舍库</button><button className={tab==="liturgy"?"active":""} onClick={()=>{setTab("liturgy");setDetail(null)}}>诵录</button><button className={tab==="ops"?"active":""} onClick={()=>{setTab("ops");setDetail(null)}}>操作记录</button><button className={tab==="recycle"?"active":""} onClick={()=>{setTab("recycle");setDetail(null)}}>删除记录</button></aside>
    <section style={s.adminBody}>
     {tab==="watch"&&<WatchList openKnown={openKnown} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>}
     {tab==="users"&&<><div style={s.sectionTitle}>用户查询</div><form onSubmit={doSearch} style={s.adminSearch}><Search size={16}/><input value={q} onChange={e=>{setQ(e.target.value);setSearched(false)}} placeholder="姓名 / 论坛账号 / UID / 记录编号 / 客编号"/><button>查询</button></form>{showCase&&<CaseTrail level={caseLevel} openShen={openShen} openDetail={openDetail}/>} {detail?<AdminDetailPage detail={detail} openDetail={openDetail} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>:<>{searched&&!result&&<p style={s.adminEmpty}>没有匹配记录。</p>}{result==="shen"&&<ShenRecord openDetail={openDetail} onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} {result==="liang"&&<LiangRecord onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} {result==="lin"&&<LinRecord openDetail={openDetail}/>} {result==="third"&&<ThirdRecord onCopyMaterial={onCopyMaterial} hasMaterial={hasMaterial}/>} {result==="zheliu"&&<ZheliuAdminRecord/>}</>}</>}
     {tab==="candidates"&&<CandidateLibrary/>}
+    {tab==="liturgy"&&<Liturgy/>}
     {tab==="ops"&&<Operations/>}
     {tab==="recycle"&&<Recycle/>}
    </section>
   </div>
  </main>;
 }
+
+function Liturgy(){return <><div style={s.sectionTitle}>诵录</div><p style={{margin:"0 0 14px",color:"#707872",fontSize:12}}>内部日课 · 归真序列阶段 II</p><section style={{maxWidth:760,padding:"28px 30px",border:"1px solid #3b2926",borderRadius:8,background:"radial-gradient(circle at 50% 10%,#2b1513,#110d0c 62%,#090807)",boxShadow:"0 18px 44px #0002",color:"#d7c6b5",fontFamily:"serif",lineHeight:2,textAlign:"center"}}><small style={{color:"#8f5f57",letterSpacing:".18em"}}>晚课 · 第七录</small><h2 style={{margin:"10px 0 18px",color:"#a93d35",font:"700 27px serif",letterSpacing:".18em"}}>无相还真</h2><p style={{fontSize:18}}>无相还真，舍身无量。</p><p>真君无相，不应有定身。</p><p>身为舍，魂为客。</p><div style={{width:70,height:1,margin:"20px auto",background:"#60312c"}}/><p style={{margin:0,color:"#b8a393"}}>今日所验，不在一舍之成；<br/>所验者，是客历舍而其续不绝。</p><p style={{margin:"18px 0 0",color:"#8f7468",fontSize:12}}>长客再舍未稳，归真序列不得启。</p></section><section style={s.adminPanel}><h4>诵录旁注</h4><Record date="归真目标" title="建立可重复的连续换舍路径" meta="内部目的" text="验证同一客能在多具舍之间连续迁移，并尽可能保持记忆与主体连续。"/><Record date="当前前置" title="长期客二次再舍稳定" meta="RS-2026-1012" text="客α的第二次再舍是现阶段关键验证；旧对契异常尚未关闭。"/><Record date="真君序列" title="待前置验证通过" meta="阶段 II" text="若连续再舍稳定性达到条件，流程将进入无相真君序列。真君原始身份不在本页登记。"/></section></>}
 
 function CandidateLibrary(){
  const rows=[

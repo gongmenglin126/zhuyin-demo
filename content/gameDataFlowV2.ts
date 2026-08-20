@@ -129,6 +129,13 @@ const adminAccountPost:Post={
  archive:"站务归档：2024-03-02；主题保留，停止回复。"
 };
 
+
+const thresholdNamePost:Post={
+ id:"34106",title:"搬家第一晚不能在门口喊全名？我外婆这个说法是哪儿的",author:"白粥配蛋",date:"2026-10-16 23:37",board:"闲聊灌水",views:286,excerpt:"整理老人旧笔记翻到一句很怪的搬家忌讳：过门以后先认屋，再认名。有人家里也这么说吗？",terms:["搬家","门槛","全名","过门","名字","旧俗"],highlights:[],
+ body:["整理外婆留下来的杂记，看到一条我小时候听过但早忘了的规矩：搬家第一晚，站在门里不要喊家里人的全名。","她解释得很怪，大意是‘门先认住进来的人，名字慢慢再认’，还写了一句：人换屋，名也跟着换地方。小时候我一直当她吓小孩。","搜了一圈没找到完全一样的说法。有人家里也讲过这种‘过门以后别急着叫名’的禁忌吗？"],
+ replies:[reply("旧纸鸢","23:51","像是搬家忌讳、叫魂和避名几种说法混在一起了。老人家口传几代，很容易串。"),reply("南门摆摊","00:06","我老家只讲进门别回头，没听过不能叫全名。"),reply("折柳","00:18","这种家里话很难追固定出处。记下来就行，别因为一句怪话硬往某个教门上套。"),reply("白粥配蛋","00:25","行，我主要是觉得那句‘先认屋再认名’太怪了，记着玩。","楼主")]
+};
+
 const ritualFragmentPost:Post={
  id:"23109",title:"老帖附件只恢复出黄纸和两个纸人，有人认得吗",author:"纸页边角",date:"2016-02-11 23:18",board:"旧闻考据",views:2419,hidden:true,
  excerpt:"旧图床缓存只剩一张模糊缩略图：黄纸、红烛、两个纸偶和一条残句。",
@@ -150,7 +157,7 @@ const toRank=(date:string)=>{
   return 0;
 };
 
-export const posts:Post[]=[...patched,posterMemory,linSnackPost,linMarblePost,shenCandyPost,ritualFragmentPost,adminAccountPost].sort((a,b)=>toRank(a.date)-toRank(b.date));
+export const posts:Post[]=[...patched,posterMemory,linSnackPost,linMarblePost,shenCandyPost,thresholdNamePost,ritualFragmentPost,adminAccountPost].sort((a,b)=>toRank(a.date)-toRank(b.date));
 
 const privateP1=flowPrivateEntries.find(entry=>entry.id==="p1")!;
 const privateP3=flowPrivateEntries.find(entry=>entry.id==="p3")!;
