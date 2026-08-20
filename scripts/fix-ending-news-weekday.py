@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# One-shot final polish: make each ending newspaper date use its real weekday.
 p=Path('app/GameEnding.tsx')
 s=p.read_text()
 s=s.replace('home:{date:"2026年10月18日",headline:', 'home:{date:"2026年10月18日",weekday:"星期日",headline:', 1)
