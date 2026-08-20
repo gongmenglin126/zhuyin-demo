@@ -1,4 +1,4 @@
-name: Apply Private Share UX
+name: Repair Private Share Source
 
 on:
   push:
@@ -10,38 +10,41 @@ permissions:
   contents: write
 
 jobs:
-  apply:
+  repair:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: agent/v8-forum-gameplay-rework
-      - name: Clarify private record to WeChat flow
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Repair duplicated private share edits
         run: |
           python - <<'PY'
           from pathlib import Path
-
           p=Path('app/PrivateArea.tsx')
           s=p.read_text()
-          s=s.replace(' const [zoom,setZoom]=useState<{src:string;caption:string}|null>(null);', ' const [zoom,setZoom]=useState<{src:string;caption:string}|null>(null);\n const [shared,setShared]=useState(false);')
-          s=s.replace('const share=()=>onCopyMaterial({', 'const share=()=>{onCopyMaterial({')
-          s=s.replace('  url:`local://private/${active.id}`,\n });', '  url:`local://private/${active.id}`,\n });setShared(true)};')
-          s=s.replace('onClick={()=>setId(null)} style={s.back}', 'onClick={()=>{setId(null);setShared(false)}} style={s.back}')
-          s=s.replace('onClick={()=>setId(entry.id)} style={s.row}', 'onClick={()=>{setId(entry.id);setShared(false)}} style={s.row}')
-          s=s.replace('<button onClick={share} style={s.share}><Link2 size={14}/>复制这份记录</button>', '<button onClick={share} style={s.share}><Link2 size={14}/>{shared?"已加入微信材料":"加入微信材料"}</button>')
-          s=s.replace('<article style={s.article}>', '{shared&&<p style={s.sharedHint}>已加入材料列表。打开微信后，在周川或梁茵聊天底部点“选择材料”即可发送。</p>}<article style={s.article}>')
-          s=s.replace(' share:{flex:"0 0 auto",display:"flex",alignItems:"center",gap:6,padding:"8px 11px",border:"1px solid #c5bbae",borderRadius:7,background:"#fff",color:"#485b55",fontSize:12},', ' share:{flex:"0 0 auto",display:"flex",alignItems:"center",gap:6,padding:"8px 11px",border:"1px solid #c5bbae",borderRadius:7,background:"#fff",color:"#485b55",fontSize:12},sharedHint:{margin:"0",padding:"10px 14px",border:"1px solid #c7d8cf",borderTop:0,background:"#edf5f0",color:"#456257",fontSize:12},')
-          p.write_text(s)
-
-          p=Path('app/InteractiveWechat.tsx')
-          s=p.read_text()
-          s=s.replace('<Link2 size={15}/>材料{sendable.length>1?` ${sendable.length}`:""}</button>', '<Link2 size={15}/>选择材料{sendable.length?` ${sendable.length}`:""}</button>')
+          duplicate=' const [shared,setShared]=useState(false);\n const [shared,setShared]=useState(false);'
+          while duplicate in s:
+              s=s.replace(duplicate,' const [shared,setShared]=useState(false);')
+          import re
+          s=re.sub(r' \}\);setShared\(true\)\};(?:setShared\(true\)\};)*\};', ' });setShared(true)};', s)
+          hint='{shared&&<p style={s.sharedHint}>已加入材料列表。打开微信后，在周川或梁茵聊天底部点“选择材料”即可发送。</p>}'
+          while hint+hint in s:
+              s=s.replace(hint+hint,hint)
           p.write_text(s)
           PY
-      - name: Commit
+      - name: Install dependencies
+        run: npm ci
+      - name: Build repaired source
+        run: npm run build:single
+      - name: Commit repaired source
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app/PrivateArea.tsx app/InteractiveWechat.tsx
-          git diff --cached --quiet || git commit -m "Make private record sharing discoverable"
+          git add app/PrivateArea.tsx
+          git diff --cached --quiet || git commit -m "Repair private material sharing state"
           git push
