@@ -20,7 +20,6 @@ export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial,ha
  const [id,setId]=useState<string|null>(null);
  const [zoom,setZoom]=useState<{src:string;caption:string}|null>(null);
  const [shared,setShared]=useState(false);
- const [shared,setShared]=useState(false);
  const active=id?entries.find(entry=>entry.id===id):null;
 
  const submit=(e:FormEvent)=>{
@@ -84,7 +83,7 @@ export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial,ha
   title:active.id==="p2"?"《三门疏》残页":active.title,
   kind:"沈妍私密记录",
   url:`local://private/${active.id}`,
- });setShared(true)};setShared(true)};};
+ });setShared(true)};
 
  return <main style={s.page}>
   <div style={s.crumb}>个人主页　/　私密主题　/　{active.title}</div>
@@ -94,7 +93,7 @@ export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial,ha
     <span><small style={s.eyebrow}>私密记录 · {active.date}</small><h2 style={s.threadTitle}>{active.title}</h2></span>
     <button disabled={hasMaterial(materialId)} onClick={share} style={{...s.share,opacity:hasMaterial(materialId)?.55:1,cursor:hasMaterial(materialId)?"default":"pointer"}}><Link2 size={14}/>{hasMaterial(materialId)?"已添加":"添加到材料"}</button>
    </header>
-   {shared&&<p style={s.sharedHint}>已加入材料列表。打开微信后，在周川或梁茵聊天底部点“选择材料”即可发送。</p>}{shared&&<p style={s.sharedHint}>已加入材料列表。打开微信后，在周川或梁茵聊天底部点“选择材料”即可发送。</p>}<article style={s.article}>
+   {shared&&<p style={s.sharedHint}>已加入材料列表。打开微信后，在周川或梁茵聊天底部点“选择材料”即可发送。</p>}<article style={s.article}>
     <header style={s.authorLine}><i style={s.smallAvatar}>候</i><span><b>候鸟第七年</b><small>仅自己可见</small></span></header>
     <div style={s.body}>
      {active.body.map((text,index)=><p key={index}>{mark(text,active.highlights)}</p>)}
