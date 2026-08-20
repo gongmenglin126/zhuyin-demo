@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# trigger
 p=Path("app/InteractiveWechat.tsx")
 s=p.read_text()
 old=' const previewFor=(c:Contact)=>{const added=extra[c.id]||[];return editWechatLive(added.length?added[added.length-1].text:c.preview)};'
