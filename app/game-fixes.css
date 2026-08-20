@@ -177,3 +177,50 @@ button:has(> svg.lucide-file-plus-2):disabled::after {
   color: #fff !important;
   box-shadow: 0 4px 12px rgba(36,54,47,.15);
 }
+
+/* Admin person records: one clear title hierarchy. Hide the redundant
+   single-character pseudo-avatar and normalize status/meta typography. */
+.admin-clean article > header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 54px;
+}
+
+.admin-clean article > header > i {
+  display: none !important;
+}
+
+.admin-clean article > header > span {
+  display: block !important;
+  min-width: 0;
+}
+
+.admin-clean article > header > span > h3 {
+  margin: 0 !important;
+  font-size: 17px !important;
+  line-height: 1.35 !important;
+  font-weight: 750 !important;
+}
+
+.admin-clean article > header > span > small {
+  display: block !important;
+  margin-top: 4px !important;
+  color: #6e7872 !important;
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+  font-weight: 500 !important;
+}
+
+.admin-clean article > header > em {
+  margin-left: auto !important;
+  padding: 5px 9px !important;
+  border-radius: 999px !important;
+  background: #e1e8e4 !important;
+  color: #496057 !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  font-style: normal !important;
+  white-space: nowrap;
+}
