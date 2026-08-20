@@ -7,3 +7,5 @@ new='  "能描述不属于登记身份的旧屋细节；听到‘徐宁’时持
 if old not in s:
     raise SystemExit('target line not found')
 p.write_text(s.replace(old,new,1))
+
+# trigger workflow
