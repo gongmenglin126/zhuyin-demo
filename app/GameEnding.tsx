@@ -1,6 +1,7 @@
 "use client";
 
 import {CSSProperties,ReactNode,useEffect,useState} from "react";
+import {editEndingText} from "../content/endingDialogues";
 import type {EndingKind} from "./endingState";
 
 const delaySteps=(setStep:(n:number)=>void,max:number,base=1500)=>{
@@ -19,9 +20,9 @@ function DesktopShell({children,date="10月20日 周二 22:41"}:{children:ReactN
  return <div style={s.desktop}><div style={s.sys}><span><b>●</b> 微信</span><span>Wi‑Fi　80%　{date}</span></div>{children}</div>;
 }
 function WechatFrame({title="徐宁",children,draft,notice,friendRequest}:{title?:string;children:ReactNode;draft?:string;notice?:{name:string;text:string};friendRequest?:{account:string;text:string}}){
- return <><div style={s.window}><div style={s.winHead}><span>● ● ●</span><b>微信</b><span/></div><div style={s.wx}><aside style={s.side}><div style={s.me}>妍　沈妍</div><div style={s.contactActive}>{title}</div><div style={s.contact}>梁茵</div><div style={s.contact}>周川</div></aside><main style={s.chat}><header style={s.chatHead}>{title}</header><section style={s.messages}>{children}</section><footer style={s.footer}><div style={s.input}>{draft||""}{draft!==undefined&&<i style={s.cursor}/>}</div></footer></main></div></div>{notice&&<div style={s.notice}><b>微信新消息 · {notice.name}</b><span>{notice.text}</span></div>}{friendRequest&&<div style={s.friendRequest}><div style={s.friendAvatar}>?</div><span><small>新的朋友</small><b>{friendRequest.account}</b><em>验证消息：{friendRequest.text}</em></span></div>}</>;
+ return <><div style={s.window}><div style={s.winHead}><span>● ● ●</span><b>微信</b><span/></div><div style={s.wx}><aside style={s.side}><div style={s.me}>妍　沈妍</div><div style={s.contactActive}>{title}</div><div style={s.contact}>梁茵</div><div style={s.contact}>周川</div></aside><main style={s.chat}><header style={s.chatHead}>{title}</header><section style={s.messages}>{children}</section><footer style={s.footer}><div style={s.input}>{draft?editEndingText(draft):""}{draft!==undefined&&<i style={s.cursor}/>}</div></footer></main></div></div>{notice&&<div style={s.notice}><b>微信新消息 · {notice.name}</b><span>{editEndingText(notice.text)}</span></div>}{friendRequest&&<div style={s.friendRequest}><div style={s.friendAvatar}>?</div><span><small>新的朋友</small><b>{friendRequest.account}</b><em>验证消息：{editEndingText(friendRequest.text)}</em></span></div>}</>;
 }
-function Bubble({mine=false,children}:{mine?:boolean;children:ReactNode}){return <div style={{...s.bubble,...(mine?s.mine:{})}}>{children}</div>}
+function Bubble({mine=false,children}:{mine?:boolean;children:ReactNode}){return <div style={{...s.bubble,...(mine?s.mine:{})}}>{typeof children==="string"?editEndingText(children):children}</div>}
 
 function HomeEnding({step}:{step:number}){
  const draft=step<2?"":step===2?"我到底是谁":step===3?"我对徐宁到底是谁":step===4?"如果她知道了，她会怎么看我":step>=5?"徐宁，如果你知道小时候回来的人已经不是原来的沈妍了，你以后看到我的时候，会觉得我是谁":"";
@@ -33,14 +34,14 @@ function TrueEnding({step}:{step:number}){
  const lines=["沈妍……","不是。","林楠。","我是不是林楠……","为什么我知道徐宁这个名字……","我到底是谁啊……","为什么要这样对我……","我以前长什么样？"];
  const shown=Math.max(0,Math.min(lines.length,step-1));
  const draft=step<9?undefined:step===9?"她是不是我":step===10?"我是不是她":"我们到底谁是谁";
- return <DesktopShell date="10月21日 周三 00:18">{step===0?<div style={s.blackDate}>2026年10月21日　00:18</div>:step<9?<div style={s.recording}><div style={s.file}>OBS_19-07_1013_0317.wav</div><div style={s.wave}>▂▃▂▅▇▅▂▁▃▆▇▃▂▁▅▃▂▆▇▂▁</div><div style={s.transcript}>{lines.slice(0,shown).map((x,i)=><p key={i}>{x}</p>)}</div><small>内部问询录音 · 自动转写</small></div>:<WechatFrame draft={draft}><Bubble>你睡了吗？</Bubble><Bubble mine>没有。</Bubble>{step>=11&&<div style={s.unsent}>消息没有发送。</div>}</WechatFrame>}{step>=11&&<EndingTitle title="谁是我" sub="两个名字都还在，答案没有。"/>}</DesktopShell>;
+ return <DesktopShell date="10月21日 周三 00:18">{step===0?<div style={s.blackDate}>2026年10月21日　00:18</div>:step<9?<div style={s.recording}><div style={s.file}>OBS_19-07_1013_0317.wav</div><div style={s.wave}>▂▃▂▅▇▅▂▁▃▆▇▃▂▁▅▃▂▆▇▂▁</div><div style={s.transcript}>{lines.slice(0,shown).map((x,i)=><p key={i}>{editEndingText(x)}</p>)}</div><small>内部问询录音 · 自动转写</small></div>:<WechatFrame draft={draft}><Bubble>你睡了吗？</Bubble><Bubble mine>没有。</Bubble>{step>=11&&<div style={s.unsent}>消息没有发送。</div>}</WechatFrame>}{step>=11&&<EndingTitle title="谁是我" sub="两个名字都还在，答案没有。"/>}</DesktopShell>;
 }
 
 function DoubleEnding({step}:{step:number}){
  return <DesktopShell date="10月20日 周二 23:06">{step===0?<div style={s.blackDate}>三天后　23:06</div>:<WechatFrame title="梁茵" notice={step>=6?{name:"徐宁",text:"到了。"}:undefined}><Bubble>沈妍？？？</Bubble><Bubble>你终于回来了？</Bubble><Bubble>徐宁呢？她这几天也联系不上。</Bubble>{step>=3&&<Bubble mine>我没事。</Bubble>}{step>=4&&<Bubble mine>她也没事。</Bubble>}{step>=5&&<Bubble>你说话怎么怪怪的。</Bubble>}{step>=7&&<Bubble mine>你以前不是一直想知道，小时候回来以后为什么会觉得家里不对吗。</Bubble>}{step>=8&&<Bubble mine>周末来吧。有人会告诉你。</Bubble>}{step>=9&&<Bubble mine>无相还真，舍身无量。</Bubble>}</WechatFrame>}{step>=10&&<EndingTitle title="双归" sub="两个人都回来了。"/>}</DesktopShell>;
 }
 
-function EndingTitle({title,sub}:{title:string;sub:string}){return <div style={s.ending}><small>{sub}</small><h1>《{title}》</h1></div>}
+function EndingTitle({title,sub}:{title:string;sub:string}){return <div style={s.ending}><small>{editEndingText(sub)}</small><h1>《{editEndingText(title)}》</h1></div>}
 
 const s:Record<string,CSSProperties>={
  cover:{position:"fixed",inset:0,zIndex:10000,background:"#050505",color:"#eee",userSelect:"none"},

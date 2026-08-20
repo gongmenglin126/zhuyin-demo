@@ -4,6 +4,7 @@
 import {ReactNode,useEffect,useMemo,useState} from "react";
 import {ArrowLeft,ChevronRight,Clock3,Globe2,History as HistoryIcon,Home,LockKeyhole,Maximize2,MessageCircle,Minimize2,NotebookPen,RefreshCw,Search,Wifi,X} from "lucide-react";
 import {history,Post,posts,privateEntries,profile} from "../content/gameDataFlowV2";
+import {applyForumPost,applyPrivateEntry} from "../content/forumDialogues";
 import LocalVault from "./LocalVault";
 import InteractiveWechat,{SharedMaterial,WechatNotice,discoverZhouIdentity,focusWechatContact,subscribeWechatNotices} from "./InteractiveWechat";
 import PrivateArea from "./PrivateArea";
@@ -16,8 +17,8 @@ type App="browser"|"wechat"|"notes"|"verse";
 type Route={kind:"home"}|{kind:"post",id:string}|{kind:"profile"}|{kind:"user",name:string}|{kind:"private"}|{kind:"history"}|{kind:"search",q:string}|{kind:"account"};
 
 const contextPosts:Post[]=[];
-const investigationPosts=posts;
-const investigationPrivateEntries=privateEntries;
+const investigationPosts=posts.map(applyForumPost);
+const investigationPrivateEntries=privateEntries.map(applyPrivateEntry);
 const SHAREABLE_POST_IDS=new Set(["33897","09114","09831","10731","14692","17428","11208","23109","27614"]);
 const HOME_POST_IDS=["34106","34091","34086","34080","34064","34055","34049","20847","34043","33992","33981"];
 let persistedForumIdentity:"shenyan"|"admin"="shenyan";
