@@ -21,3 +21,5 @@ for old,new in replacements.items():
         raise SystemExit('missing target: '+old[:60])
     s=s.replace(old,new,1)
 p.write_text(s)
+
+# trigger workflow
