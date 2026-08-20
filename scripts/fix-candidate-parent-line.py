@@ -6,3 +6,4 @@ new='父亲母亲，我中选了。这是喜事。'
 if old not in s:
     raise SystemExit('target line not found')
 p.write_text(s.replace(old,new,1))
+# trigger
