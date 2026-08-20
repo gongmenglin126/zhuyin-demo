@@ -6,6 +6,7 @@ on:
       - agent/v8-forum-gameplay-rework
     paths:
       - scripts/apply-editable-copy-extraction.py
+      - scripts/editable-copy-trigger.txt
 
 permissions:
   contents: write
