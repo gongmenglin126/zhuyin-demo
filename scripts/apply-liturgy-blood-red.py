@@ -45,3 +45,5 @@ function Liturgy(){
 '''
 
 path.write_text(text[:start] + new_block + text[end:])
+
+# trigger one-time workflow
