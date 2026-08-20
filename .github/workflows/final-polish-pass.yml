@@ -6,6 +6,7 @@ on:
       - agent/v8-forum-gameplay-rework
     paths:
       - scripts/final-polish-pass.py
+      - .github/workflows/final-polish-pass.yml
 
 permissions:
   contents: write
