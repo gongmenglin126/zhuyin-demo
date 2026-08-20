@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -15,15 +15,132 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+          fetch-depth: 0
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+      - name: Apply full-flow playtest fixes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def repl(path, old, new, label):
+              p=Path(path)
+              s=p.read_text()
+              if new in s:
+                  return
+              if old not in s:
+                  raise SystemExit(f'{label}: neither old nor new text found in {path}')
+              p.write_text(s.replace(old,new,1))
+
+          repl('app/page.tsx',
+'''style={{marginTop:8,border:"1px solid #b8afa5",background:"#fff",borderRadius:5,padding:"6px 10px",fontSize:12,cursor:hasMaterial(post.id)?"default":"pointer",opacity:hasMaterial(post.id)?.55:1}}>{hasMaterial(post.id)?"已添加":"添加到材料"}</button>''',
+'''style={{minWidth:188,height:44,marginTop:12,border:hasMaterial(post.id)?"1px solid #b8afa5":"2px solid #4b7765",background:hasMaterial(post.id)?"#f0eee9":"#fff",color:hasMaterial(post.id)?"#777":"#315f4d",borderRadius:8,padding:"0 15px",fontSize:13,fontWeight:800,cursor:hasMaterial(post.id)?"default":"pointer",opacity:hasMaterial(post.id)?.7:1,boxShadow:hasMaterial(post.id)?"none":"0 5px 14px #315f4d1c"}}>{hasMaterial(post.id)?"✓ 已加入调查材料":"＋ 加入调查材料"}</button>''',
+'forum material button')
+          repl('app/page.tsx',
+'''style={{marginTop:8,border:"1px solid #69342f",background:"#201311",color:"#d6c0ae",borderRadius:4,padding:"8px 11px",fontSize:12,cursor:added?"default":"pointer",opacity:added?.55:1}}>{added?"已添加":"添加到材料"}</button>''',
+'''style={{minWidth:188,height:44,marginTop:12,border:added?"1px solid #593a35":"2px solid #9d4b43",background:added?"#1a1412":"#251411",color:added?"#907d73":"#ead4c1",borderRadius:7,padding:"0 15px",fontSize:13,fontWeight:800,cursor:added?"default":"pointer",opacity:added?.7:1,boxShadow:added?"none":"0 5px 18px #0006"}}>{added?"✓ 已加入调查材料":"＋ 加入调查材料"}</button>''',
+'scripture material button')
+
+          repl('app/PrivateArea.tsx',
+'''<button disabled={hasMaterial(materialId)} onClick={share} style={{...s.share,opacity:hasMaterial(materialId)?.55:1,cursor:hasMaterial(materialId)?"default":"pointer"}}><Link2 size={14}/>{hasMaterial(materialId)?"已添加":"添加到材料"}</button>''',
+'''<button disabled={hasMaterial(materialId)} onClick={share} style={{...s.share,opacity:hasMaterial(materialId)?.7:1,cursor:hasMaterial(materialId)?"default":"pointer"}}><Link2 size={19}/>{hasMaterial(materialId)?"已加入调查材料":"加入调查材料"}</button>''',
+'private share button')
+          repl('app/PrivateArea.tsx',
+'''share:{flex:"0 0 auto",display:"flex",alignItems:"center",gap:6,padding:"8px 11px",border:"1px solid #c5bbae",borderRadius:7,background:"#fff",color:"#485b55",fontSize:12},''',
+'''share:{flex:"0 0 auto",minWidth:176,height:46,display:"flex",alignItems:"center",justifyContent:"center",gap:9,padding:"0 15px",border:"2px solid #58776b",borderRadius:8,background:"#fff",color:"#355e50",fontSize:13,fontWeight:800,boxShadow:"0 5px 14px #355e5017"},''',
+'private share style')
+
+          repl('app/InteractiveWechat.tsx',
+'''<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 6px 8px"}}><b style={{fontSize:13}}>发送文件</b>''',
+'''<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 6px 8px"}}><b style={{fontSize:13}}>选择调查材料</b>''',
+'wechat picker heading')
+          repl('app/InteractiveWechat.tsx',
+'''<form onSubmit={sendText} style={{display:"grid",gridTemplateColumns:"1fr 64px 48px",gap:8,alignItems:"center"}}>''',
+'''<form onSubmit={sendText} style={{display:"grid",gridTemplateColumns:"1fr 96px 52px",gap:8,alignItems:"center"}}>''',
+'wechat composer columns')
+          repl('app/InteractiveWechat.tsx',
+'''style={{position:"relative",height:48,width:64,border:canPickMaterial?"2px solid #4a8a64":"1px solid #d0d0d0",borderRadius:7,background:"#fff",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:1,color:canPickMaterial?"#2d7550":"#777",opacity:canPickMaterial?1:.35,fontWeight:800}}><Plus size={21}/><span style={{fontSize:10,lineHeight:1}}>资料</span>''',
+'''style={{position:"relative",height:48,width:96,border:canPickMaterial?"2px solid #4a8a64":"1px solid #d0d0d0",borderRadius:8,background:"#fff",display:"flex",alignItems:"center",justifyContent:"center",gap:6,color:canPickMaterial?"#2d7550":"#777",opacity:canPickMaterial?1:.35,fontWeight:800}}><Plus size={22}/><span style={{fontSize:11,lineHeight:1}}>选择材料</span>''',
+'wechat material chooser button')
+
+          repl('app/InteractiveWechat.tsx',
+'''  if(received("ly","admin-location-hln04"))base.next=[{id:"ly-report-both",text:"地址也有了。把19-07一起报给警方。",emphasis:true,ending:"report",reply:[{text:"对。两个人都报。别自己过去。"}]}];''',
+'''  if(received("ly","admin-location-hln04"))base.next=[{id:"ly-hold-both",text:"地址也有了。把19-07这份也一起留好。",emphasis:true,reply:[{text:"对。两个人的记录都别漏。"},{text:"真要报警就一起交。你先别自己过去。"}]}];''',
+'liang third ending bypass')
+          repl('app/InteractiveWechat.tsx',
+'''  if(received("ly","admin-third-1907"))return [{id:"ly-report-both-now",text:"报警，把沈妍和19-07的记录一起交出去。",emphasis:true,ending:"report",reply:[{text:"对。两个人都报。你别自己去。"}]}];
+  return [{id:"ly-report-shen",text:"报警，先把沈妍的位置交出去。",emphasis:true,ending:"report",reply:[{text:"好。截图别漏，地址和批次都给他们。"}]},{id:"ly-check-third",text:"我再确认一下19-07。",reply:[{text:"行，但快点。地址已经有了。"}]}];''',
+'''  if(received("ly","admin-third-1907"))return [{id:"ly-hold-location-both",text:"地址和19-07都齐了。先把两份证据留好。",emphasis:true,reply:[{text:"对。截图、批次、地址、19-07都别漏。"},{text:"你先别自己去，也别按任何人给你的新指示走。"}]}];
+  return [{id:"ly-hold-location-shen",text:"先把沈妍的位置和批次截图留好。",emphasis:true,reply:[{text:"好。地址和批次都别漏。"},{text:"先别自己过去。"}]},{id:"ly-check-third",text:"我再确认一下19-07。",reply:[{text:"行，但快点。地址已经有了。"}]}];''',
+'liang location ending bypass')
+
+          repl('app/AdminPortalOccult.tsx',
+''' <section style={s.adminPanel}><h4>筛选规范沿革</h4><Record date="2004版" title="低龄强制样本优先" meta="适用：7—11岁" text="名称识别已形成；长期社会身份尚未固化；返家后的记忆、性格异常可归入失踪应激。"/><Record date="2012修订" title="停止低龄优先" meta="成年自愿候舍纳入正式序列" text="长期样本证明年龄不是必要条件。改以对契匹配、去名训练与成年自愿对象为主。"/><Record date="去名训练" title="仅保留候舍编号" meta="入库前连续30日" text="停止使用原名；不看旧照片；减少原家庭接触；问询时只对候舍编号作答。完成后原姓名字段从候舍库移除。"/><Record date="现行" title="候舍来源充足，无需强制补充" meta="旧契样本另行处置" text="常规候舍优先从奉舍申请中匹配。旧契样本不可替代；出现同步、返契异常时优先回收。"/></section>''',
+''' <section style={s.adminPanel}><h4>候舍制度沿革</h4><Record date="2004版" title="低龄强制样本优先" meta="适用：7—11岁" text="早期判断：身份与社会关系尚未完全固化的对象更容易适应易舍；返家后的记忆、性格异常也更容易被解释为失踪创伤。沈妍、林楠属于这一阶段。"/><Record date="长期复核" title="年龄不是长期稳定的必要条件" meta="2004—2011" text="持续观察显示，稳定性更接近对契匹配、生理适配、客本身稳定与易舍后的身份重建；低龄本身没有决定性优势。"/><Record date="2012修订" title="成年自愿候舍纳入正式序列" meta="停止低龄优先" text="教内将主动放弃当前身体解释为‘奉舍’。以对契筛选、成年自愿与去名训练替代低龄强制路线，候舍开始规模化。"/><Record date="去名训练" title="仅保留候舍编号" meta="入库前连续30日" text="停止使用原名；不看旧照片；减少原家庭接触；问询时只对候舍编号作答。目的不是姓名有魔法，而是削弱对原人生的依附。"/><Record date="现行" title="候舍来源充足，无需强制补充普通身体" meta="在库164 / 匹配可用37" text="常规易舍优先从奉舍申请中匹配。旧契对象本身不等于抓捕条件；只有出现同步、返契异常等试验事故时才进入强制控制。"/></section>
+ <section style={s.adminPanel}><h4>0712-4471 · 本次强制控制原因</h4><Record date="10-12 22:13" title="RS-2026-1012 完成" meta="B+α ↔ C+γ" text="林楠身体中的长期客α与候舍19-07进行第二次再舍。"/><Record date="10-12 23:04" title="AN-0712-1012" meta="旧对契另一端异常" text="再舍后51分钟，0712-4471同步值异常升高并出现旧屋、旧称呼与记忆回流。"/><Record date="10-16 19:49" title="执行回收" meta="HN-1016-02" text="因再舍引发的旧对契异常持续，0712-4471被转入控制。不是为了补充候舍。"/></section>''',
+'organization evolution panel')
+          repl('app/AdminPortalOccult.tsx',
+'''<Record date="HN-1016-02" title="对象类型：返契祭品" meta="执行批次" text="执行条件：待复核；当前场地字段未展开。"/>''',
+'''<Record date="HN-1016-02" title="对象类型：旧对契异常端" meta="执行批次" text="触发原因：RS-2026-1012 后出现持续同步异常；当前场地字段未展开。"/>''',
+'shen control reason')
+          repl('app/AdminPortalOccult.tsx',
+'''  {label:"19-07",sub:"候舍对象",go:()=>openDetail("third")},
+ ];''',
+'''  {label:"19-07",sub:"候舍对象",go:()=>openDetail("third")},
+  {label:"执行批次",sub:"HN-1016-02",go:()=>openDetail("batch")},
+  {label:"场地",sub:"HL-N-04",go:()=>openDetail("location")},
+ ];''',
+'admin case trail late links')
+          repl('app/AdminPortalOccult.tsx',
+''' const openDetail=(next:Exclude<AdminDetail,null>)=>{setDetail(next);setTab("users");raise(next==="pair2004"?2:next==="lin"?3:5)};''',
+''' const openDetail=(next:Exclude<AdminDetail,null>)=>{setDetail(next);setTab("users");raise(next==="pair2004"?2:next==="lin"?3:next==="batch"?6:next==="location"?7:5)};''',
+'admin trail level mapping')
+          repl('app/AdminPortalOccult.tsx',
+'''function Operations(){const zhouTime=getFirstContactTime("zc");return <><h2>操作记录</h2><div style={s.adminPanel}>{zhouTime&&<Record date={`2026-10-17 ${zhouTime}`} title="访问者身份补录：0712-4471" meta="来源：折柳" metaStrong text="访问者：徐宁。保留观察。"/>}<Record date="2026-10-17 18:42"''',
+'''function Operations(){const zhouTime=getFirstContactTime("zc");return <><h2>操作记录</h2><div style={s.adminPanel}>{zhouTime&&<Record date={`2026-10-17 ${zhouTime}`} title="访问者身份补录：0712-4471" meta="来源：折柳" metaStrong text="访问者：徐宁。保留观察。"/>}<Record date="2026-10-16 19:53" title="观察备注同步：0712-4471" meta="来源：折柳" metaStrong text="线下转交完成。公开区停止主动接触。"/><Record date="2026-10-17 18:42"''',
+'always-visible zheliu admin log')
+
+          repl('docs/CANON_v3.0_世界观与游戏设定唯一权威集.md',
+'''所以沈妍被抓是因为旧对契在 α 第二次再舍后出现异常，不是因为缺身体。''',
+'''所以沈妍被抓是因为旧对契在 α 第二次再舍后出现异常，不是因为缺身体。
+
+**抓捕触发条件必须写死：旧契样本身份本身不是抓捕条件。** 固定因果只有这一条：
+
+1. 林楠身体 B 中的 α 与候舍 19-07 身体 C 中的 γ 执行 `RS-2026-1012`；
+2. α 再次移动；
+3. α—β 的 2004 旧对契被重新激活；
+4. 沈妍 A+β 出现 `AN-0712-1012` 同步异常与记忆回流；
+5. 异常持续，组织才在 10 月 16 日执行 `HN-1016-02`，强制控制沈妍。
+
+因此不能写成“因为沈妍是长期样本，所以组织决定抓她”。没有 10 月 12 日这次再舍事故，就没有本次抓捕。''',
+'canon capture trigger')
+          repl('docs/CANON_v3.0_世界观与游戏设定唯一权威集.md',
+'''全程镜头停留在沈妍的电脑上。
+
+不切警方现场、医院、徐宁手机或上帝视角。''',
+'''全程镜头停留在沈妍的电脑上。
+
+不切警方现场、医院、徐宁手机或上帝视角。
+
+**三个结局都必须从同一条完整主流程分出：查到 HL-N-04 → 周川/折柳身份已揭穿 → 周川发出“别报警、一个人来”的威胁 → 玩家再做最终选择。** 梁茵可以帮助整理与判断材料，但不能在周川威胁出现前直接触发结局。''',
+'canon ending gate')
+          PY
       - name: Install dependencies
         run: npm ci
       - name: Build single-file playtest
         run: npm run build:single
+      - name: Commit tested source changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx app/PrivateArea.tsx app/InteractiveWechat.tsx app/AdminPortalOccult.tsx docs/CANON_v3.0_世界观与游戏设定唯一权威集.md
+          git diff --cached --quiet || git commit -m "Complete full-flow playtest to endings"
+          git push origin HEAD:agent/v8-forum-gameplay-rework
       - name: Upload playtest
         uses: actions/upload-artifact@v4
         with:
