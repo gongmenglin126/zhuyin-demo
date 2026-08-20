@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -22,8 +24,21 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Apply horror pass
+        run: python scripts/apply-horror-pass.py
       - name: Build single-file playtest
         run: npm run build:single
+      - name: Commit verified source changes
+        run: |
+          if git diff --quiet -- app/AdminPortalOccult.tsx content/gameDataFlowV2.ts docs/CANON_v3.0_世界观与游戏设定唯一权威集.md; then
+            echo "No source changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/AdminPortalOccult.tsx content/gameDataFlowV2.ts docs/CANON_v3.0_世界观与游戏设定唯一权威集.md
+          git commit -m "Add cult horror reveal and deleted rescue post"
+          git push origin HEAD:agent/v8-forum-gameplay-rework
       - name: Upload playtest
         uses: actions/upload-artifact@v4
         with:
