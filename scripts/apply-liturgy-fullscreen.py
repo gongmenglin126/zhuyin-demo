@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# trigger fullscreen liturgy build
 path = Path("app/AdminPortalOccult.tsx")
 text = path.read_text()
 start = text.index("let liturgyBurned=false;\nfunction Liturgy(){")
