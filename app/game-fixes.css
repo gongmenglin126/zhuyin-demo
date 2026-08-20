@@ -19,6 +19,7 @@
    itself large enough to notice without hunting. */
 .thread-title > button,
 .verse-page article > button {
+  min-width: 188px !important;
   min-height: 46px !important;
   padding: 0 16px !important;
   border-width: 2px !important;
@@ -55,6 +56,7 @@
 /* Private-area share button: this page intentionally has no broad layout
    class, so target its stable crumb + thread structure. */
 .site > main:not([class]) > div:first-child + section > header > button {
+  min-width: 176px !important;
   min-height: 46px !important;
   padding: 0 16px !important;
   border-width: 2px !important;
@@ -71,10 +73,15 @@
 
 /* WeChat material picker: make the action obvious even when the player is
    focused on the conversation rather than the composer controls. */
+.wechat main > footer form {
+  grid-template-columns: minmax(0, 1fr) 96px 52px !important;
+}
+
 .wechat footer form > button[type="button"] {
-  width: 88px !important;
+  width: 96px !important;
   height: 50px !important;
   border-width: 2px !important;
+  border-radius: 8px !important;
   box-shadow: 0 4px 12px rgba(45, 117, 80, .12);
 }
 
