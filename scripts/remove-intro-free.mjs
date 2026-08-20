@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 
+// One-shot, idempotent cleanup for the three intro-only free-text shortcuts.
 const path='app/InteractiveWechat.tsx';
 let s=fs.readFileSync(path,'utf8');
 const replacements=[
