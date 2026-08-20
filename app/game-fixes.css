@@ -30,6 +30,12 @@
   box-shadow: 0 5px 14px rgba(45, 72, 60, .12);
 }
 
+.thread-title > button:not(:disabled):hover,
+.verse-page article > button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 18px rgba(45, 72, 60, .16);
+}
+
 .thread-title > button::before,
 .verse-page article > button::before {
   content: "+";
