@@ -194,7 +194,25 @@ function AdminDesk({onExitAdmin,onWechatIncoming,onCopyMaterial,hasMaterial}:{on
  </main>;
 }
 
-function Liturgy(){return <><div style={s.sectionTitle}>诵录</div><p style={{margin:"0 0 14px",color:"#707872",fontSize:12}}>内部日课 · 归真序列阶段 II</p><section style={{maxWidth:760,padding:"28px 30px",border:"1px solid #3b2926",borderRadius:8,background:"radial-gradient(circle at 50% 10%,#2b1513,#110d0c 62%,#090807)",boxShadow:"0 18px 44px #0002",color:"#d7c6b5",fontFamily:"serif",lineHeight:2,textAlign:"center"}}><small style={{color:"#8f5f57",letterSpacing:".18em"}}>晚课 · 第七录</small><h2 style={{margin:"10px 0 18px",color:"#a93d35",font:"700 27px serif",letterSpacing:".18em"}}>无相还真</h2><p style={{fontSize:18}}>无相还真，舍身无量。</p><p>真君无相，不应有定身。</p><p>身为舍，魂为客。</p><div style={{width:70,height:1,margin:"20px auto",background:"#60312c"}}/><p style={{margin:0,color:"#b8a393"}}>今日所验，不在一舍之成；<br/>所验者，是客历舍而其续不绝。</p><p style={{margin:"18px 0 0",color:"#8f7468",fontSize:12}}>长客再舍未稳，归真序列不得启。</p></section><section style={s.adminPanel}><h4>诵录旁注</h4><Record date="归真目标" title="建立可重复的连续换舍路径" meta="内部目的" text="验证同一客能在多具舍之间连续迁移，并尽可能保持记忆与主体连续。"/><Record date="当前前置" title="长期客二次再舍稳定" meta="RS-2026-1012" text="客α的第二次再舍是现阶段关键验证；旧对契异常尚未关闭。"/><Record date="真君序列" title="待前置验证通过" meta="阶段 II" text="若连续再舍稳定性达到条件，流程将进入无相真君序列。真君原始身份不在本页登记。"/></section></>}
+let liturgyBurned=false;
+function Liturgy(){
+ const [step,setStep]=useState(()=>liturgyBurned?99:0);
+ useEffect(()=>{
+  if(liturgyBurned)return;
+  const timers=[
+   window.setTimeout(()=>setStep(1),700),
+   window.setTimeout(()=>setStep(2),1700),
+   window.setTimeout(()=>setStep(3),2700),
+   window.setTimeout(()=>setStep(4),3700),
+   window.setTimeout(()=>setStep(5),5000),
+   window.setTimeout(()=>{liturgyBurned=true;setStep(99)},6500),
+  ];
+  return ()=>timers.forEach(id=>window.clearTimeout(id));
+ },[]);
+ if(step===99)return <section style={{minHeight:520,display:"grid",placeItems:"center",margin:"-28px -34px",background:"#000",color:"#111",boxShadow:"inset 0 0 120px #000"}}><span style={{font:"11px ui-monospace,monospace",letterSpacing:".12em"}}>ERR_ARCHIVE_410</span></section>;
+ const line=(n:number,text:string)=><p style={{margin:"12px 0",fontSize:20,letterSpacing:".14em",color:step===n?"#d8d0c3":"#56443f",textShadow:step===n?"0 0 18px #c546384f":"none",transition:".35s"}}>{text}</p>;
+ return <><div style={s.sectionTitle}>诵录</div><p style={{margin:"0 0 14px",color:"#707872",fontSize:12}}>内部日课 · 归真序列阶段 II</p><section style={{maxWidth:760,minHeight:420,display:"grid",alignContent:"center",padding:"34px 36px",border:"1px solid #3b2926",borderRadius:8,background:"radial-gradient(circle at 50% 8%,#2b1513,#100c0b 60%,#070606)",boxShadow:"0 18px 44px #0003",color:"#d7c6b5",fontFamily:"serif",textAlign:"center"}}><small style={{color:"#80534d",letterSpacing:".2em"}}>晚课 · 第七录</small><h2 style={{margin:"10px 0 22px",color:"#8e302b",font:"700 27px serif",letterSpacing:".18em"}}>无相还真</h2>{line(1,"身为舍。")}{line(2,"魂为客。")}{line(3,"名可弃。")}{line(4,"舍可更。")}{step>=5&&<div style={{marginTop:28,padding:"13px 15px",borderTop:"1px solid #382220",borderBottom:"1px solid #382220",background:"#070707",color:"#d4d4d4",font:"700 14px ui-monospace,SFMono-Regular,Consolas,monospace",letterSpacing:".05em"}}>访问者徐宁，未登记候舍编号。</div>}</section></>;
+}
 
 function CandidateLibrary(){
  const rows=[
@@ -274,7 +292,7 @@ function ZheliuAdminRecord(){
 }
 
 function Operations(){const zhouTime=getFirstContactTime("zc");return <><h2>操作记录</h2><div style={s.adminPanel}>{zhouTime&&<Record date={`2026-10-17 ${zhouTime}`} title="访问者身份补录：0712-4471" meta="来源：折柳" metaStrong text="访问者：徐宁。保留观察。"/>}<Record date="2026-10-17 18:42" title="设备记录刷新：0419-2286" meta="自动任务" text="P-4477 / 河临北区"/><Record date="2026-10-17 17:51" title="新增待复核对象：3188-2204" meta="自动任务" text="旧案索引匹配 61%"/><Record date="2026-10-17 16:27" title="线下接触完成：4410-1733" meta="执行组 02" text="返回持续观察"/><Record date="2026-10-16 21:06" title="人员状态变更：0712-4471" meta="旧档员-03" text="观察中 → 已控制"/><Record date="2026-10-16 20:52" title="样本登记：0712-4471" meta="内部任务" text="血样 2 管 / 有效"/><Record date="2026-10-16 19:49" title="线下转交：0712-4471" meta="旧档员-03" text="完成"/><Record date="2026-10-16 18:31" title="草稿镜像写入：0712-4471" meta="自动任务" text="1 条"/><Record date="2026-10-15 23:17" title="观察等级调整：4410-1733" meta="照骨" text="I → II"/><Record date="2026-10-15 18:06" title="关键词命中：6602-3511" meta="公开区" text="进入待复核"/></div></>}
-function Recycle(){return <><h2>删除记录</h2><div style={s.adminPanel}><Record date="2026-10-16 18:31" title="未发布草稿" meta="候鸟第七年 · 已删除" text="原始内容已删除；镜像保留。"/><Record date="2026-10-16 20:47" title="IMG_1016_2047.jpg" meta="现场终端 03" text="上传 20:47；原始文件已删除；缓存缩略图可用。"/><RitualPhoto/><Record date="2013-07-09 03:14" title="旧教页缓存" meta="旧档恢复 · 已删除" text="页面文件已删除；缓存图像与文字层仍可读。"/><figure style={s.scripture}><img src="assets/occult/huanzhen-scripture-v904.webp" alt="无相还真会黑底朱字旧教页"/></figure></div></>}
+function Recycle(){return <><h2>删除记录</h2><div style={s.adminPanel}><Record date="2026-10-16 18:31" title="未发布草稿" meta="候鸟第七年 · 已删除" text="原始内容已删除；镜像保留。"/><Record date="2026-10-16 20:47" title="IMG_1016_2047.jpg" meta="现场终端 03" text="上传 20:47；原始文件已删除；缓存缩略图可用。"/><RitualPhoto/><Record date="2011-08-25 00:41" title="《救救我》" meta="小雨伞 · 已删除 · 镜像完整" text="恢复正文：昨天晚上又来了两个人。爸妈把我以前的照片都收走了，还让我不要回答别人叫我的名字。我说我要去找老师，我爸把门锁了，手机也被拿走了。我现在用旧电脑发的。救救我。我真的很害怕。｜删除操作：旧档员-03｜公开区后续发言：0｜内部标签：低龄 / 家庭接触中"/><Record date="2013-07-09 03:14" title="旧教页缓存" meta="旧档恢复 · 已删除" text="页面文件已删除；缓存图像与文字层仍可读。"/><figure style={s.scripture}><img src="assets/occult/huanzhen-scripture-v904.webp" alt="无相还真会黑底朱字旧教页"/></figure></div></>}
 function RitualPhoto(){return <figure style={s.photo}><img src="assets/occult/recovered-redbox-v904.webp" alt="恢复出的红铁皮盒与纸偶旧照片" style={{display:"block",width:"100%",border:"1px solid #372824",background:"#0b0908"}}/><figcaption style={s.photoCaption}>IMG_1016_2047.jpg　恢复 14%</figcaption></figure>}
 function Record({date,title,meta,text,metaStrong=false}:{date:string;title:string;meta:string;text:string;metaStrong?:boolean}){return <div style={s.record}><time>{date}</time><span><b>{title}</b><small style={metaStrong?{color:"#111",fontWeight:900,fontSize:12}:undefined}>{meta}</small><p>{text}</p></span></div>}
 
