@@ -12,12 +12,33 @@ const delaySteps=(setStep:(n:number)=>void,max:number,base=1500)=>{
 
 export default function GameEnding({kind}:{kind:Exclude<EndingKind,null>}){
  const [step,setStep]=useState(0);
- useEffect(()=>delaySteps(setStep,kind==="home"?8:kind==="true"?11:10,kind==="true"?1350:1500),[kind]);
- return <div style={s.cover}>{kind==="home"?<HomeEnding step={step}/>:kind==="true"?<TrueEnding step={step}/>:<DoubleEnding step={step}/>}</div>;
+ const [newsOpen,setNewsOpen]=useState(true);
+ useEffect(()=>{if(newsOpen)return;return delaySteps(setStep,kind==="home"?8:kind==="true"?11:10,kind==="true"?1350:1500)},[kind,newsOpen]);
+ return <div style={s.cover}>{newsOpen?<IncidentNews kind={kind} onClose={()=>setNewsOpen(false)}/>:kind==="home"?<HomeEnding step={step}/>:kind==="true"?<TrueEnding step={step}/>:<DoubleEnding step={step}/>}</div>;
 }
 
 function DesktopShell({children,date="10月20日 周二 22:41"}:{children:ReactNode;date?:string}){
  return <div style={s.desktop}><div style={s.sys}><span><b>●</b> 微信</span><span>Wi‑Fi　80%　{date}</span></div>{children}</div>;
+}
+
+const endingNews={
+ home:{date:"2026年10月18日",headline:"北郊仓储区一处非法拘禁点被查处　一名失联女子获救",lead:"警方根据市民提供的网络记录与场地编号，于17日晚对河临北郊第三仓储区4号库展开处置。",body:"现场救出一名此前失联的成年女性，并查获多台电脑、身份档案、采样器材及大量旧纸质资料。警方称案件仍在调查，暂未公布涉案人员身份及具体案情。获救人员已接受检查，家属已取得联系。"},
+ true:{date:"2026年10月18日",headline:"北郊仓储区非法拘禁案：两名被控制人员获救",lead:"警方在4号库及相邻隔离间发现两名成年女性，其中一人的登记身份与现场档案存在异常。",body:"两人均无生命危险。警方同时带走多台终端和纸质档案，并表示将核查更多历史记录。因其中一名获救者目前无法稳定陈述姓名与经历，相关身份信息暂不公开。"},
+ double:{date:"2026年10月20日",headline:"两名短暂失联女子已自行返家　警方终止公开寻人",lead:"此前先后失联的两名成年女性于20日返回住处，并分别与亲友取得联系。",body:"两人均表示离开期间未遭限制人身自由，也不愿继续接受媒体采访。警方称现阶段未发现需要继续公开协查的情况。有关网络传言暂无证据支持。"},
+} as const;
+function IncidentNews({kind,onClose}:{kind:Exclude<EndingKind,null>;onClose:()=>void}){
+ const item=endingNews[kind];
+ return <div style={s.newsStage}><article style={s.newsPaper}>
+  <header style={s.newsTop}><span>{editEndingText(item.date)}　星期日</span><span>河临 · 电子版</span></header>
+  <div style={s.newsMast}>{editEndingText("河临晚报")}</div>
+  <div style={s.newsSection}>{editEndingText("社会 · 本地")}</div>
+  <h1 style={s.newsHeadline}>{editEndingText(item.headline)}</h1>
+  <p style={s.newsLead}>{editEndingText(item.lead)}</p>
+  <div style={s.newsRule}/>
+  <p style={s.newsBody}>{editEndingText(item.body)}</p>
+  <small style={s.newsSource}>{editEndingText("来源：河临晚报电子版 · 案件信息以警方后续通报为准")}</small>
+  <button onClick={onClose} style={s.newsClose}>{editEndingText("关闭报道")}</button>
+ </article></div>;
 }
 function WechatFrame({title="徐宁",children,draft,notice,friendRequest}:{title?:string;children:ReactNode;draft?:string;notice?:{name:string;text:string};friendRequest?:{account:string;text:string}}){
  return <><div style={s.window}><div style={s.winHead}><span>● ● ●</span><b>微信</b><span/></div><div style={s.wx}><aside style={s.side}><div style={s.me}>妍　沈妍</div><div style={s.contactActive}>{title}</div><div style={s.contact}>梁茵</div><div style={s.contact}>周川</div></aside><main style={s.chat}><header style={s.chatHead}>{title}</header><section style={s.messages}>{children}</section><footer style={s.footer}><div style={s.input}>{draft?editEndingText(draft):""}{draft!==undefined&&<i style={s.cursor}/>}</div></footer></main></div></div>{notice&&<div style={s.notice}><b>微信新消息 · {notice.name}</b><span>{editEndingText(notice.text)}</span></div>}{friendRequest&&<div style={s.friendRequest}><div style={s.friendAvatar}>?</div><span><small>新的朋友</small><b>{friendRequest.account}</b><em>验证消息：{editEndingText(friendRequest.text)}</em></span></div>}</>;
@@ -45,6 +66,17 @@ function EndingTitle({title,sub}:{title:string;sub:string}){return <div style={s
 
 const s:Record<string,CSSProperties>={
  cover:{position:"fixed",inset:0,zIndex:10000,background:"#050505",color:"#eee",userSelect:"none"},
+ newsStage:{position:"absolute",inset:0,display:"grid",placeItems:"center",padding:"4vh 5vw",boxSizing:"border-box",background:"radial-gradient(circle at 50% 28%,#403d36 0,#1b1a18 46%,#090909 100%)"},
+ newsPaper:{position:"relative",width:"min(880px,92vw)",maxHeight:"88vh",overflow:"auto",boxSizing:"border-box",padding:"26px 38px 34px",background:"#eee9dc",color:"#1b1b18",border:"1px solid #aaa28f",boxShadow:"0 28px 100px #000c",fontFamily:'Georgia,"Songti SC","SimSun",serif'},
+ newsTop:{display:"flex",justifyContent:"space-between",paddingBottom:8,borderBottom:"1px solid #8d8779",fontSize:11,color:"#666052"},
+ newsMast:{padding:"13px 0 8px",borderBottom:"4px double #37352f",textAlign:"center",fontSize:42,fontWeight:900,letterSpacing:".26em"},
+ newsSection:{marginTop:18,fontSize:12,fontWeight:800,letterSpacing:".16em",color:"#736b5e"},
+ newsHeadline:{margin:"10px 0 12px",fontSize:"clamp(28px,4vw,46px)",lineHeight:1.18,fontWeight:900,letterSpacing:".02em"},
+ newsLead:{margin:"0 0 15px",fontSize:16,lineHeight:1.75,fontWeight:700,color:"#3b3934"},
+ newsRule:{height:1,background:"#908878",margin:"15px 0"},
+ newsBody:{margin:0,fontSize:15,lineHeight:2,textAlign:"justify",color:"#34322e"},
+ newsSource:{display:"block",marginTop:22,paddingTop:11,borderTop:"1px solid #c2bbab",fontSize:10,color:"#847c6d"},
+ newsClose:{position:"sticky",float:"right",bottom:0,marginTop:20,padding:"8px 15px",border:"1px solid #797266",background:"#24231f",color:"#f4efe3",fontSize:12,fontWeight:700,cursor:"pointer"},
  desktop:{position:"absolute",inset:0,overflow:"hidden",background:"radial-gradient(circle at 45% 35%,#333944 0,#1c222b 35%,#0b0d11 100%)"},
  sys:{height:34,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0 14px",background:"#111b",fontSize:12,backdropFilter:"blur(10px)"},
  blackDate:{position:"absolute",inset:34,display:"grid",placeItems:"center",background:"#050505",fontSize:18,letterSpacing:".12em",color:"#aaa"},

@@ -169,12 +169,14 @@ function AdminDesk({onExitAdmin,onWechatIncoming,onCopyMaterial,hasMaterial}:{on
  const [searched,setSearched]=useState(()=>adminDeskSession.searched);
  const [detail,setDetail]=useState<AdminDetail>(()=>adminDeskSession.detail);
  const [caseLevel,setCaseLevel]=useState(()=>adminCaseLevel);
+ const [trueNameAttack,setTrueNameAttack]=useState(false);
+ useEffect(()=>{if(!trueNameAttack)return;const timer=window.setTimeout(()=>setTrueNameAttack(false),4200);return ()=>window.clearTimeout(timer)},[trueNameAttack]);
  const result=useMemo<ResultKind>(()=>{if(!searched)return null;const t=q.trim();if(/候鸟第七年|沈妍|0712-4471/.test(t))return "shen";if(/迟迟|梁茵|0419-2286/.test(t))return "liang";if(/林楠/.test(t))return "lin";if(/19-07|候舍/.test(t))return "third";if(/折柳|周川/.test(t))return "zheliu";return null},[searched,q]);
  useEffect(()=>{adminDeskSession.tab=tab;adminDeskSession.q=q;adminDeskSession.searched=searched;adminDeskSession.detail=detail;adminCaseLevel=caseLevel},[tab,q,searched,detail,caseLevel]);
  useEffect(()=>{const timer=window.setTimeout(()=>{if(triggerAdminWechatBeat("shen-record"))onWechatIncoming?.()},900);return ()=>window.clearTimeout(timer)},[]);
  const fireShenBeat=()=>{if(triggerAdminWechatBeat("shen-record"))onWechatIncoming?.()};
  const raise=(n:number)=>setCaseLevel(v=>Math.max(v,n));
- const doSearch=(e?:FormEvent)=>{e?.preventDefault();const raw=q.trim();const t=raw.replace(/客|编号|[-_\s]/g,"");setSearched(true);if(/^LN20040718$/i.test(t)){setDetail("pair2004");raise(2);return}if(/^RS20261012$/i.test(t)){setDetail("reswap");raise(5);return}if(/^AN07121012$/i.test(t)){setDetail("sync");raise(5);return}if(/^1907$/i.test(t)){setDetail("third");raise(5);return}if(/^HN101602$/i.test(t)){setDetail("batch");raise(6);return}if(/^HLN04$/i.test(t)){setDetail("location");raise(7);return}if(t==="α"){setDetail("guestA");raise(5);return}if(t==="β"){setDetail("guestB");raise(5);return}if(t==="γ"){setDetail("guestG");raise(5);return}setDetail(null);if(/候鸟第七年|沈妍|07124471/.test(t)){raise(1);fireShenBeat()}if(/林楠/.test(t))raise(3)};
+ const doSearch=(e?:FormEvent)=>{e?.preventDefault();const raw=q.trim();const t=raw.replace(/客|编号|[-_\s]/g,"");if(/无相真君/.test(raw)){setDetail(null);setSearched(false);setTrueNameAttack(true);return}setSearched(true);if(/^LN20040718$/i.test(t)){setDetail("pair2004");raise(2);return}if(/^RS20261012$/i.test(t)){setDetail("reswap");raise(5);return}if(/^AN07121012$/i.test(t)){setDetail("sync");raise(5);return}if(/^1907$/i.test(t)){setDetail("third");raise(5);return}if(/^HN101602$/i.test(t)){setDetail("batch");raise(6);return}if(/^HLN04$/i.test(t)){setDetail("location");raise(7);return}if(t==="α"){setDetail("guestA");raise(5);return}if(t==="β"){setDetail("guestB");raise(5);return}if(t==="γ"){setDetail("guestG");raise(5);return}setDetail(null);if(/候鸟第七年|沈妍|07124471/.test(t)){raise(1);fireShenBeat()}if(/林楠/.test(t))raise(3)};
  const openKnown=(name:string)=>{setQ(name);setSearched(true);setDetail(null);setTab("users");if(/候鸟第七年|沈妍/.test(name)){raise(1);fireShenBeat()}};
  const openShen=()=>{setQ("沈妍");setSearched(true);setDetail(null);setTab("users");raise(1)};
  const openDetail=(next:Exclude<AdminDetail,null>)=>{setDetail(next);setTab("users");raise(next==="pair2004"?2:next==="lin"?3:5)};
@@ -192,7 +194,17 @@ function AdminDesk({onExitAdmin,onWechatIncoming,onCopyMaterial,hasMaterial}:{on
     {tab==="recycle"&&<Recycle/>}
    </section>
   </div>
+  {trueNameAttack&&<TrueNameAttack/>}
  </main>;
+}
+
+function TrueNameAttack(){
+ const words=Array.from({length:38},(_,i)=>({left:`${3+(i*37)%92}%`,top:`${2+(i*53)%94}%`,size:18+(i%7)*8,rot:-16+(i%9)*4,delay:(i%11)*-.07}));
+ return <section style={{position:"fixed",inset:0,zIndex:12000,overflow:"hidden",background:"radial-gradient(circle at 50% 50%,#220000 0,#090000 42%,#000 82%)",cursor:"default"}}>
+  <style>{`@keyframes trueNameHit{0%{opacity:.12;filter:blur(2px);transform:translate(-50%,-50%) scale(.82)}45%{opacity:.96;filter:blur(0);transform:translate(-50%,-50%) scale(1.12)}100%{opacity:.32;filter:blur(.7px);transform:translate(-50%,-50%) scale(.98)}}`}</style>
+  {words.map((w,i)=><span key={i} style={{position:"absolute",left:w.left,top:w.top,color:i%5===0?"#f0d8d3":"#9f1118",fontFamily:'STKaiti,KaiTi,"FangSong",serif',fontSize:w.size,fontWeight:900,whiteSpace:"nowrap",letterSpacing:".08em",textShadow:"0 0 12px #b00000,2px 2px 0 #240000",rotate:`${w.rot}deg`,animation:`trueNameHit .62s ${w.delay}s infinite alternate`}}>{editAdminText("误呼吾主真名")}</span>)}
+  <strong style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",width:"100%",textAlign:"center",color:"#d8c1ba",font:'900 clamp(34px,7vw,104px) STKaiti,KaiTi,"FangSong",serif',letterSpacing:".16em",textShadow:"0 0 35px #c00000,5px 5px 0 #220000"}}>{editAdminText("误呼吾主真名")}</strong>
+ </section>;
 }
 
 let liturgyBurned=false;
@@ -207,7 +219,8 @@ function Liturgy(){
    window.setTimeout(()=>setStep(3),3100),
    window.setTimeout(()=>setStep(4),4400),
    window.setTimeout(()=>setStep(5),5900),
-   window.setTimeout(()=>{liturgyBurned=true;setStep(99)},7600),
+   window.setTimeout(()=>setStep(6),6900),
+   window.setTimeout(()=>{liturgyBurned=true;setStep(99)},8400),
   ];
   return ()=>timers.forEach(id=>window.clearTimeout(id));
  },[]);
@@ -229,7 +242,8 @@ function Liturgy(){
   {fullLine(2,"魂为客。","38%","53%","clamp(49px,7.4vw,108px)",".13em","1.35deg")}
   {fullLine(3,"名可弃。","57%","45%","clamp(58px,9vw,132px)",".08em","-1.4deg")}
   {fullLine(4,"舍可更。","76%","55%","clamp(68px,11vw,165px)",".16em","2.1deg")}
-  {step>=5&&<><div style={{position:"absolute",inset:0,background:"#000e",boxShadow:"inset 0 0 220px #000",transition:"background .18s ease"}}/><div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",width:"min(980px,90vw)",padding:"12px 18px",boxSizing:"border-box",color:"#eeeeee",font:"700 clamp(18px,2.2vw,30px) ui-monospace,SFMono-Regular,Consolas,monospace",letterSpacing:".075em",lineHeight:1.5,textAlign:"center",textShadow:"0 0 16px #ffffff21"}}>{editAdminText("访问者徐宁，未登记候舍编号。")}</div></>}
+  {step===5&&<><div style={{position:"absolute",inset:0,background:"#000e",boxShadow:"inset 0 0 220px #000",transition:"background .18s ease"}}/><div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",width:"min(980px,90vw)",padding:"12px 18px",boxSizing:"border-box",color:"#eeeeee",font:"700 clamp(18px,2.2vw,30px) ui-monospace,SFMono-Regular,Consolas,monospace",letterSpacing:".075em",lineHeight:1.5,textAlign:"center",textShadow:"0 0 16px #ffffff21"}}>{editAdminText("访问者徐宁，未登记候舍编号。")}</div></>}
+  {step>=6&&step!==99&&<><div style={{position:"absolute",inset:0,background:"#000f",boxShadow:"inset 0 0 240px #000"}}/><div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%) rotate(-1deg)",width:"min(1100px,92vw)",color:"#b3131b",font:'900 clamp(34px,6.4vw,94px) STKaiti,KaiTi,"FangSong",serif',letterSpacing:".12em",textAlign:"center",textShadow:"0 0 9px #e019206e,3px 3px 0 #310000"}}>{editAdminText("一切献给无相真君。")}</div></>}
  </section>;
 }
 
@@ -244,7 +258,7 @@ function CandidateLibrary(){
  ];
  return <><div style={s.sectionTitle}>候舍库</div><p style={{margin:"0 0 14px",color:"#707872",fontSize:12}}>姓名字段已舍弃。候舍编号为唯一有效身份。</p><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:16}}>{[["在库","164"],["匹配可用","37"],["待执行","12"],["再舍申请","8"]].map(([k,v])=><div key={k} style={{padding:"11px 12px",border:"1px solid #cbd1cd",borderRadius:7,background:"#fff"}}><small style={{display:"block",color:"#7b837e"}}>{k}</small><b style={{display:"block",marginTop:4,fontSize:22}}>{v}</b></div>)}</div>
  <section style={s.adminPanel}><h4>筛选规范沿革</h4><Record date="2004版" title="低龄强制样本优先" meta="适用：7—11岁" text="名称识别已形成；长期社会身份尚未固化；返家后的记忆、性格异常可归入失踪应激。"/><Record date="2012修订" title="停止低龄优先" meta="成年自愿候舍纳入正式序列" text="长期样本证明年龄不是必要条件。改以对契匹配、去名训练与成年自愿对象为主。"/><Record date="去名训练" title="仅保留候舍编号" meta="入库前连续30日" text="停止使用原名；不看旧照片；减少原家庭接触；问询时只对候舍编号作答。完成后原姓名字段从候舍库移除。"/><Record date="现行" title="候舍来源充足，无需强制补充" meta="旧契样本另行处置" text="常规候舍优先从奉舍申请中匹配。旧契样本不可替代；出现同步、返契异常时优先回收。"/></section>
- <section style={s.adminPanel}><h4>归真序列 · 阶段 II</h4><Record date="前置验证" title="长期客二次再舍稳定" meta="RS-2026-1012" text="客α作为当前长期样本。二次再舍已完成；旧对契异常尚未关闭。"/><Record date="候舍池" title="来源充足" meta="匹配可用 37 / 待执行 12" text="现阶段不批准以强制方式补充普通候舍。"/><Record date="真君序列" title="暂缓启用" meta="待长期客验证通过" text="连续再舍稳定性未达到启用条件。旧客验证完成后重新评估。"/></section>
+ <section style={s.adminPanel}><h4>归真序列 · 阶段 II</h4><Record date="序列目标" title="无相真君连续更舍" meta="真君无相，不应有定身" text="验证同一客在多具舍之间连续迁移后，记忆与主体能否维持；若成立，则建立供无相真君反复更舍的长期序列。"/><Record date="前置验证" title="长期客二次再舍稳定" meta="RS-2026-1012" text="客α作为当前长期样本。二次再舍已完成；旧对契异常尚未关闭。"/><Record date="候舍池" title="来源充足" meta="匹配可用 37 / 待执行 12" text="现阶段不批准以强制方式补充普通候舍。"/><Record date="真君序列" title="暂缓启用" meta="待长期客验证通过" text="连续再舍稳定性未达到启用条件。旧客验证完成后重新评估。"/></section>
  <section style={s.adminPanel}><h4>近期奉舍申请</h4>{rows.map(([id,meta,count,text])=><Record key={id} date={id} title={meta} meta={count} text={`申请原文：${editAdminText(text)}`}/>)}</section>
  </>;
 }
