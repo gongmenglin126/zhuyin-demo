@@ -198,21 +198,40 @@ function AdminDesk({onExitAdmin,onWechatIncoming,onCopyMaterial,hasMaterial}:{on
 let liturgyBurned=false;
 function Liturgy(){
  const [step,setStep]=useState(()=>liturgyBurned?99:0);
+ const [dismissed,setDismissed]=useState(()=>liturgyBurned);
  useEffect(()=>{
   if(liturgyBurned)return;
   const timers=[
-   window.setTimeout(()=>setStep(1),700),
-   window.setTimeout(()=>setStep(2),1700),
-   window.setTimeout(()=>setStep(3),2700),
-   window.setTimeout(()=>setStep(4),3700),
-   window.setTimeout(()=>setStep(5),5000),
-   window.setTimeout(()=>{liturgyBurned=true;setStep(99)},6500),
+   window.setTimeout(()=>setStep(1),850),
+   window.setTimeout(()=>setStep(2),1900),
+   window.setTimeout(()=>setStep(3),3100),
+   window.setTimeout(()=>setStep(4),4400),
+   window.setTimeout(()=>setStep(5),5900),
+   window.setTimeout(()=>{liturgyBurned=true;setStep(99)},7600),
   ];
   return ()=>timers.forEach(id=>window.clearTimeout(id));
  },[]);
- if(step===99)return <section style={{minHeight:520,display:"grid",placeItems:"center",margin:"-28px -34px",background:"#000",color:"#111",boxShadow:"inset 0 0 120px #000"}}><span style={{font:"11px ui-monospace,monospace",letterSpacing:".12em"}}>ERR_ARCHIVE_410</span></section>;
- const line=(n:number,text:string)=><p style={{margin:"12px 0",fontSize:20,letterSpacing:".14em",color:step===n?"#d8d0c3":"#56443f",textShadow:step===n?"0 0 18px #c546384f":"none",transition:".35s"}}>{editAdminText(text)}</p>;
- return <><div style={s.sectionTitle}>诵录</div><p style={{margin:"0 0 14px",color:"#707872",fontSize:12}}>内部日课 · 归真序列阶段 II</p><section style={{maxWidth:760,minHeight:420,display:"grid",alignContent:"center",padding:"34px 36px",border:"1px solid #3b2926",borderRadius:8,background:"radial-gradient(circle at 50% 8%,#2b1513,#100c0b 60%,#070606)",boxShadow:"0 18px 44px #0003",color:"#d7c6b5",fontFamily:"serif",textAlign:"center"}}><small style={{color:"#80534d",letterSpacing:".2em"}}>晚课 · 第七录</small><h2 style={{margin:"10px 0 22px",color:"#8e302b",font:"700 27px serif",letterSpacing:".18em"}}>无相还真</h2>{line(1,"身为舍。")}{line(2,"魂为客。")}{line(3,"名可弃。")}{line(4,"舍可更。")}{step>=5&&<div style={{marginTop:28,padding:"13px 15px",borderTop:"1px solid #382220",borderBottom:"1px solid #382220",background:"#070707",color:"#d4d4d4",font:"700 14px ui-monospace,SFMono-Regular,Consolas,monospace",letterSpacing:".05em"}}>{editAdminText("访问者徐宁，未登记候舍编号。")}</div>}</section></>;
+ useEffect(()=>{
+  const onKey=(e:KeyboardEvent)=>{if(e.key==="Escape")setDismissed(true)};
+  window.addEventListener("keydown",onKey);
+  return ()=>window.removeEventListener("keydown",onKey);
+ },[]);
+ if(dismissed)return <><div style={s.sectionTitle}>诵录</div><section style={{minHeight:360,display:"grid",placeItems:"center",border:"1px solid #171717",borderRadius:6,background:"#050505",color:"#3b3b3b",boxShadow:"inset 0 0 90px #000"}}><div style={{textAlign:"center"}}><b style={{display:"block",marginBottom:10,color:"#5d5d5d",font:"12px ui-monospace,SFMono-Regular,Consolas,monospace",letterSpacing:".16em"}}>ERR_ARCHIVE_410</b><small style={{color:"#2f2f2f",font:"11px ui-monospace,SFMono-Regular,Consolas,monospace"}}>诵录读取失败</small></div></section></>;
+ const fullLine=(n:number,text:string,top:string,size:string,spacing:string)=>{
+  const visible=step>=n&&step!==99;
+  const active=step===n;
+  return <p style={{position:"absolute",left:"50%",top,width:"100%",margin:0,transform:`translate(-50%,-50%) scale(${active?1.04:1})`,padding:"0 5vw",boxSizing:"border-box",opacity:visible?1:0,color:active?"#e2d9cf":"#766760",fontFamily:"serif",fontSize:size,fontWeight:700,lineHeight:1.08,letterSpacing:spacing,textAlign:"center",textShadow:active?"0 0 30px #8e281f66,0 0 80px #55100d55":"0 0 16px #000",transition:"opacity .7s ease, transform 1.1s ease, color .7s ease"}}>{editAdminText(text)}</p>;
+ };
+ if(step===99)return <section onClick={()=>setDismissed(true)} style={{position:"fixed",inset:0,zIndex:9999,display:"grid",placeItems:"center",background:"#000",cursor:"default",boxShadow:"inset 0 0 180px #000"}}><span style={{color:"#151515",font:"11px ui-monospace,SFMono-Regular,Consolas,monospace",letterSpacing:".18em"}}>ERR_ARCHIVE_410</span><small style={{position:"fixed",right:22,bottom:18,color:"#161616",font:"10px ui-monospace,SFMono-Regular,Consolas,monospace",letterSpacing:".12em"}}>ESC</small></section>;
+ return <section style={{position:"fixed",inset:0,zIndex:9999,overflow:"hidden",background:"radial-gradient(circle at 50% 46%,#160d0b 0%,#080606 34%,#020202 72%,#000 100%)",color:"#d8cec5",boxShadow:"inset 0 0 220px #000"}}>
+  <div style={{position:"absolute",inset:0,opacity:.22,background:"repeating-linear-gradient(180deg,transparent 0,transparent 3px,#ffffff05 4px,#ffffff05 5px)",pointerEvents:"none"}}/>
+  <small style={{position:"absolute",left:24,top:20,color:"#3d302d",font:"10px ui-monospace,SFMono-Regular,Consolas,monospace",letterSpacing:".22em"}}>ARCHIVE / LITURGY_07</small>
+  {fullLine(1,"身为舍。","19%","clamp(34px,5.6vw,82px)",".18em")}
+  {fullLine(2,"魂为客。","36%","clamp(40px,6.8vw,98px)",".20em")}
+  {fullLine(3,"名可弃。","54%","clamp(48px,8.4vw,124px)",".24em")}
+  {fullLine(4,"舍可更。","73%","clamp(58px,10.5vw,156px)",".28em")}
+  {step>=5&&<div style={{position:"absolute",left:"50%",top:"88%",transform:"translate(-50%,-50%)",width:"min(900px,88vw)",padding:"14px 18px",boxSizing:"border-box",borderTop:"1px solid #222",borderBottom:"1px solid #222",background:"#000d",color:"#e4e4e4",font:"700 clamp(13px,1.6vw,20px) ui-monospace,SFMono-Regular,Consolas,monospace",letterSpacing:".07em",textAlign:"center",boxShadow:"0 0 80px #000",animation:"none"}}>{editAdminText("访问者徐宁，未登记候舍编号。")}</div>}
+ </section>;
 }
 
 function CandidateLibrary(){
