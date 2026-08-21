@@ -1,0 +1,35 @@
+name: Apply Verse Material Action
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths:
+      - '.github/workflows/apply-v8.9.6-verse-material.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - name: Make verse excerpt a shareable material
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/page.tsx')
+          s=p.read_text()
+          old='function VersePage({onCopyMaterial}:{onCopyMaterial:(m:SharedMaterial)=>void}){return <main className="verse-page"><header><LockKeyhole/><span>www.zhuyinwen.cn/archive/cache/baishesong-1986.html</span><b>缓存页面</b></header><section className="verse-image-view simple"><figure><img src="assets/baishesong-recovered-scan-v1.webp" alt="一张来源不明的黑纸红字抄写页扫描件"/><figcaption><span>scan_07_untitled.tif</span><em>来源字段已删除 · 缓存于 2026-10-16 19:49</em></figcaption></figure><article style={{maxWidth:720,margin:"18px auto 0",padding:"16px 18px",background:"#f5f1e9",border:"1px solid #d7cec1",lineHeight:1.8,fontSize:14}}><small style={{color:"#8a8179"}}>缓存页附带的手工抄录</small><p>能辨认的其中一句是：<strong className="clue">身非我身，名非我名</strong>。标点为后补，原页只有连续八字。</p><button onClick={()=>onCopyMaterial({id:"verse",title:"《百舍偈》残页缓存",kind:"缓存页",url:"https://www.zhuyinwen.cn/archive/cache/baishesong-1986.html"})} style={{border:"1px solid #b8afa5",background:"#fff",borderRadius:5,padding:"7px 10px",fontSize:12,cursor:"pointer"}}>复制缓存链接</button></article></section></main>}'
+          new='function VersePage({onCopyMaterial}:{onCopyMaterial:(m:SharedMaterial)=>void}){const [added,setAdded]=useState(false);return <main className="verse-page"><header><LockKeyhole/><span>www.zhuyinwen.cn/archive/cache/baishesong-1986.html</span><b>缓存页面</b></header><section className="verse-image-view simple"><figure><img src="assets/baishesong-recovered-scan-v1.webp" alt="一张来源不明的黑纸红字抄写页扫描件"/><figcaption><span>scan_07_untitled.tif</span><em>来源字段已删除 · 缓存于 2026-10-16 19:49</em></figcaption></figure><article style={{maxWidth:720,margin:"18px auto 0",padding:"16px 18px",background:"#f5f1e9",border:"1px solid #d7cec1",lineHeight:1.8,fontSize:14}}><small style={{color:"#8a8179"}}>缓存页附带的手工抄录</small><p>能辨认的其中一句是：<strong className="clue">身非我身，名非我名</strong>。标点为后补，原页只有连续八字。</p><button onClick={()=>{onCopyMaterial({id:"verse",title:"身非我身，名非我名",kind:"手工抄录",url:"https://www.zhuyinwen.cn/archive/cache/baishesong-1986.html"});setAdded(true)}} style={{border:"1px solid #b8afa5",background:"#fff",borderRadius:5,padding:"7px 10px",fontSize:12,cursor:"pointer"}}>{added?"已添加":"添加到材料"}</button></article></section></main>}'
+          if old not in s:
+              raise SystemExit('VersePage target not found')
+          p.write_text(s.replace(old,new))
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/page.tsx
+          git diff --cached --quiet || git commit -m 'Make verse excerpt shareable as material'
+          git push

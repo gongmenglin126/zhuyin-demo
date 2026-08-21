@@ -1,0 +1,32 @@
+name: Build Playtest Artifact
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build single-file playtest
+        run: npm run build:single
+      - name: Upload playtest
+        uses: actions/upload-artifact@v4
+        with:
+          name: zhuyin-v8-forum-playtest
+          path: single-dist/index.html
+          if-no-files-found: error

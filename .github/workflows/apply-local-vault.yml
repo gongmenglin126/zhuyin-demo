@@ -1,0 +1,41 @@
+name: Apply Local Vault
+
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths:
+      - '.github/workflows/apply-local-vault.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - name: Replace local notes UI
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/page.tsx')
+          s=p.read_text()
+          imp='import LocalVault from "./LocalVault";\n'
+          if imp not in s:
+              s=s.replace('import {chats,history,Post,posts,privateEntries,profile} from "../content/gameDataFlowV2";\n', 'import {chats,history,Post,posts,privateEntries,profile} from "../content/gameDataFlowV2";\n'+imp)
+          old='<Notes unlocked={noteUnlocked} onUnlock={()=>setNoteUnlocked(true)} openLink={()=>open("verse")}/>'
+          new='<LocalVault unlocked={noteUnlocked} onUnlock={()=>setNoteUnlocked(true)} openLink={()=>open("verse")}/>'
+          if old not in s:
+              raise SystemExit('Notes mount not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx
+          git commit -m "Use simple three-character local vault" || exit 0
+          git push origin HEAD:agent/v8-forum-gameplay-rework

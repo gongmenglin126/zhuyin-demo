@@ -1,0 +1,82 @@
+name: Apply Refined Forum Flow
+
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths:
+      - '.github/workflows/apply-v2-import.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - name: Switch v8 page to refined forum data
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/page.tsx')
+          s=p.read_text()
+          s=s.replace('from "../content/gameDataFlow";', 'from "../content/gameDataFlowV2";')
+
+          # Generated imports stay idempotent.
+          lines=s.splitlines()
+          lines=[line for line in lines if not line.startswith('import InteractiveWechat') and not line.startswith('import DeepArchiveGate') and not line.startswith('import PrivateArea')]
+          s='\n'.join(lines)+'\n'
+          s=s.replace('import LocalVault from "./LocalVault";', 'import LocalVault from "./LocalVault";\nimport InteractiveWechat,{SharedMaterial} from "./InteractiveWechat";\nimport PrivateArea from "./PrivateArea";',1)
+
+          s=s.replace('<dt>主题</dt><dd>8</dd>', '<dt>主题</dt><dd>{profile.topics.length}</dd>')
+          s=s.replace('<h3>公开主题（8） <small>按发布时间从早到晚</small></h3>', '<h3>公开主题（{profile.topics.length}） <small>按发布时间从早到晚</small></h3>')
+          s=s.replace('<b>私密主题（3）</b>', '<b>私密主题（{investigationPrivateEntries.length}）</b>')
+
+          old_state=' const [intro,setIntro]=useState(true),[app,setApp]=useState<App|null>(null),[max,setMax]=useState(true),[wxRead,setWxRead]=useState(false),[privateUnlocked,setPrivateUnlocked]=useState(false),[noteUnlocked,setNoteUnlocked]=useState(false);'
+          old_clip=' const [clipboard,setClipboard]=useState<SharedMaterial|null>(null);'
+          new_materials=' const [materials,setMaterials]=useState<SharedMaterial[]>([]);\n const rememberMaterial=(m:SharedMaterial)=>setMaterials(prev=>prev.some(x=>x.id===m.id)?prev:[...prev,m]);'
+          if old_clip in s:
+              s=s.replace(old_clip,new_materials,1)
+          elif old_state in s and 'const [materials,setMaterials]' not in s:
+              s=s.replace(old_state,old_state+'\n'+new_materials,1)
+
+          s=s.replace('<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked}/>', '<Browser privateUnlocked={privateUnlocked} setPrivateUnlocked={setPrivateUnlocked} onCopyMaterial={rememberMaterial}/>',1)
+          s=s.replace('onCopyMaterial={setClipboard}', 'onCopyMaterial={rememberMaterial}')
+          s=s.replace('app==="wechat"?<Wechat/>', 'app==="wechat"?<InteractiveWechat materials={materials}/>',1)
+          s=s.replace('<InteractiveWechat clipboard={clipboard}/>', '<InteractiveWechat materials={materials}/>',1)
+          s=s.replace(':<VersePage/>', ':<VersePage onCopyMaterial={rememberMaterial}/>',1)
+          s=s.replace('function Browser({privateUnlocked,setPrivateUnlocked}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void}){', 'function Browser({privateUnlocked,setPrivateUnlocked,onCopyMaterial}:{privateUnlocked:boolean;setPrivateUnlocked:(value:boolean)=>void;onCopyMaterial:(m:SharedMaterial)=>void}){',1)
+          s=s.replace('<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser}/>', '<Thread post={investigationPosts.find(x=>x.id===route.id)!} openUser={openUser} onCopyMaterial={onCopyMaterial}/>',1)
+          s=s.replace('function Thread({post,openUser}:{post:Post;openUser:(name:string)=>void}){', 'function Thread({post,openUser,onCopyMaterial}:{post:Post;openUser:(name:string)=>void;onCopyMaterial:(m:SharedMaterial)=>void}){',1)
+
+          # Replace the old cramped private-topic implementation with the dedicated component.
+          s=s.replace('<Private unlocked={privateUnlocked} onUnlock={()=>setPrivateUnlocked(true)} onCopyMaterial={onCopyMaterial}/>', '<PrivateArea entries={investigationPrivateEntries} unlocked={privateUnlocked} onUnlock={()=>setPrivateUnlocked(true)} onCopyMaterial={onCopyMaterial}/>',1)
+          s=s.replace('<Private unlocked={privateUnlocked} onUnlock={()=>setPrivateUnlocked(true)}/>', '<PrivateArea entries={investigationPrivateEntries} unlocked={privateUnlocked} onUnlock={()=>setPrivateUnlocked(true)} onCopyMaterial={onCopyMaterial}/>',1)
+
+          private_start=s.find('function Private({')
+          private_end=s.find('function HistoryPage(',private_start)
+          if private_start!=-1 and private_end!=-1:
+              s=s[:private_start]+s[private_end:]
+
+          needle='</p></header><Floor user={post.author}'
+          if needle in s and '复制帖子链接' not in s:
+              button='</p><button onClick={()=>onCopyMaterial({id:post.id,title:post.title,kind:"论坛帖子",url:"https://www.zhuyinwen.cn/thread/"+post.id})} style={{marginTop:8,border:"1px solid #b8afa5",background:"#fff",borderRadius:5,padding:"6px 10px",fontSize:12,cursor:"pointer"}}>复制帖子链接</button></header><Floor user={post.author}'
+              s=s.replace(needle,button,1)
+
+          start=s.find('function VersePage(){')
+          end=s.find('function Wechat(){',start)
+          if start!=-1 and end!=-1:
+              verse='''function VersePage({onCopyMaterial}:{onCopyMaterial:(m:SharedMaterial)=>void}){return <main className="verse-page"><header><LockKeyhole/><span>www.zhuyinwen.cn/archive/cache/baishesong-1986.html</span><b>缓存页面</b></header><section className="verse-image-view simple"><figure><img src="assets/baishesong-recovered-scan-v1.webp" alt="一张来源不明的黑纸红字抄写页扫描件"/><figcaption><span>scan_07_untitled.tif</span><em>来源字段已删除 · 缓存于 2026-10-16 19:49</em></figcaption></figure><article style={{maxWidth:720,margin:"18px auto 0",padding:"16px 18px",background:"#f5f1e9",border:"1px solid #d7cec1",lineHeight:1.8,fontSize:14}}><small style={{color:"#8a8179"}}>缓存页附带的手工抄录</small><p>能辨认的其中一句是：<strong className="clue">身非我身，名非我名</strong>。标点为后补，原页只有连续八字。</p><button onClick={()=>onCopyMaterial({id:"verse",title:"《百舍偈》残页缓存",kind:"缓存页",url:"https://www.zhuyinwen.cn/archive/cache/baishesong-1986.html"})} style={{border:"1px solid #b8afa5",background:"#fff",borderRadius:5,padding:"7px 10px",fontSize:12,cursor:"pointer"}}>复制缓存链接</button></article></section></main>}\n'''
+              s=s[:start]+verse+s[end:]
+
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx
+          git diff --cached --quiet || git commit -m "Mount redesigned private investigation area"
+          git push

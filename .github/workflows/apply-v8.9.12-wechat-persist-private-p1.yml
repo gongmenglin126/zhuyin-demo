@@ -1,0 +1,138 @@
+name: Persist WeChat And Fix Private P1
+
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths: ['.github/workflows/apply-v8.9.12-wechat-persist-private-p1.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - name: Persist chat session and remove clue leakage
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace(path, old, new):
+              p=Path(path)
+              s=p.read_text()
+              if old not in s:
+                  raise SystemExit(f'pattern not found in {path}: {old[:120]!r}')
+              p.write_text(s.replace(old,new,1))
+
+          # 1) Make the private note read like Shen Yan's own late-night record.
+          replace('content/gameDataFlow.ts',
+'''    title:"六月十九日，先别给“楠楠”补字",
+    date:"2026-06-19 03:12",
+    highlights:["楠楠","囡囡","音节本身","红色铁皮糖盒","厨房门朝走廊开"],
+    body:[
+      "昨晚又梦见那间房。最稳定的还是红色铁皮糖盒、右边褪色的蓝窗帘，还有厨房门朝走廊开。",
+      "叫我的声音还是最后两个音最清楚：楠楠。也可能是囡囡。折柳说得对，在没有别的证据以前，先记音节本身，不要急着替它补成一个名字。",
+      "我把每次醒来第一分钟写下来的版本单独留着，避免自己越记越像。"
+    ]''',
+'''    title:"昨晚又梦到了",
+    date:"2026-06-19 03:12",
+    highlights:["楠楠","囡囡","红色铁皮糖盒","厨房门朝走廊开","话梅","盒盖会卡一下"],
+    body:[
+      "昨晚又是那间房。红色铁皮糖盒、右边晒褪色的蓝窗帘、厨房门往走廊开，还是这些。",
+      "厨房里的人又叫了我一声。醒来只剩最后两个音，听着像“楠楠”，也可能只是“囡囡”。我现在分不清。",
+      "最怪的是我醒来的时候还知道盒子里是话梅，甚至记得盒盖第一下会卡住。可我现实里根本不吃话梅。"
+    ]''')
+
+          # 2) NPCs may only react to information contained in private-p1.
+          replace('app/InteractiveWechat.tsx',
+'''  "private-p1":{
+    yq:[{text:"她是跟我说过最近老做同一个梦。"},{text:"但是林楠……真没提过。"}],
+    zc:[{text:"这是她电脑里的？"},{text:"她没给我看过这一版。"},{text:"林楠是后来加上去的？"}],
+    ly:[{text:"你先等下。"},{material:returnedPost},{text:"这个帖子你看一眼。"}],
+  },''',
+'''  "private-p1":{
+    yq:[{text:"她是跟我说过最近老做同一个梦。"},{text:"但没跟我讲过这么细。"}],
+    zc:[{text:"这是她电脑里的？"},{text:"她没给我看过这一版。"},{text:"她最后还是觉得那两个音像“楠楠”啊。"}],
+    ly:[{text:"这个‘名字听着不对’的感觉让我想到一个旧帖。"},{material:returnedPost},{text:"不一定有关系，就是有点像。"}],
+  },''')
+
+          # 3) Keep WeChat state alive when the component unmounts while switching apps.
+          anchor='const ordinaryChangePost=forumPost("17428","小时候走失以后突然不吃香菜，这种变化会持续很多年吗");\n'
+          store='''const ordinaryChangePost=forumPost("17428","小时候走失以后突然不吃香菜，这种变化会持续很多年吗");
+
+// The desktop swaps apps by unmounting them. Keep the current WeChat session at module level
+// so messages and one-shot material sends survive switching to Browser/Files and back.
+const wechatSession={
+  extra:{} as Record<string,Msg[]>,
+  introduced:{} as Record<string,boolean>,
+  sent:{} as Record<string,boolean>,
+};
+const wechatSubscribers=new Set<()=>void>();
+const notifyWechat=()=>wechatSubscribers.forEach(fn=>fn());
+'''
+          replace('app/InteractiveWechat.tsx',anchor,store)
+
+          replace('app/InteractiveWechat.tsx',
+''' const [extra,setExtra]=useState<Record<string,Msg[]>>({});
+ const [introduced,setIntroduced]=useState<Record<string,boolean>>({});
+ const [typing,setTyping]=useState<Record<string,boolean>>({});
+ const [sent,setSent]=useState<Record<string,boolean>>({});''',
+''' const [extra,setExtra]=useState<Record<string,Msg[]>>(()=>({...wechatSession.extra}));
+ const [introduced,setIntroduced]=useState<Record<string,boolean>>(()=>({...wechatSession.introduced}));
+ const [typing,setTyping]=useState<Record<string,boolean>>({});
+ const [sent,setSent]=useState<Record<string,boolean>>(()=>({...wechatSession.sent}));''')
+
+          replace('app/InteractiveWechat.tsx',
+''' const appendFor=(contactId:string,items:Msg[])=>setExtra(prev=>({...prev,[contactId]:[...(prev[contactId]||[]),...items]}));
+ const ensureIntro=(contactId:string):Msg[]=>{
+  if(contactId==="x"||introduced[contactId])return [];
+  setIntroduced(prev=>({...prev,[contactId]:true}));
+  return [{who:"沈妍",text:introText(contactId)}];
+ };''',
+''' const appendFor=(contactId:string,items:Msg[])=>{
+  wechatSession.extra={...wechatSession.extra,[contactId]:[...(wechatSession.extra[contactId]||[]),...items]};
+  notifyWechat();
+ };
+ const ensureIntro=(contactId:string):Msg[]=>{
+  if(contactId==="x"||wechatSession.introduced[contactId])return [];
+  wechatSession.introduced={...wechatSession.introduced,[contactId]:true};
+  notifyWechat();
+  return [{who:"沈妍",text:introText(contactId)}];
+ };''')
+
+          replace('app/InteractiveWechat.tsx',
+''' useEffect(()=>{
+  const el=scrollRef.current;
+  if(el)el.scrollTop=el.scrollHeight;
+ },[id,messages.length,typing[id]]);''',
+''' useEffect(()=>{
+  const sync=()=>{
+   setExtra({...wechatSession.extra});
+   setIntroduced({...wechatSession.introduced});
+   setSent({...wechatSession.sent});
+  };
+  wechatSubscribers.add(sync);
+  sync();
+  return ()=>{wechatSubscribers.delete(sync)};
+ },[]);
+ useEffect(()=>{
+  const el=scrollRef.current;
+  if(el)el.scrollTop=el.scrollHeight;
+ },[id,messages.length,typing[id]]);''')
+
+          replace('app/InteractiveWechat.tsx',
+'''  setSent(prev=>({...prev,[`${id}:${material.id}`]:true}));''',
+'''  wechatSession.sent={...wechatSession.sent,[`${id}:${material.id}`]:true};
+  notifyWechat();''')
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add content/gameDataFlow.ts app/InteractiveWechat.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Persist WeChat session and keep private clues grounded"
+          git push

@@ -1,0 +1,280 @@
+.verse-image-view.simple {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  align-content: start;
+  place-items: start center;
+}
+
+.verse-image-view.simple > article {
+  width: min(720px, 94%);
+  box-sizing: border-box;
+  margin-bottom: 34px !important;
+}
+
+/* Investigation CTA: collecting a clue is a primary gameplay action.
+   It should read like one, not like a small utility/share control. */
+.thread-title > button,
+.verse-page article > button,
+.site > main:not([class]) > div:first-child + section > header > button,
+button:has(> svg.lucide-file-plus-2) {
+  min-width: 210px !important;
+  min-height: 52px !important;
+  padding: 0 18px !important;
+  border: 2px solid #234f40 !important;
+  border-radius: 10px !important;
+  background: #2f6d56 !important;
+  color: #fff !important;
+  font-size: 0 !important;
+  font-weight: 800 !important;
+  letter-spacing: .02em;
+  box-shadow: 0 7px 18px rgba(38, 82, 65, .28) !important;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.thread-title > button:not(:disabled),
+.verse-page article > button:not(:disabled),
+.site > main:not([class]) > div:first-child + section > header > button:not(:disabled),
+button:has(> svg.lucide-file-plus-2):not(:disabled) {
+  animation: material-cta-nudge 1.45s ease-in-out 2;
+}
+
+.thread-title > button:not(:disabled):hover,
+.verse-page article > button:not(:disabled):hover,
+.site > main:not([class]) > div:first-child + section > header > button:not(:disabled):hover,
+button:has(> svg.lucide-file-plus-2):not(:disabled):hover {
+  transform: translateY(-2px);
+  background: #285e4a !important;
+  box-shadow: 0 10px 24px rgba(38, 82, 65, .34) !important;
+}
+
+.thread-title > button::before,
+.verse-page article > button::before {
+  content: "+";
+  display: inline-grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  margin-right: 9px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.18);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  vertical-align: -3px;
+}
+
+.thread-title > button::after,
+.verse-page article > button::after,
+.site > main:not([class]) > div:first-child + section > header > button::after,
+button:has(> svg.lucide-file-plus-2)::after {
+  content: "加入调查材料";
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* Private record uses a link icon rather than the circular plus. */
+.site > main:not([class]) > div:first-child + section > header > button svg,
+button:has(> svg.lucide-file-plus-2) > svg {
+  width: 21px !important;
+  height: 21px !important;
+  margin-right: 9px;
+  color: currentColor;
+}
+
+.thread-title > button:disabled,
+.verse-page article > button:disabled,
+.site > main:not([class]) > div:first-child + section > header > button:disabled,
+button:has(> svg.lucide-file-plus-2):disabled {
+  border-color: #9ba9a2 !important;
+  background: #e7ece9 !important;
+  color: #66766f !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+.thread-title > button:disabled::before,
+.verse-page article > button:disabled::before {
+  content: "✓";
+  background: #83938b;
+  color: #fff;
+  font-size: 15px;
+}
+
+.thread-title > button:disabled::after,
+.verse-page article > button:disabled::after,
+.site > main:not([class]) > div:first-child + section > header > button:disabled::after,
+button:has(> svg.lucide-file-plus-2):disabled::after {
+  content: "已加入调查材料";
+}
+
+@keyframes material-cta-nudge {
+  0%,100% { transform: translateY(0); box-shadow: 0 7px 18px rgba(38, 82, 65, .28); }
+  50% { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(38, 82, 65, .38); }
+}
+
+/* WeChat material picker is also a primary investigation action once enabled. */
+.wechat main > footer form {
+  grid-template-columns: minmax(0, 1fr) 108px 52px !important;
+}
+
+.wechat footer form > button[type="button"] {
+  width: 108px !important;
+  height: 52px !important;
+  border: 2px solid #2f6d56 !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  color: #285e4a !important;
+  box-shadow: 0 5px 14px rgba(45, 117, 80, .16);
+}
+
+.wechat footer form > button[type="button"] svg {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.wechat footer form > button[type="button"] span {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+
+/* Admin navigation must always read as one fixed vertical sidebar. */
+.admin-clean > div > aside {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+  width: 180px !important;
+  box-sizing: border-box !important;
+}
+
+.admin-clean > div > aside > button {
+  display: block !important;
+  width: 100% !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: #445049 !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+
+.admin-clean > div > aside > button:hover {
+  background: rgba(255,255,255,.55) !important;
+}
+
+.admin-clean > div > aside > button.active {
+  background: #32473f !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(36,54,47,.15);
+}
+
+/* Admin person records: one clear title hierarchy. Hide the redundant
+   single-character pseudo-avatar and normalize status/meta typography. */
+.admin-clean article > header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 54px;
+}
+
+.admin-clean article > header > i {
+  display: none !important;
+}
+
+.admin-clean article > header > span {
+  display: block !important;
+  min-width: 0;
+}
+
+.admin-clean article > header > span > h3 {
+  margin: 0 !important;
+  font-size: 17px !important;
+  line-height: 1.35 !important;
+  font-weight: 750 !important;
+}
+
+.admin-clean article > header > span > small {
+  display: block !important;
+  margin-top: 4px !important;
+  color: #6e7872 !important;
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+  font-weight: 500 !important;
+}
+
+.admin-clean article > header > em {
+  margin-left: auto !important;
+  padding: 5px 9px !important;
+  border-radius: 999px !important;
+  background: #e1e8e4 !important;
+  color: #496057 !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  font-style: normal !important;
+  white-space: nowrap;
+}
+
+/* Searching the honorific should feel like a restrained internal rule,
+   not a haunted-house jump scare. TrueNameAttack is the only section that
+   is a direct child of .admin-clean, so target the structure rather than
+   brittle serialized inline-style text. */
+.admin-clean > section {
+  inset: auto 24px auto auto !important;
+  top: 78px !important;
+  width: min(360px, calc(100vw - 48px)) !important;
+  min-height: 0 !important;
+  padding: 16px 18px !important;
+  border: 1px solid #9ca6a0 !important;
+  border-left: 4px solid #74433f !important;
+  border-radius: 8px !important;
+  background: #f5f4f1 !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,.22) !important;
+  overflow: visible !important;
+}
+
+.admin-clean > section > span,
+.admin-clean > section > style {
+  display: none !important;
+}
+
+.admin-clean > section > strong {
+  position: static !important;
+  display: block !important;
+  width: auto !important;
+  transform: none !important;
+  color: transparent !important;
+  font: 700 0/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif !important;
+  letter-spacing: 0 !important;
+  text-shadow: none !important;
+  animation: none !important;
+}
+
+.admin-clean > section > strong::before {
+  content: "检索已终止";
+  display: block;
+  margin-bottom: 5px;
+  color: #87514d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.admin-clean > section > strong::after {
+  content: "该称谓不进入姓名索引。请改用序列号、客编号或执行批次查询。";
+  display: block;
+  color: #303632;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.65;
+}
