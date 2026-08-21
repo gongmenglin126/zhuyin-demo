@@ -186,7 +186,27 @@ const toRank=(date:string)=>{
   return 0;
 };
 
-export const posts:Post[]=[...patched,posterMemory,linSnackPost,linMarblePost,shenCandyPost,thresholdNamePost,ritualFragmentPost,adminAccountPost,facelessIdolPost].sort((a,b)=>toRank(a.date)-toRank(b.date));
+const welcomePost:Post={
+ id:"31003",title:"【置顶】写给第一次来到这里的人：你不需要先证明自己",author:"旧档员-03",date:"2016-07-12 00:08",board:"站务区",views:48612,hidden:false,
+ excerpt:"如果你因为一段说不清的梦、记忆或旧事来到这里，可以慢慢写。这里不会要求你先证明自己的经历。",
+ terms:["新人","第一次来到","说不清的经历","站务","欢迎"],highlights:["这里接纳所有愿意认真描述自己经历的人","你不需要先证明它是真的","有些困惑，并不只有你一个人经历过"],
+ body:[
+  "这几年经常有人私信问：我只是做了一个很奇怪的梦，或者记得一点根本说不清来源的东西，这种内容能不能发在这里。可以。",
+  "很多人来到这里，心里都带着一件说不清楚的事。可能是一段反复出现的梦，一间明明没住过却觉得熟悉的房子，一个莫名亲切的名字，也可能只是某种很难解释的感觉。",
+  "这里接纳所有愿意认真描述自己经历的人。你不需要先证明它是真的，也不用担心别人觉得你奇怪。如果愿意，就把自己确实记得的东西写下来：一个名字、一种味道、一扇门、一件小时候的东西，都可以。记不清的地方空着就好。",
+  "当然，论坛不能代替医生、警方或其他专业帮助。如果这些事已经明显影响睡眠和生活，现实里的帮助永远比网友猜测重要。",
+  "无论最后有没有答案，希望你至少能知道：有些困惑，并不只有你一个人经历过。"
+ ],
+ replies:[
+  reply("纸页边角","2016-07-12 00:31","这条挺好，最近新人确实多。很多人一上来就怕自己说得太离谱。"),
+  reply("旧档员-03","00:46","能确认什么就写什么，想不起来的地方不用硬补。","版主"),
+  reply("迟迟","2017-07-22 23:26","谢谢。我就是搜小时候一些很怪的事搜进来的，本来只是想看看有没有人跟我一样。"),
+  reply("雨停以前","2022-03-18 01:14","翻到这条突然有点安心。我删了三次草稿，还是决定发出来看看。"),
+  reply("版务","2026-01-03 09:12","长期置顶。涉及现实人身安全、失踪或伤害风险的内容，请优先联系当地警方或可信任的现实联系人。","版主")
+ ]
+};
+
+export const posts:Post[]=[...patched,posterMemory,linSnackPost,linMarblePost,shenCandyPost,thresholdNamePost,ritualFragmentPost,adminAccountPost,facelessIdolPost,welcomePost].sort((a,b)=>toRank(a.date)-toRank(b.date));
 
 const privateP1=flowPrivateEntries.find(entry=>entry.id==="p1")!;
 const privateP3=flowPrivateEntries.find(entry=>entry.id==="p3")!;
