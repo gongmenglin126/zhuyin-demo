@@ -4,6 +4,7 @@
 // v9.2.2 controlled WeChat
 // v9.2.2b WeChat hard lock
 // v9.2.3 identity clarity + hostile Zhou
+// v9.2.4 staged admin reasoning
 
 import {FormEvent,useEffect,useMemo,useRef,useState} from "react";
 import {advanceGameClock} from "./gameClock";
@@ -87,17 +88,24 @@ const materialRules:Record<string,MaterialRule>={
  sanmen:{zc:[],ly:[]},
  "23109":{zc:[{text:"……这张图挺邪的。"},{text:"你从哪翻出来的？"}],ly:[{text:"这个黄纸我小时候见过差不多的。"},{text:"贴在门框边上。我一直以为就是家里辟邪。"}]},
  "27614":{zc:[{text:"这篇我有印象。"},{text:"站务后来不是说多人轮用吗。"}],ly:[{text:"我以前没点进去看过。"}]},
- "admin-watchlist":{ly:[{text:"我第一次搜自己身上那些怪事的时候，那篇帖子就在搜索结果第一条。"},{text:"我以为我终于找到了所谓的‘病友’。"},{text:"我还觉得，原来真的有人跟我一样。"},{text:"没想到……"},{text:"不是我找到他们。"},{text:"是他们一直把这些帖子放在那里，等我们自己搜进来。"}],zc:[{text:"这么多人？"},{text:"这后台不像临时搭的。"}]},
+ "admin-watchlist":{ly:[{text:"……等一下。"},{text:"这个‘归巢’……是在说我们这种人？"},{text:"我第一次搜自己身上那些怪事的时候，那篇帖子就在搜索结果第一条。"},{text:"我当时真的松了一口气。"},{text:"我以为终于有人跟我一样。"}],zc:[{text:"这么多人？"},{text:"这后台不像临时搭的。"}]},
  "admin-shen-record":{yq:[{text:"……"},{text:"你从哪看到这个的？"}],ly:[{text:"这些时间都记得这么细？"},{text:"10月16号那几条……截图。"}],zc:[{text:"19:49转交，20:52采血，21:06控制。"},{text:"三个时间是连着的。"}]},
  "admin-liang-record":{ly:[{text:"操。"},{text:"真的是我。"},{text:"这东西从什么时候开始记我的？"}],zc:[{text:"这是梁茵那份？"},{text:"今天18:42还在自动刷新，说明这系统现在还在跑。"}]},
  "admin-pair-2004":{ly:[{text:"A这边是客β，B这边是客α。"},{text:"这两个希腊字母看着不像人名，更像他们给‘客’单独编的号。"}],zc:[{text:"这份比经文直接。"},{text:"两边都写了易舍完成，还各自留了客编号。"}]},
  "admin-reswap-2026":{ly:[{text:"这里写的是‘再次易舍’，而且特意标了稳定期22年。"},{text:"试验目的那句你怎么看？"}],zc:[{text:"稳定22年以后又做一次。"},{text:"这不像临时决定的。"}]},
  "admin-sync-shen":{ly:[{text:"这条才是在解释沈妍为什么被抓。"},{text:"10月12号再舍完成以后，她这边的同步反应一直往上升；10月16号后台才把她转成‘已控制’。"}],zc:[{text:"他们自己把这条标成了关联异常。"},{text:"‘控制’和执行批次比解释更重要。"}]},
- "admin-third-1907":{ly:[{text:"她连自己到底叫沈妍还是林楠都说不稳。"},{text:"但一听到徐宁这个名字就哭……这比直接认出你更吓人。"}],zc:[{text:"姓名陈述来回变？"},{text:"那就不是一句口误能解释的。"}]},
+ "admin-third-1907":{ly:[{text:"……等一下。"},{text:"她真的在‘沈妍’和‘林楠’两个名字之间来回说？"},{text:"可记录里又写，她听到‘徐宁’的时候会一直哭？"},{text:"她连自己是谁都说不稳，却还对你的名字有反应……徐宁，这比她直接认出你更吓人。"}],zc:[{text:"姓名陈述来回变？"},{text:"那就不是一句口误能解释的。"}]},
  "admin-location-hln04":{ly:[{text:"地址有了。"},{text:"别自己去。报警，把后台记录和这个地址一起交出去。"}]},
 };
 
 const received=(contactId:string,materialId:string)=>!!wechatSession.sent[`${contactId}:${materialId}`];
+const LY_ADMIN_FLOW=["admin-watchlist","admin-liang-record","admin-shen-record","admin-pair-2004","admin-reswap-2026","admin-sync-shen","admin-third-1907","admin-location-hln04"];
+const materialAllowed=(contactId:string,materialId:string)=>{
+ if(contactId!=="ly")return true;
+ const index=LY_ADMIN_FLOW.indexOf(materialId);
+ if(index<=0)return true;
+ return LY_ADMIN_FLOW.slice(0,index).every(previous=>received("ly",previous));
+};
 export const triggerZhouLocationThreat=()=>{
  wechatSession.locationKnown=true;
  if(wechatSession.locationThreatSent||!wechatSession.zhouIdentityKnown||!wechatSession.zhouConfronted)return false;
@@ -160,6 +168,22 @@ const pairReasoningChoices=():QuickReply[]=>{
 };
 
 const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
+ if(contactId==="ly"&&materialId==="admin-watchlist")return [{
+  id:"ly-watch-roost",
+  text:"后台写‘无需主动寻找’。这到底是什么意思？",
+  emphasis:true,
+  reply:[
+   {text:"……我刚才也没反应过来。"},
+   {text:"他们知道我们会去搜。"},
+   {text:"名字不对、另一个家、走失以后变了……这种事越想越不对，就一定会自己找答案。"},
+   {text:"那些旧帖不是碰巧留在那儿的。"},
+   {text:"他们把入口一直放着，等我们自己点进去。"},
+   {text:"我以为我找到的是病友。"},
+   {text:"其实是我自己走进了他们的观察名单。"},
+   {text:"不是我找到他们。是他们一直等着我们自己搜进来。"},
+   {text:"然后他们把这件事叫‘归巢’。"}
+  ]
+ }];
  if(contactId==="yq"&&materialId==="admin-shen-record")return [
   {id:"yq-admin-transfer",text:"你说九点左右才走。后台为什么19:49已经写了‘线下转交’？",emphasis:true,reply:[{text:"……"},{text:"那个人十九点多就到了。"},{text:"我把沈妍交给她以后，剩下的不是我负责。"}],next:[
    {id:"yq-admin-chat",text:"那20:46和21:03这些聊天呢？",reply:[{text:"‘你不吃了’和‘到家说一声’是他们让我发的。"},{text:"沈妍账号后来回的那几句，不是她发的。"},{text:"她的手机那时候已经不在她手里了。"}],next:[
@@ -188,7 +212,7 @@ const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
   return syncReasoningChoices();
  }
  if(contactId==="ly"&&materialId==="admin-third-1907"){
-  const base:QuickReply={id:"ly-third-identity",text:"她听到徐宁这个名字为什么会哭？",reply:[{text:"……这才吓人。"},{text:"她连名字都说不稳，但情绪反应还在。"},{text:"真找到地点，这个人也得告诉警方。"}]};
+  const base:QuickReply={id:"ly-third-identity",text:"所以她还留着沈妍的记忆？",reply:[{text:"我不敢直接这么说。"},{text:"但姓名会乱，旧屋的细节却能说出来，听到你的名字还有反应。"},{text:"至少有些东西没有跟着‘名字’一起消失。"},{text:"真找到地点，这个人也得一起告诉警方。"}]};
   if(received("ly","admin-location-hln04"))base.next=[{id:"ly-report-both",text:"地址也有了。把19-07一起报给警方。",emphasis:true,ending:"report",reply:[{text:"对。两个人都报。别自己过去。"}]}];
   return [base];
  }
@@ -204,8 +228,7 @@ const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
      {id:"ly-admin-now",text:"今天18:42还有设备记录刷新。",reply:[{text:"今天？"},{text:"我今天根本没上论坛。"},{text:"……有点恶心了。"},{text:"我先把定位关了。"},{text:"你继续看。沈妍那边比我急。"}]}
     ]}
    ]}
-  ]},
-  {id:"ly-admin-2021-direct",text:"2021年三月有第一次线下接触。",reply:[{text:"等一下。"},{text:"那年三月我确实见过一个论坛里认识的女的。"},{text:"就吃了顿饭，她一直问我小时候走失那阵的事。"},{text:"我当时真以为就是网友聊天。"}]}
+  ]}
  ];
  return [];
 };
@@ -307,7 +330,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  const canFreeText=id!=="x"&&!!introduced[id]&&!!freeText[id]&&!actionLocked&&!hasQuick;
  const zhouHostile=id==="zc"&&wechatSession.zhouConfronted;
  const canPickMaterial=id!=="x"&&!!introduced[id]&&!actionLocked&&!hasQuick&&!freeText[id]&&!zhouHostile;
- const sendable=useMemo(()=>id==="x"||!introduced[id]||zhouHostile?[]:materials.filter(m=>{const rules=materialRules[m.id];return !!rules&&Object.prototype.hasOwnProperty.call(rules,id)&&rules[id]!==null&&!sent[`${id}:${m.id}`]}),[materials,id,sent,introduced,zhouHostile]);
+ const sendable=useMemo(()=>id==="x"||!introduced[id]||zhouHostile?[]:materials.filter(m=>{const rules=materialRules[m.id];return !!rules&&Object.prototype.hasOwnProperty.call(rules,id)&&rules[id]!==null&&!sent[`${id}:${m.id}`]&&materialAllowed(id,m.id)}),[materials,id,sent,introduced,zhouHostile]);
  const appendFor=(contactId:string,items:Msg[])=>{
   wechatSession.extra={...wechatSession.extra,[contactId]:[...(wechatSession.extra[contactId]||[]),...items]};
   const incoming=[...items].reverse().find(x=>x.who==="对方"&&!!x.text);
@@ -392,7 +415,7 @@ export default function InteractiveWechat({materials,onOpenPost}:{materials:Shar
  const sendMaterial=(material:SharedMaterial)=>{
   if(!canPickMaterial||wechatSession.locked[id])return;
   const rules=materialRules[material.id];
-  if(!rules||!Object.prototype.hasOwnProperty.call(rules,id))return;
+  if(!rules||!Object.prototype.hasOwnProperty.call(rules,id)||!materialAllowed(id,material.id))return;
   setLockedFor(id,true);
   const reply=materialReply(id,material.id);
   appendFor(id,[{who:"沈妍",text:`[分享] ${material.title}`,material}]);
