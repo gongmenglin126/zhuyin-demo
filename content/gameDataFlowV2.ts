@@ -124,9 +124,6 @@ const wallPost:Post={
 const returnedBase=flowPosts.find(post=>post.id==="14692")!;
 const returnedCase:Post={...returnedBase,terms:(returnedBase.terms||[]).filter(term=>term!=="寻人启事"),highlights:(returnedBase.highlights||[]).filter(mark=>mark!=="寻人启事"),replies:[reply("睡前一杯水","23:41","如果现在还会因为这些事难受，继续做咨询比在论坛找答案靠谱。"),reply("雨棚下","00:09","我四岁搬家后把旧家和幼儿园混在一起很多年。小孩的记忆真能串。"),reply("山羊胡","01:03","派出所也许还留过接警记录，不过年代这么久不一定查得到。"),reply("南门摆摊","11:32","有没有可能那几天有人临时照顾你？住过几天的地方后来被记成另一个家。"),reply("蓝色票根","04-12","我小时候一直说家门颜色不对，后来才知道那年真的重新刷过。"),reply("折柳","04-13","我第一反应还是走失以后记忆乱了。不过你写的这些细节确实挺具体。"),reply("照骨","2020-01-13 00:18","回来以后除了名字和另一个家，还有没有突然怕以前不怕的东西，或者以前会做、后来突然不会的事？没有也可以写没有。"),reply("夜班公交","00:31","@照骨 你怎么又问这一套，我好像在别的走失帖也见过。"),reply("照骨","00:44","类似帖子我都会问，省得每次漏掉东西。"),reply("版务","00:57","旧帖请勿频繁顶起。","版主")]};
 
-const julyBase=flowPosts.find(post=>post.id==="10731")!;
-const julyArchive:Post={...julyBase,title:"2004 年 7 月两地地方报转载来源求考",replies:[reply("报刊索引","21:48","我核过目录号，不是重复转载。两条都有各自的首发版面。"),reply("纸页边角","22:03","差一天、同岁、都两周左右，难怪目录里看着像一条。"),reply("南站旧报摊","22:51","两地四百多公里，联系人也不一样，应该就是两起碰巧挨得很近。"),reply("折柳","23:02","这帖我当年看过。印象最深的就是两个“十三天”挨在一起。"),reply("地方志小王","23:07","对，我当时就是怕目录合并错了才发帖。","楼主")]};
-
 const traumaBase=flowPosts.find(post=>post.id==="17428")!;
 const traumaCase:Post={...traumaBase,replies:[reply("营养科路过","18:52","会有这种可能，也可能只是儿童期口味刚好在那段时间改变。单凭时间前后真说不准。"),reply("雨衣口袋","19:02","我家里也是拿“走失回来以后变了”讲了二十多年，所以我自己也不知道是不是硬连在一起了。","楼主"),reply("折柳","19:14","你这篇我反而觉得挺普通的。除了香菜，别的生活都没变，对吧？"),reply("雨衣口袋","19:22","对，其他都正常。","楼主"),reply("照骨","19:41","那名字、家里房间、以前会做的事这些，有没有哪样突然觉得不对？"),reply("雨衣口袋","19:53","都没有。就是香菜。","楼主"),reply("纸页边角","20:07","照骨你是不是在别的走失帖也问过这几个问题？看着好眼熟。"),reply("照骨","20:16","问过，类似帖子我一般都这么问。")]};
 
@@ -174,7 +171,7 @@ const ritualFragmentPost:Post={
  archive:"旧档恢复记录：2016-02-12；执行账号“旧档员-03”。原始附件已失效。"
 };
 
-const patched=flowPosts.map(post=>post.id==="33897"?cottonYard:post.id==="09114"?linNanReport:post.id==="09831"?shenYanReport:post.id==="20847"?dreamPost:post.id==="30177"?redBoxPost:post.id==="34049"?wallPost:post.id==="14692"?returnedCase:post.id==="10731"?julyArchive:post.id==="17428"?traumaCase:post.id==="11208"?scriptureComparePost:post);
+const patched=flowPosts.filter(post=>post.id!=="10731").map(post=>post.id==="33897"?cottonYard:post.id==="09114"?linNanReport:post.id==="09831"?shenYanReport:post.id==="20847"?dreamPost:post.id==="30177"?redBoxPost:post.id==="34049"?wallPost:post.id==="14692"?returnedCase:post.id==="17428"?traumaCase:post.id==="11208"?scriptureComparePost:post);
 
 const toRank=(date:string)=>{
   const full=date.match(/(20\d{2})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2}))?/);
