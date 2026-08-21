@@ -6,6 +6,7 @@ on:
       - agent/v8-forum-gameplay-rework
     paths:
       - scripts/final-narrative-closure.py
+      - .github/workflows/final-narrative-closure.yml
 
 permissions:
   contents: write
