@@ -4,6 +4,8 @@ on:
   push:
     branches: [agent/v8-forum-gameplay-rework]
     paths: ['.github/workflows/apply-v9.2.4-reasoning-flow.yml']
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
