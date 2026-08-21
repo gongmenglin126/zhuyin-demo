@@ -87,7 +87,7 @@ const materialRules:Record<string,MaterialRule>={
  "23109":{zc:[{text:"……这张图挺邪的。"},{text:"你从哪翻出来的？"}],ly:[{text:"这个黄纸我小时候见过差不多的。"},{text:"贴在门框边上。我一直以为就是家里辟邪。"}]},
  "27614":{zc:[{text:"这篇我有印象。"},{text:"站务后来不是说多人轮用吗。"}],ly:[{text:"我以前没点进去看过。"}]},
  "admin-watchlist":{ly:[{text:"这么多人？"},{text:"……迟迟也在里面？"}],zc:[{text:"这么多人？"},{text:"这后台不像临时搭的。"}]},
- "admin-shen-record":{ly:[{text:"这些时间都记得这么细？"},{text:"10月16号那几条……截图。"}],zc:[{text:"19:49转交，20:52采血，21:06控制。"},{text:"三个时间是连着的。"}]},
+ "admin-shen-record":{yq:[{text:"……"},{text:"你从哪看到这个的？"}],ly:[{text:"这些时间都记得这么细？"},{text:"10月16号那几条……截图。"}],zc:[{text:"19:49转交，20:52采血，21:06控制。"},{text:"三个时间是连着的。"}]},
  "admin-liang-record":{ly:[{text:"操。"},{text:"真的是我。"},{text:"这东西从什么时候开始记我的？"}],zc:[{text:"这是梁茵那份？"},{text:"今天18:42还在自动刷新，说明这系统现在还在跑。"}]},
  "admin-pair-2004":{ly:[{text:"A这边是客β，B这边是客α。"},{text:"这两个希腊字母看着不像人名，更像他们给‘客’单独编的号。"}],zc:[{text:"这份比经文直接。"},{text:"两边都写了易舍完成，还各自留了客编号。"}]},
  "admin-reswap-2026":{ly:[{text:"这里写的是‘再次易舍’，而且特意标了稳定期22年。"},{text:"试验目的那句你怎么看？"}],zc:[{text:"稳定22年以后又做一次。"},{text:"这不像临时决定的。"}]},
@@ -164,6 +164,13 @@ const pairReasoningChoices=():QuickReply[]=>{
 };
 
 const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
+ if(contactId==="yq"&&materialId==="admin-shen-record")return [
+  {id:"yq-admin-transfer",text:"你说九点左右才走。后台为什么19:49已经写了‘线下转交’？",emphasis:true,reply:[{text:"……"},{text:"那个人十九点多就到了。"},{text:"我把沈妍交给她以后，剩下的不是我负责。"}],next:[
+   {id:"yq-admin-chat",text:"那20:46和21:03这些聊天呢？",reply:[{text:"‘你不吃了’和‘到家说一声’是他们让我发的。"},{text:"沈妍账号后来回的那几句，不是她发的。"},{text:"她的手机那时候已经不在她手里了。"}],next:[
+    {id:"yq-admin-know",text:"你知道他们会把她怎么样？",reply:[{text:"不知道具体会做什么。"},{text:"我知道那不是普通见面。"},{text:"我只负责把人带到，后面的事他们从来不跟我说。"},{text:"我能说的就这些。"}]}
+   ]}
+  ]}
+ ];
  if(contactId==="zc"&&materialId==="sanmen"){
   const hasPair=received("zc","10731")||(received("zc","09114")&&received("zc","09831"));
   return [{id:"zc-sanmen-body",text:"你觉得“舍”和“客”指什么？",reply:[{text:"硬按字面猜的话，“舍”像住的地方。"},{text:"如果前一句真是“身为舍，魂为客”，那舍就是身体，客就是……住进去的那个东西。"},{text:"我只是按中文意思说，不代表这东西真在讲这个。"}],next:[{id:"zc-sanmen-two",text:"那“二客相契，两门相应”呢？",reply:hasPair?[{text:"两个客，两个门。"},{text:"跟你前面那两个人放一起，我第一反应会是两边一起发生了什么。"},{text:"但我现在也只能到这。"}]:[{text:"两个客、两个门，大概至少不是只说一个人。"},{text:"再往下我没东西能对。"}]}]}];
