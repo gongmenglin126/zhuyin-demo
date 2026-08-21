@@ -147,7 +147,7 @@ const adminLocationMaterial:SharedMaterial={id:"admin-location-hln04",title:"HL-
 function AddMaterialButton({material,onCopyMaterial,hasMaterial}:{material:SharedMaterial;onCopyMaterial?:(m:SharedMaterial)=>void;hasMaterial?:(id:string)=>boolean}){
  if(!onCopyMaterial)return null;
  const added=!!hasMaterial?.(material.id);
- return <button disabled={added} onClick={()=>onCopyMaterial(material)} style={{minWidth:220,height:46,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,margin:"4px 0 16px",padding:"0 16px",border:added?"1px solid #b9c3bd":"2px solid #4b7d67",borderRadius:8,background:added?"#e9eeeb":"#fff",color:added?"#6f7c75":"#2e654d",fontSize:13,fontWeight:800,cursor:added?"default":"pointer",boxShadow:added?"none":"0 5px 14px #284b3b18"}}><FilePlus2 size={20}/>{added?"已加入调查材料":"加入调查材料"}</button>
+ return <button disabled={added} onClick={()=>onCopyMaterial(material)} style={{minWidth:240,height:50,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:10,margin:"6px 0 18px",padding:"0 18px",border:added?"1px solid #b9c3bd":"2px solid #477563",borderRadius:8,background:added?"#e9eeeb":"#e2f0e8",color:added?"#6f7c75":"#285943",fontSize:13,fontWeight:800,cursor:added?"default":"pointer",boxShadow:added?"none":"0 8px 20px #284b3b28"}}><FilePlus2 size={20}/>{added?"已加入调查材料":"添加到调查材料"}</button>
 }
 
 let adminCaseLevel=0;

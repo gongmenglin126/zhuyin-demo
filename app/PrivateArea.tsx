@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import {FormEvent,useState} from "react";
-import {ArrowLeft,FileText,Link2,LockKeyhole,Maximize2,X} from "lucide-react";
+import {ArrowLeft,FilePlus2,FileText,LockKeyhole,Maximize2,X} from "lucide-react";
 import type {PrivateEntry} from "../content/gameDataFlowV2";
 import type {SharedMaterial} from "./InteractiveWechat";
 
@@ -91,7 +91,7 @@ export default function PrivateArea({entries,unlocked,onUnlock,onCopyMaterial,ha
    <button onClick={()=>{setId(null);setShared(false)}} style={s.back}><ArrowLeft size={15}/>返回私密主题</button>
    <header style={s.threadHead}>
     <span><small style={s.eyebrow}>私密记录 · {active.date}</small><h2 style={s.threadTitle}>{active.title}</h2></span>
-    <button disabled={hasMaterial(materialId)} onClick={share} style={{...s.share,opacity:hasMaterial(materialId)?.55:1,cursor:hasMaterial(materialId)?"default":"pointer"}}><Link2 size={14}/>{hasMaterial(materialId)?"已添加":"添加到材料"}</button>
+    <button disabled={hasMaterial(materialId)} onClick={share} style={{...s.share,opacity:hasMaterial(materialId)?.6:1,cursor:hasMaterial(materialId)?"default":"pointer",boxShadow:hasMaterial(materialId)?"none":"0 7px 18px #274b3a24"}}><FilePlus2 size={18}/><span>{hasMaterial(materialId)?"已加入调查材料":"添加到调查材料"}</span></button>
    </header>
    {shared&&<p style={s.sharedHint}>已加入调查材料。</p>}<article style={s.article}>
     <header style={s.authorLine}><i style={s.smallAvatar}>候</i><span><b>候鸟第七年</b><small>仅自己可见</small></span></header>
@@ -149,7 +149,7 @@ const s:Record<string,React.CSSProperties>={
  time:{color:"#7e786f",fontSize:11,textAlign:"right"},
  thread:{maxWidth:930,margin:"0 auto"},back:{display:"flex",alignItems:"center",gap:6,margin:"0 0 10px",padding:"7px 0",border:0,background:"transparent",color:"#46645b",fontSize:12},
  threadHead:{display:"flex",justifyContent:"space-between",alignItems:"flex-end",gap:18,padding:"22px 24px",border:"1px solid #d1c8bb",borderRadius:"10px 10px 0 0",background:"#fbf9f4"},threadTitle:{margin:"6px 0 0",fontSize:24,lineHeight:1.35},
- share:{flex:"0 0 auto",display:"flex",alignItems:"center",gap:6,padding:"8px 11px",border:"1px solid #c5bbae",borderRadius:7,background:"#fff",color:"#485b55",fontSize:12},sharedHint:{margin:"0",padding:"10px 14px",border:"1px solid #c7d8cf",borderTop:0,background:"#edf5f0",color:"#456257",fontSize:12},sharedHint:{margin:"0",padding:"10px 14px",border:"1px solid #c7d8cf",borderTop:0,background:"#edf5f0",color:"#456257",fontSize:12},
+ share:{flex:"0 0 auto",minHeight:46,display:"flex",alignItems:"center",justifyContent:"center",gap:9,padding:"0 17px",border:"2px solid #477563",borderRadius:8,background:"#e2f0e8",color:"#285943",fontSize:13,fontWeight:800},sharedHint:{margin:"0",padding:"10px 14px",border:"1px solid #c7d8cf",borderTop:0,background:"#edf5f0",color:"#456257",fontSize:12},sharedHint:{margin:"0",padding:"10px 14px",border:"1px solid #c7d8cf",borderTop:0,background:"#edf5f0",color:"#456257",fontSize:12},
  article:{border:"1px solid #d1c8bb",borderTop:0,borderRadius:"0 0 10px 10px",background:"#fbf9f4"},authorLine:{display:"flex",alignItems:"center",gap:10,padding:"16px 24px",borderBottom:"1px solid #e0d8cc",background:"#f1ece3",fontSize:12},smallAvatar:{width:34,height:34,display:"grid",placeItems:"center",borderRadius:8,background:"#60776f",color:"#fff",fontStyle:"normal"},
  body:{padding:"24px 30px 34px",fontSize:15,lineHeight:1.95},clue:{fontWeight:800,textDecoration:"underline",textDecorationColor:"#b9ad99",textUnderlineOffset:3},
  figure:{width:"min(520px,100%)",margin:"24px auto",padding:10,border:"1px solid #d4ccbf",borderRadius:8,background:"#f0ece4"},imageButton:{position:"relative",width:"100%",display:"block",padding:0,border:0,borderRadius:5,overflow:"hidden",background:"#d9d4cb"},image:{display:"block",width:"100%",maxHeight:360,objectFit:"contain",background:"#e8e3da"},zoomLabel:{position:"absolute",right:8,bottom:8,display:"flex",alignItems:"center",gap:5,padding:"5px 8px",borderRadius:5,background:"#111c",color:"#fff",fontSize:10},caption:{padding:"9px 3px 2px",color:"#77736c",fontSize:11},
