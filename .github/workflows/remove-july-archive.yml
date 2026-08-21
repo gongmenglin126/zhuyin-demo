@@ -1,0 +1,54 @@
+name: Remove accidental July archive thread
+
+on:
+  push:
+    branches:
+      - agent/v8-forum-gameplay-rework
+    paths:
+      - scripts/remove-july-archive.py
+      - .github/workflows/remove-july-archive.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: python scripts/remove-july-archive.py
+      - run: npm run build:single
+      - name: Verify removal and image regression
+        run: |
+          ! grep -F "2004 年 7 月两地地方报转载来源求考" content/gameDataFlowV2.ts
+          ! grep -F "2004 年 7 月两地地方报转载来源求考" single-dist/index.html
+          grep -F 'filter(post=>post.id!=="10731")' content/gameDataFlowV2.ts
+          test -f public/assets/occult/factory-faceless-idol.jpg
+      - name: Commit source change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- content/gameDataFlowV2.ts app/page.tsx
+          git commit -m "Remove accidental July archive thread"
+          git push origin HEAD:agent/v8-forum-gameplay-rework
+      - name: Publish updated playtest
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./single-dist
+          publish_branch: gh-pages
+          force_orphan: true
+          enable_jekyll: false
+      - name: Remove one-shot maintenance files
+        run: |
+          git rm -- scripts/remove-july-archive.py .github/workflows/remove-july-archive.yml
+          git commit -m "Remove temporary July archive workflow"
+          git push origin HEAD:agent/v8-forum-gameplay-rework
