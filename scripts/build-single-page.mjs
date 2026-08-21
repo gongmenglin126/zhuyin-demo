@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -87,6 +87,18 @@ html = html
   .replace(scriptMatch[0], () => inlineScript);
 
 await mkdir(outputDirectory, { recursive: true });
+
+// Keep a real copy of every non-JS/CSS asset alongside the single-file build.
+// Most assets are inlined above, but runtime-generated/serialized paths can survive
+// bundling as literal URLs. Publishing these files makes those paths reliable too.
+for (const relativePath of generatedAssets) {
+  const sourcePath = path.join(pagesDirectory, relativePath);
+  const targetPath = path.join(outputDirectory, relativePath);
+  await mkdir(path.dirname(targetPath), { recursive: true });
+  await copyFile(sourcePath, targetPath);
+}
+
 await writeFile(path.join(outputDirectory, "index.html"), html);
 
 console.log(`Single-file build written to ${path.join(outputDirectory, "index.html")}`);
+console.log(`Copied ${generatedAssets.length} fallback assets into single-dist.`);
