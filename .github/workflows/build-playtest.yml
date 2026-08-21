@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: agent/v8-forum-gameplay-rework
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -24,75 +22,11 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Replace old true-name attack
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          admin = Path('app/AdminPortalOccult.tsx')
-          text = admin.read_text()
-          pattern = r'function TrueNameAttack\(\)\{.*?\n\}\n\nlet liturgyBurned=false;'
-          replacement = '''function TrueNameAttack(){
- return <aside style={{position:"fixed",right:24,top:78,zIndex:12000,width:360,padding:"16px 18px",border:"1px solid #7f8d86",borderLeft:"4px solid #5a2727",borderRadius:8,background:"#f5f4f1",boxShadow:"0 12px 32px #0003",color:"#303632",pointerEvents:"none"}}>
-  <small style={{display:"block",marginBottom:5,color:"#87514d",fontSize:10,fontWeight:800,letterSpacing:".12em"}}>检索已终止</small>
-  <strong style={{display:"block",fontSize:14,lineHeight:1.5}}>该称谓不进入姓名索引。</strong>
-  <span style={{display:"block",marginTop:5,color:"#68716c",fontSize:11,lineHeight:1.55}}>请改用序列号、客编号或执行批次查询。</span>
- </aside>;
-}
-
-let liturgyBurned=false;'''
-          text, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
-          if count == 0:
-              if '该称谓不进入姓名索引。' not in text:
-                  raise SystemExit('TrueNameAttack block not found')
-          else:
-              admin.write_text(text)
-
-          dialogues = Path('content/adminDialogues.ts')
-          d = dialogues.read_text()
-          d = d.replace('  "误呼吾主真名":"误呼吾主真名",\n', '')
-          dialogues.write_text(d)
-          PY
-      - name: Verify source fix
-        shell: bash
-        run: |
-          grep -F '该称谓不进入姓名索引。' app/AdminPortalOccult.tsx
-          ! grep -F 'trueNameHit' app/AdminPortalOccult.tsx
-          ! grep -F '误呼吾主真名' app/AdminPortalOccult.tsx
-          ! grep -F '勿呼吾主真名' app/AdminPortalOccult.tsx
-          ! grep -F '误呼吾主真名' content/adminDialogues.ts
       - name: Build single-file playtest
         run: npm run build:single
-      - name: Verify final playtest
-        shell: bash
-        run: |
-          grep -F '该称谓不进入姓名索引。' single-dist/index.html
-          ! grep -F '误呼吾主真名' single-dist/index.html
-          ! grep -F '勿呼吾主真名' single-dist/index.html
-          test -f single-dist/assets/occult/factory-faceless-idol.jpg
-      - name: Commit actual source fix
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- app/AdminPortalOccult.tsx content/adminDialogues.ts
-          git commit -m "Replace true-name attack with restrained system notice" || true
-          git push origin HEAD:agent/v8-forum-gameplay-rework
       - name: Upload playtest
         uses: actions/upload-artifact@v4
         with:
           name: zhuyin-v8-forum-playtest
           path: single-dist/index.html
           if-no-files-found: error
-      - name: Publish updated playtest to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./single-dist
-          publish_branch: gh-pages
-          force_orphan: true
-          enable_jekyll: false
-
-# retrigger true-name fix
