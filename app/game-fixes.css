@@ -224,3 +224,55 @@ button:has(> svg.lucide-file-plus-2):disabled::after {
   font-style: normal !important;
   white-space: nowrap;
 }
+
+/* Searching the honorific should feel like a restrained internal rule,
+   not a haunted-house jump scare. Collapse the existing full-screen effect
+   into a quiet system notice and suppress the repeated animated words. */
+.admin-clean > section[style*="z-index: 12000"] {
+  inset: auto 24px auto auto !important;
+  top: 78px !important;
+  width: min(360px, calc(100vw - 48px)) !important;
+  min-height: 0 !important;
+  padding: 16px 18px !important;
+  border: 1px solid #9ca6a0 !important;
+  border-left: 4px solid #74433f !important;
+  border-radius: 8px !important;
+  background: #f5f4f1 !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,.22) !important;
+  overflow: visible !important;
+}
+
+.admin-clean > section[style*="z-index: 12000"] > span,
+.admin-clean > section[style*="z-index: 12000"] > style {
+  display: none !important;
+}
+
+.admin-clean > section[style*="z-index: 12000"] > strong {
+  position: static !important;
+  display: block !important;
+  width: auto !important;
+  transform: none !important;
+  color: transparent !important;
+  font: 700 0/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif !important;
+  letter-spacing: 0 !important;
+  text-shadow: none !important;
+}
+
+.admin-clean > section[style*="z-index: 12000"] > strong::before {
+  content: "检索已终止";
+  display: block;
+  margin-bottom: 5px;
+  color: #87514d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.admin-clean > section[style*="z-index: 12000"] > strong::after {
+  content: "该称谓不进入姓名索引。请改用序列号、客编号或执行批次查询。";
+  display: block;
+  color: #303632;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.65;
+}
