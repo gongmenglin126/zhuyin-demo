@@ -75,13 +75,14 @@ export const discoverZhouIdentity=()=>{wechatSession.zhouIdentityKnown=true;noti
 
 const materialRules:Record<string,MaterialRule>={
  "33897":{yq:[{text:"这是哪儿？"},{text:"没去过。昨晚她也没跟我说这个。"}],zc:[{text:"这个我看过。"},{text:"她当时还在下面问那扇门怎么开的。"},{text:"照片跟她画的确实有点像。"}]},
- "09114":{yq:[{text:"林楠？"},{text:"没听她提过。"}],zc:[],ly:[{text:"林楠？"},{text:"不认识。"},{text:"沈妍怎么会查到她的？"}]},
- "09831":{zc:[],ly:[{text:"这是沈妍？"},{text:"她没跟我说过小时候这件事。"}]},
+ "09114":{yq:[{text:"林楠？"},{text:"没听她提过。"}],zc:[{text:"不认识。"},{text:"……你为什么在找这个？"},{text:"这跟沈妍有关系吗？"}],ly:[{text:"林楠？"},{text:"不认识。"}]},
+ "09831":{zc:[{text:"这是沈妍小时候？"},{text:"她从来没提过。"}],ly:[{text:"这是沈妍？"},{text:"她没跟我说过小时候这件事。"}]},
  "10731":{zc:[],ly:[{text:"这篇我看过。"},{text:"两条都十三天那段我有印象。"}]},
  "14692":{zc:[{text:"这帖我记得。"},{text:"楼主后来没怎么更新。"}],ly:[{text:"这篇我看过。"},{text:"他说别人叫名字时会慢半拍，那段我记得。"}]},
  "17428":{zc:[{text:"这个我也回过。"},{text:"就香菜，别的没啥。"}],ly:[{text:"这个跟我不太像。"}]},
  "private-p1":{yq:[{text:"她是说过最近总梦见同一间屋。"},{text:"盒子这些细节没跟我讲过。"}],zc:[{text:"这是她自己存的？"},{text:"这版她没给我看过。"},{text:"原来她后来一直觉得是“楠楠”。"}]},
  "private-p3":{yq:null,zc:[{text:"她把这些都存一起了？"},{text:"里面那个“突然不吃某种味道”我有印象。"},{text:"有篇旧帖就这样。"},{material:ordinaryChangePost},{text:"好像就是这个。"}],ly:[{text:"“另一个家”这几个字我见过。"},{text:"有个旧帖里也这么写。"},{material:returnedPost},{text:"我以前看过，不一定是一回事。"}]},
+ "private-p4":{yq:null,zc:[{text:"她连这个也记下来了？"},{text:"这篇比前面的梦境记录具体多了。"}],ly:[{text:"前面的记录还只是一些零碎的梦。"},{text:"这篇突然清楚了很多。"}]},
  verse:{zc:[{text:"这张黑底的我眼熟。"},{text:"以前有个帖子专门吵它跟白纸抄本是不是一套。"},{material:scriptureComparePost}],ly:[{text:"看不懂。"},{text:"这也是她电脑里的？"}]},
  sanmen:{zc:[],ly:[]},
  "23109":{zc:[{text:"……这张图挺邪的。"},{text:"你从哪翻出来的？"}],ly:[{text:"这个黄纸我小时候见过差不多的。"},{text:"贴在门框边上。我一直以为就是家里辟邪。"}]},
@@ -114,13 +115,8 @@ export const triggerZhouLocationThreat=()=>{
 };
 
 const materialReply=(contactId:string,materialId:string):ReplyPart[]|null=>{
- if(contactId==="zc"&&materialId==="09114"){
-  if(received("zc","09831"))return [{text:"等等。"},{text:"这条也是九岁？"},{text:"也是十三天。"},{text:"日期还挨着……这也太巧了。"}];
-  return [{text:"林楠？"},{text:"这个名字她没跟我说过。"},{text:"九岁，失踪十三天。挺久的。"}];
- }
- if(contactId==="zc"&&materialId==="09831"){
-  if(received("zc","09114"))return [{text:"这是沈妍？"},{text:"等会儿，林楠那条也是九岁。"},{text:"都是十三天？"},{text:"这也太巧了。"}];
-  return [{text:"这是沈妍小时候？"},{text:"她从来没提过。"}];
+ if(contactId==="ly"&&materialId==="09114"&&received("ly","09831")){
+  return [{text:"等等。"},{text:"这条也是九岁？"},{text:"也是十三天。"},{text:"日期还挨着……这也太巧了。"}];
  }
  if(contactId==="zc"&&materialId==="10731"){
   if(received("zc","09114")&&received("zc","09831"))return [{text:"哦。"},{text:"原来你前面发的就是这两条。"},{text:"我以前回过这帖，当时只觉得目录撞得离谱。"}];
