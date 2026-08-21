@@ -1,0 +1,104 @@
+name: Make material actions prominent
+
+on:
+  push:
+    branches:
+      - agent/v8-forum-gameplay-rework
+    paths:
+      - .github/workflows/fix-material-button-visibility.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Strengthen all material actions
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              if old not in text:
+                  raise SystemExit(f"pattern not found: {label}")
+              return text.replace(old, new, 1)
+
+          # Forum posts + cached scripture page.
+          p = Path("app/page.tsx")
+          s = p.read_text()
+          s = replace_once(
+              s,
+              'Clock3,Globe2,History as HistoryIcon',
+              'Clock3,FilePlus2,Globe2,History as HistoryIcon',
+              'page icon import',
+          )
+          old_forum = '''{SHAREABLE_POST_IDS.has(post.id)&&<button disabled={hasMaterial(post.id)} onClick={()=>onCopyMaterial({id:post.id,title:post.title,kind:"论坛帖子",url:"https://www.zhuyinwen.cn/thread/"+post.id})} style={{marginTop:8,border:"1px solid #b8afa5",background:"#fff",borderRadius:5,padding:"6px 10px",fontSize:12,cursor:hasMaterial(post.id)?"default":"pointer",opacity:hasMaterial(post.id)?.55:1}}>{hasMaterial(post.id)?"已添加":"添加到材料"}</button>}'''
+          new_forum = '''{SHAREABLE_POST_IDS.has(post.id)&&<button disabled={hasMaterial(post.id)} onClick={()=>onCopyMaterial({id:post.id,title:post.title,kind:"论坛帖子",url:"https://www.zhuyinwen.cn/thread/"+post.id})} style={{minHeight:46,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,marginTop:12,padding:"0 17px",border:hasMaterial(post.id)?"1px solid #bdc8c2":"2px solid #477563",background:hasMaterial(post.id)?"#eef1ef":"#e2f0e8",color:hasMaterial(post.id)?"#748079":"#285943",borderRadius:8,fontSize:13,fontWeight:800,cursor:hasMaterial(post.id)?"default":"pointer",boxShadow:hasMaterial(post.id)?"none":"0 7px 18px #274b3a24"}}><FilePlus2 size={18}/><span>{hasMaterial(post.id)?"已加入调查材料":"添加到调查材料"}</span></button>}'''
+          s = replace_once(s, old_forum, new_forum, 'forum material button')
+          old_verse = '''<button disabled={added} onClick={()=>onCopyMaterial({id:"verse",title:"无相还真旧教页",kind:"缓存教页",url:"https://www.zhuyinwen.cn/archive/cache/baishesong-1986.html"})} style={{marginTop:8,border:"1px solid #69342f",background:"#201311",color:"#d6c0ae",borderRadius:4,padding:"8px 11px",fontSize:12,cursor:added?"default":"pointer",opacity:added?.55:1}}>{added?"已添加":"添加到材料"}</button>'''
+          new_verse = '''<button disabled={added} onClick={()=>onCopyMaterial({id:"verse",title:"无相还真旧教页",kind:"缓存教页",url:"https://www.zhuyinwen.cn/archive/cache/baishesong-1986.html"})} style={{minHeight:48,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,marginTop:18,padding:"0 18px",border:added?"1px solid #5e4a45":"2px solid #a34e43",background:added?"#211b19":"#3b1714",color:added?"#8b7d76":"#f0d7c8",borderRadius:7,fontSize:13,fontWeight:800,cursor:added?"default":"pointer",boxShadow:added?"none":"0 8px 24px #0008"}}><FilePlus2 size={18}/><span>{added?"已加入调查材料":"添加到调查材料"}</span></button>'''
+          s = replace_once(s, old_verse, new_verse, 'verse material button')
+          p.write_text(s)
+
+          # Private records.
+          p = Path("app/PrivateArea.tsx")
+          s = p.read_text()
+          s = replace_once(
+              s,
+              'import {ArrowLeft,FileText,Link2,LockKeyhole,Maximize2,X} from "lucide-react";',
+              'import {ArrowLeft,FilePlus2,FileText,LockKeyhole,Maximize2,X} from "lucide-react";',
+              'private icon import',
+          )
+          old_private_button = '''<button disabled={hasMaterial(materialId)} onClick={share} style={{...s.share,opacity:hasMaterial(materialId)?.55:1,cursor:hasMaterial(materialId)?"default":"pointer"}}><Link2 size={14}/>{hasMaterial(materialId)?"已添加":"添加到材料"}</button>'''
+          new_private_button = '''<button disabled={hasMaterial(materialId)} onClick={share} style={{...s.share,opacity:hasMaterial(materialId)?.6:1,cursor:hasMaterial(materialId)?"default":"pointer",boxShadow:hasMaterial(materialId)?"none":"0 7px 18px #274b3a24"}}><FilePlus2 size={18}/><span>{hasMaterial(materialId)?"已加入调查材料":"添加到调查材料"}</span></button>'''
+          s = replace_once(s, old_private_button, new_private_button, 'private material button')
+          old_share_style = '''share:{flex:"0 0 auto",display:"flex",alignItems:"center",gap:6,padding:"8px 11px",border:"1px solid #c5bbae",borderRadius:7,background:"#fff",color:"#485b55",fontSize:12}'''
+          new_share_style = '''share:{flex:"0 0 auto",minHeight:46,display:"flex",alignItems:"center",justifyContent:"center",gap:9,padding:"0 17px",border:"2px solid #477563",borderRadius:8,background:"#e2f0e8",color:"#285943",fontSize:13,fontWeight:800}'''
+          s = replace_once(s, old_share_style, new_share_style, 'private share style')
+          p.write_text(s)
+
+          # Admin material action: keep same semantics, make it visually match the rest.
+          p = Path("app/AdminPortalOccult.tsx")
+          s = p.read_text()
+          old_admin = '''return <button disabled={added} onClick={()=>onCopyMaterial(material)} style={{minWidth:220,height:46,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9,margin:"4px 0 16px",padding:"0 16px",border:added?"1px solid #b9c3bd":"2px solid #4b7d67",borderRadius:8,background:added?"#e9eeeb":"#fff",color:added?"#6f7c75":"#2e654d",fontSize:13,fontWeight:800,cursor:added?"default":"pointer",boxShadow:added?"none":"0 5px 14px #284b3b18"}}><FilePlus2 size={20}/>{added?"已加入调查材料":"加入调查材料"}</button>'''
+          new_admin = '''return <button disabled={added} onClick={()=>onCopyMaterial(material)} style={{minWidth:240,height:50,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:10,margin:"6px 0 18px",padding:"0 18px",border:added?"1px solid #b9c3bd":"2px solid #477563",borderRadius:8,background:added?"#e9eeeb":"#e2f0e8",color:added?"#6f7c75":"#285943",fontSize:13,fontWeight:800,cursor:added?"default":"pointer",boxShadow:added?"none":"0 8px 20px #284b3b28"}}><FilePlus2 size={20}/>{added?"已加入调查材料":"添加到调查材料"}</button>'''
+          s = replace_once(s, old_admin, new_admin, 'admin material button')
+          p.write_text(s)
+      - run: npm run build:single
+      - name: Verify prominent material actions and image embedding
+        run: |
+          grep -F "添加到调查材料" single-dist/index.html
+          grep -F "已加入调查材料" single-dist/index.html
+          if grep -Fq "assets/occult/factory-faceless-idol.jpg" single-dist/index.html; then
+            echo "faceless idol image was not embedded into the single-file build"
+            exit 1
+          fi
+      - name: Commit source changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx app/PrivateArea.tsx app/AdminPortalOccult.tsx
+          git diff --cached --quiet || git commit -m "Make material actions more prominent"
+          git push origin HEAD:agent/v8-forum-gameplay-rework
+      - name: Publish updated playtest to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./single-dist
+          publish_branch: gh-pages
+          force_orphan: true
+          enable_jekyll: false
+      - name: Remove temporary workflow
+        run: |
+          git rm -f .github/workflows/fix-material-button-visibility.yml
+          git commit -m "Remove temporary material button workflow"
+          git push origin HEAD:agent/v8-forum-gameplay-rework
