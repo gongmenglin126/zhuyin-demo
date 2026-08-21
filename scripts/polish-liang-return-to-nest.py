@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# trigger: apply Liang return-to-nest reaction
 p=Path('app/InteractiveWechat.tsx')
 s=p.read_text()
 old='"admin-watchlist":{ly:[{text:"这么多人？"},{text:"……迟迟也在里面？"}],zc:[{text:"这么多人？"},{text:"这后台不像临时搭的。"}]},'
