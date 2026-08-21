@@ -226,9 +226,10 @@ button:has(> svg.lucide-file-plus-2):disabled::after {
 }
 
 /* Searching the honorific should feel like a restrained internal rule,
-   not a haunted-house jump scare. Collapse the existing full-screen effect
-   into a quiet system notice and suppress the repeated animated words. */
-.admin-clean > section[style*="z-index: 12000"] {
+   not a haunted-house jump scare. TrueNameAttack is the only section that
+   is a direct child of .admin-clean, so target the structure rather than
+   brittle serialized inline-style text. */
+.admin-clean > section {
   inset: auto 24px auto auto !important;
   top: 78px !important;
   width: min(360px, calc(100vw - 48px)) !important;
@@ -242,12 +243,12 @@ button:has(> svg.lucide-file-plus-2):disabled::after {
   overflow: visible !important;
 }
 
-.admin-clean > section[style*="z-index: 12000"] > span,
-.admin-clean > section[style*="z-index: 12000"] > style {
+.admin-clean > section > span,
+.admin-clean > section > style {
   display: none !important;
 }
 
-.admin-clean > section[style*="z-index: 12000"] > strong {
+.admin-clean > section > strong {
   position: static !important;
   display: block !important;
   width: auto !important;
@@ -256,9 +257,10 @@ button:has(> svg.lucide-file-plus-2):disabled::after {
   font: 700 0/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif !important;
   letter-spacing: 0 !important;
   text-shadow: none !important;
+  animation: none !important;
 }
 
-.admin-clean > section[style*="z-index: 12000"] > strong::before {
+.admin-clean > section > strong::before {
   content: "检索已终止";
   display: block;
   margin-bottom: 5px;
@@ -268,7 +270,7 @@ button:has(> svg.lucide-file-plus-2):disabled::after {
   letter-spacing: .12em;
 }
 
-.admin-clean > section[style*="z-index: 12000"] > strong::after {
+.admin-clean > section > strong::after {
   content: "该称谓不进入姓名索引。请改用序列号、客编号或执行批次查询。";
   display: block;
   color: #303632;
