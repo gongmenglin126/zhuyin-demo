@@ -1,0 +1,173 @@
+name: Apply v9.2.4 Reasoning Flow
+
+on:
+  push:
+    branches: [agent/v8-forum-gameplay-rework]
+    paths: ['.github/workflows/apply-v9.2.4-reasoning-flow.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Patch reasoning flow and dialogue
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          wechat = Path('app/InteractiveWechat.tsx')
+          text = wechat.read_text()
+
+          old = ''' "admin-watchlist":{ly:[{text:"我第一次搜自己身上那些怪事的时候，那篇帖子就在搜索结果第一条。"},{text:"我以为我终于找到了所谓的‘病友’。"},{text:"我还觉得，原来真的有人跟我一样。"},{text:"没想到……"},{text:"不是我找到他们。"},{text:"是他们一直把这些帖子放在那里，等我们自己搜进来。"}],zc:[{text:"这么多人？"},{text:"这后台不像临时搭的。"}]}'''
+          new = ''' "admin-watchlist":{ly:[{text:"……等一下。"},{text:"这个‘归巢’……是在说我们这种人？"},{text:"我第一次搜自己身上那些怪事的时候，那篇帖子就在搜索结果第一条。"},{text:"我当时真的松了一口气。"},{text:"我以为终于有人跟我一样。"}],zc:[{text:"这么多人？"},{text:"这后台不像临时搭的。"}]}'''
+          if old not in text:
+              raise SystemExit('admin-watchlist dialogue anchor not found')
+          text = text.replace(old, new, 1)
+
+          old = ''' "admin-third-1907":{ly:[{text:"她连自己到底叫沈妍还是林楠都说不稳。"},{text:"但一听到徐宁这个名字就哭……这比直接认出你更吓人。"}],zc:[{text:"姓名陈述来回变？"},{text:"那就不是一句口误能解释的。"}]}'''
+          new = ''' "admin-third-1907":{ly:[{text:"……等一下。"},{text:"她真的在‘沈妍’和‘林楠’两个名字之间来回说？"},{text:"可记录里又写，她听到‘徐宁’的时候会一直哭？"},{text:"她连自己是谁都说不稳，却还对你的名字有反应……徐宁，这比她直接认出你更吓人。"}],zc:[{text:"姓名陈述来回变？"},{text:"那就不是一句口误能解释的。"}]}'''
+          if old not in text:
+              raise SystemExit('admin-third dialogue anchor not found')
+          text = text.replace(old, new, 1)
+
+          anchor = 'const received=(contactId:string,materialId:string)=>!!wechatSession.sent[`${contactId}:${materialId}`];\n'
+          insert = '''const received=(contactId:string,materialId:string)=>!!wechatSession.sent[`${contactId}:${materialId}`];
+const LY_ADMIN_FLOW=["admin-watchlist","admin-liang-record","admin-shen-record","admin-pair-2004","admin-reswap-2026","admin-sync-shen","admin-third-1907","admin-location-hln04"];
+const materialAllowed=(contactId:string,materialId:string)=>{
+ if(contactId!=="ly")return true;
+ const index=LY_ADMIN_FLOW.indexOf(materialId);
+ if(index<=0)return true;
+ return LY_ADMIN_FLOW.slice(0,index).every(previous=>received("ly",previous));
+};
+'''
+          if anchor not in text:
+              raise SystemExit('received anchor not found')
+          text = text.replace(anchor, insert, 1)
+
+          anchor = 'const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{\n'
+          insert = '''const quickAfterMaterial=(contactId:string,materialId:string):QuickReply[]=>{
+ if(contactId==="ly"&&materialId==="admin-watchlist")return [{
+  id:"ly-watch-roost",
+  text:"后台写‘无需主动寻找’。这到底是什么意思？",
+  emphasis:true,
+  reply:[
+   {text:"……我刚才也没反应过来。"},
+   {text:"他们知道我们会去搜。"},
+   {text:"名字不对、另一个家、走失以后变了……这种事越想越不对，就一定会自己找答案。"},
+   {text:"那些旧帖不是碰巧留在那儿的。"},
+   {text:"他们把入口一直放着，等我们自己点进去。"},
+   {text:"我以为我找到的是病友。"},
+   {text:"其实是我自己走进了他们的观察名单。"},
+   {text:"不是我找到他们。是他们一直等着我们自己搜进来。"},
+   {text:"然后他们把这件事叫‘归巢’。"}
+  ]
+ }];
+'''
+          if anchor not in text:
+              raise SystemExit('quickAfterMaterial anchor not found')
+          text = text.replace(anchor, insert, 1)
+
+          old = ''' if(contactId==="ly"&&materialId==="admin-third-1907"){
+  const base:QuickReply={id:"ly-third-identity",text:"她听到徐宁这个名字为什么会哭？",reply:[{text:"……这才吓人。"},{text:"她连名字都说不稳，但情绪反应还在。"},{text:"真找到地点，这个人也得告诉警方。"}]};'''
+          new = ''' if(contactId==="ly"&&materialId==="admin-third-1907"){
+  const base:QuickReply={id:"ly-third-identity",text:"所以她还留着沈妍的记忆？",reply:[{text:"我不敢直接这么说。"},{text:"但姓名会乱，旧屋的细节却能说出来，听到你的名字还有反应。"},{text:"至少有些东西没有跟着‘名字’一起消失。"},{text:"真找到地点，这个人也得一起告诉警方。"}]};'''
+          if old not in text:
+              raise SystemExit('third reasoning anchor not found')
+          text = text.replace(old, new, 1)
+
+          old = 'const sendable=useMemo(()=>id==="x"||!introduced[id]||zhouHostile?[]:materials.filter(m=>{const rules=materialRules[m.id];return !!rules&&Object.prototype.hasOwnProperty.call(rules,id)&&rules[id]!==null&&!sent[`${id}:${m.id}`]}),[materials,id,sent,introduced,zhouHostile]);'
+          new = 'const sendable=useMemo(()=>id==="x"||!introduced[id]||zhouHostile?[]:materials.filter(m=>{const rules=materialRules[m.id];return !!rules&&Object.prototype.hasOwnProperty.call(rules,id)&&rules[id]!==null&&!sent[`${id}:${m.id}`]&&materialAllowed(id,m.id)}),[materials,id,sent,introduced,zhouHostile]);'
+          if old not in text:
+              raise SystemExit('sendable anchor not found')
+          text = text.replace(old, new, 1)
+
+          old = '''  const rules=materialRules[material.id];
+  if(!rules||!Object.prototype.hasOwnProperty.call(rules,id))return;'''
+          new = '''  const rules=materialRules[material.id];
+  if(!rules||!Object.prototype.hasOwnProperty.call(rules,id)||!materialAllowed(id,material.id))return;'''
+          if old not in text:
+              raise SystemExit('sendMaterial guard anchor not found')
+          text = text.replace(old, new, 1)
+
+          direct = ''',
+  {id:"ly-admin-2021-direct",text:"2021年三月有第一次线下接触。",reply:[{text:"等一下。"},{text:"那年三月我确实见过一个论坛里认识的女的。"},{text:"就吃了顿饭，她一直问我小时候走失那阵的事。"},{text:"我当时真以为就是网友聊天。"}]}'''
+          if direct not in text:
+              raise SystemExit('liang shortcut anchor not found')
+          text = text.replace(direct, '', 1)
+          wechat.write_text(text)
+
+          admin = Path('app/AdminPortalOccult.tsx')
+          text = admin.read_text()
+          old = '''<Record date="系统状态" title="运行中" meta="旧档投放 / 相似叙述聚类" text="无需主动寻找。异常记忆会自行形成检索行为；命中旧档后自动进入观察候选。"/>'''
+          new = '''<Record date="系统状态" title="检索诱导运行中" meta="旧档保留 / 相似叙述聚类" text="不主动联系目标。保留‘另一个家 / 名字不对 / 走失后变化’等旧帖作为检索入口；用户自行搜索命中后，进入观察候选。内部称‘归巢’。"/>'''
+          if old not in text:
+              raise SystemExit('watchlist system text anchor not found')
+          text = text.replace(old, new, 1)
+
+          pattern = r'''function TrueNameAttack\(\)\{.*?\n\}\n\nlet liturgyBurned=false;'''
+          replacement = '''function TrueNameAttack(){
+ return <aside style={{position:"fixed",right:24,top:78,zIndex:12000,width:360,padding:"16px 18px",border:"1px solid #7f8d86",borderLeft:"4px solid #5a2727",borderRadius:8,background:"#f5f4f1",boxShadow:"0 12px 32px #0003",color:"#303632",pointerEvents:"none"}}>
+  <small style={{display:"block",marginBottom:5,color:"#87514d",fontSize:10,fontWeight:800,letterSpacing:".12em"}}>检索已终止</small>
+  <strong style={{display:"block",fontSize:14,lineHeight:1.5}}>该称谓不进入姓名索引。</strong>
+  <span style={{display:"block",marginTop:5,color:"#68716c",fontSize:11,lineHeight:1.55}}>请改用序列号、客编号或执行批次查询。</span>
+ </aside>;
+}
+
+let liturgyBurned=false;'''
+          text, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('TrueNameAttack block not found')
+          admin.write_text(text)
+
+          live = Path('content/wechatLiveDialogues.ts')
+          text = live.read_text()
+          text = text.replace('''  "她连自己到底叫沈妍还是林楠都说不稳。":"她能说出来的都只是一些碎片，人物、地点、时间都连不起来。",''','''  "她连自己到底叫沈妍还是林楠都说不稳。":"……等一下。她真的在‘沈妍’和‘林楠’两个名字之间来回说？",''')
+          text = text.replace('''  "但一听到徐宁这个名字就哭……这比直接认出你更吓人。":"她只对‘沈妍’和‘林楠’这两个名字有反应。",''','''  "但一听到徐宁这个名字就哭……这比直接认出你更吓人。":"可她听到‘徐宁’的时候会哭？她连自己是谁都说不稳，却还记得你的名字……",''')
+          text = text.replace('''  "误呼吾主真名":"误呼吾主真名",''','''  "误呼吾主真名":"该称谓不进入姓名索引。",''')
+          live.write_text(text)
+          PY
+      - name: Verify source logic
+        shell: bash
+        run: |
+          grep -q 'LY_ADMIN_FLOW' app/InteractiveWechat.tsx
+          grep -q '然后他们把这件事叫‘归巢’' app/InteractiveWechat.tsx
+          grep -q '她真的在‘沈妍’和‘林楠’两个名字之间来回说' app/InteractiveWechat.tsx
+          grep -q '该称谓不进入姓名索引' app/AdminPortalOccult.tsx
+          ! grep -q 'trueNameHit' app/AdminPortalOccult.tsx
+          ! grep -q 'ly-admin-2021-direct' app/InteractiveWechat.tsx
+      - name: Install dependencies
+        run: npm ci
+      - name: Build playtest
+        run: npm run build:single
+      - name: Verify published artifact
+        shell: bash
+        run: |
+          test -f single-dist/index.html
+          test -f single-dist/assets/occult/factory-faceless-idol.jpg
+          grep -q '检索诱导运行中' single-dist/index.html
+      - name: Commit source changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/InteractiveWechat.tsx app/AdminPortalOccult.tsx content/wechatLiveDialogues.ts
+          git commit -m "Fix staged evidence reasoning and dialogue pacing" || exit 0
+          git push origin HEAD:agent/v8-forum-gameplay-rework
+      - name: Deploy playtest
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./single-dist
+          publish_branch: gh-pages
+          force_orphan: true
