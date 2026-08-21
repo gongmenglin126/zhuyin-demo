@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -24,9 +24,27 @@ jobs:
         run: npm ci
       - name: Build single-file playtest
         run: npm run build:single
+      - name: Verify current reasoning flow and required assets
+        shell: bash
+        run: |
+          grep -F 'const LY_ADMIN_FLOW=' app/InteractiveWechat.tsx
+          grep -F '然后他们把这件事叫‘归巢’。' app/InteractiveWechat.tsx
+          grep -F '她真的在‘沈妍’和‘林楠’两个名字之间来回说？' app/InteractiveWechat.tsx
+          grep -F '该称谓不进入姓名索引' app/game-fixes.css
+          ! grep -F 'ly-admin-2021-direct' app/InteractiveWechat.tsx
+          test -f single-dist/index.html
+          test -f single-dist/assets/occult/factory-faceless-idol.jpg
       - name: Upload playtest
         uses: actions/upload-artifact@v4
         with:
           name: zhuyin-v8-forum-playtest
-          path: single-dist/index.html
+          path: single-dist
           if-no-files-found: error
+      - name: Publish updated playtest to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./single-dist
+          publish_branch: gh-pages
+          force_orphan: true
+          enable_jekyll: false
