@@ -1,0 +1,37 @@
+name: Sync Third Record Dialogue
+
+on:
+  push:
+    branches:
+      - agent/v8-forum-gameplay-rework
+    paths:
+      - scripts/sync-third-record-dialogue.py
+      - .github/workflows/sync-third-record-dialogue.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v8-forum-gameplay-rework
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: python scripts/sync-third-record-dialogue.py
+      - run: npm run build:single
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- content/wechatLiveDialogues.ts
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git commit -m "Sync 19-07 dialogue with partial memory record"
+          git push origin HEAD:agent/v8-forum-gameplay-rework
